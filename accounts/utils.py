@@ -54,7 +54,7 @@ def send_new_account_email(user, password):
     else:
         template_name = "accounts/email/new_lecturer_account_confirmation.html"
     email = {
-        "subject": "Your Dj LMS account confirmation and credentials",
+        "subject": "Your SkyLearn account confirmation and credentials",
         "recipient_list": [user.email],
         "template_name": template_name,
         "context": {"user": user, "password": password},
