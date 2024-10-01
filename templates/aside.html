@@ -17,11 +17,10 @@
 				</div>
 			</div>
 			<a href="/">
-				<img src="{% static 'img/dj-lms.png' %}" width="110px" alt="Logo Django LMS">
+				<img src="{% static 'img/brand.png' %}" width="210px" alt="Logo Django LMS">
 			</a>
-			<p class="text-orange">
-				<mark>
-					<i class="far fa-hand-point-right"></i>
+			<p class="mt-2">
+				<mark class="bg-secondary text-light" style="border-radius: 2px; padding: 2px 5px;">
 					{{ request.user.get_user_role }}
 				</mark>
 			</p>
