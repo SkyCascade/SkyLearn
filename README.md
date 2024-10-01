@@ -1,10 +1,12 @@
+![image 9](https://github.com/user-attachments/assets/2cad1d7a-b5ab-4860-9f59-78db710e0289)
+
 # SkyLearn: Open source learning management system
 
 Feature-rich learning management system using django web framework. You may want to build a learning management system(AKA school management system) for a school organization or just for the sake of learning the tech stack and building your portfolio, either way, this project would be a good kickstart for you.
 
 Let's enhance the project by contributing! 👩‍💻👩‍💻
 
-![Screenshot from 2023-12-31 17-36-31](https://github.com/adilmohak/django-lms/assets/60693922/e7fb628a-6275-4160-ae0f-ab27099ab3ca)
+<img width="1440" alt="screenshot" src="https://github.com/user-attachments/assets/08644f49-6ae0-4695-86cc-afe331c6f61a">
 
 ## Current features
 
