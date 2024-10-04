@@ -13,6 +13,7 @@ from django.db.models.signals import pre_save
 from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django.dispatch import receiver
 from model_utils.managers import InheritanceManager
 
 from course.models import Course
