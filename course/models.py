@@ -7,37 +7,8 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from core.models import ActivityLog
-from core.models import Semester
-from .utils import unique_slug_generator
-
-# Constants
-YEARS = (
-    (1, "1"),
-    (2, "2"),
-    (3, "3"),
-    (4, "4"),
-    (5, "5"),
-    (6, "6"),
-)
-
-BACHELOR_DEGREE = "Bachelor"
-MASTER_DEGREE = "Master"
-
-LEVEL_CHOICES = (
-    (BACHELOR_DEGREE, _("Bachelor Degree")),
-    (MASTER_DEGREE, _("Master Degree")),
-)
-
-FIRST = "First"
-SECOND = "Second"
-THIRD = "Third"
-
-SEMESTER_CHOICES = (
-    (FIRST, _("First")),
-    (SECOND, _("Second")),
-    (THIRD, _("Third")),
-)
+from core.models import ActivityLog, Semester
+from core.utils import unique_slug_generator
 
 
 class ProgramManager(models.Manager):
@@ -94,9 +65,9 @@ class Course(models.Model):
     credit = models.IntegerField(default=0)
     summary = models.TextField(max_length=200, blank=True)
     program = models.ForeignKey(Program, on_delete=models.CASCADE)
-    level = models.CharField(max_length=25, choices=LEVEL_CHOICES)
-    year = models.IntegerField(choices=YEARS, default=1)
-    semester = models.CharField(choices=SEMESTER_CHOICES, max_length=200)
+    level = models.CharField(max_length=25, choices=settings.LEVEL_CHOICES)
+    year = models.IntegerField(choices=settings.YEARS, default=1)
+    semester = models.CharField(choices=settings.SEMESTER_CHOICES, max_length=200)
     is_elective = models.BooleanField(default=False)
 
     objects = CourseManager()

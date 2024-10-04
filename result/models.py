@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.conf import settings
 
 from django.db import models
 from django.urls import reverse
@@ -6,34 +7,6 @@ from django.urls import reverse
 from accounts.models import Student
 from core.models import Semester
 from course.models import Course
-
-# Constants
-YEARS = (
-    (1, "1"),
-    (2, "2"),
-    (3, "3"),
-    (4, "4"),
-    (5, "5"),
-    (6, "6"),
-)
-
-BACHELOR_DEGREE = "Bachelor"
-MASTER_DEGREE = "Master"
-
-LEVEL_CHOICES = (
-    (BACHELOR_DEGREE, "Bachelor Degree"),
-    (MASTER_DEGREE, "Master Degree"),
-)
-
-FIRST = "First"
-SECOND = "Second"
-THIRD = "Third"
-
-SEMESTER_CHOICES = (
-    (FIRST, "First"),
-    (SECOND, "Second"),
-    (THIRD, "Third"),
-)
 
 A_PLUS = "A+"
 A = "A"
@@ -208,9 +181,9 @@ class Result(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     gpa = models.FloatField(null=True)
     cgpa = models.FloatField(null=True)
-    semester = models.CharField(max_length=100, choices=SEMESTER_CHOICES)
+    semester = models.CharField(max_length=100, choices=settings.SEMESTER_CHOICES)
     session = models.CharField(max_length=100, blank=True, null=True)
-    level = models.CharField(max_length=25, choices=LEVEL_CHOICES, null=True)
+    level = models.CharField(max_length=25, choices=settings.LEVEL_CHOICES, null=True)
 
     def __str__(self):
         return f"Result for {self.student} - Semester: {self.semester}, Level: {self.level}"

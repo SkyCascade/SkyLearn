@@ -2,11 +2,7 @@ from django import forms
 from django.forms.widgets import RadioSelect, Textarea
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import gettext_lazy as _
-from django.db import transaction
-
 from django.forms.models import inlineformset_factory
-
-from accounts.models import User
 from .models import Question, Quiz, MCQuestion, Choice
 
 
