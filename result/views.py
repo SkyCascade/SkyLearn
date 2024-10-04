@@ -456,7 +456,6 @@ def result_sheet_pdf_view(request, id):
 @login_required
 @student_required
 def course_registration_form(request):
-    current_semester = Semester.objects.get(is_current_semester=True)
     current_session = Session.objects.get(is_current_session=True)
     courses = TakenCourse.objects.filter(student__student__id=request.user.id)
     fname = request.user.username + ".pdf"
@@ -514,7 +513,6 @@ def course_registration_form(request):
     Story.append(title)
     student = Student.objects.get(student__pk=request.user.id)
 
-    style_right = ParagraphStyle(name="right", parent=styles["Normal"])
     tbl_data = [
         [
             Paragraph(
@@ -549,8 +547,6 @@ def course_registration_form(request):
     semester_title = "<b>FIRST SEMESTER</b>"
     semester_title = Paragraph(semester_title, semester)
     Story.append(semester_title)
-
-    elements = []
 
     # FIRST SEMESTER
     count = 0
@@ -598,7 +594,6 @@ def course_registration_form(request):
                     "",
                 )
             ]
-            color = colors.black
             count += 1
             table_body = Table(data, 1 * [1.4 * inch], 1 * [0.3 * inch])
             table_body.setStyle(
