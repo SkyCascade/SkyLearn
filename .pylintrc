@@ -452,7 +452,8 @@ disable=raw-checker-failed,
         invalid-overridden-method,
         unsupported-binary-operation,
         attribute-defined-outside-init,
-        duplicate-code
+        duplicate-code,
+        import-error
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
