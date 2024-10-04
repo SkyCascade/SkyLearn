@@ -5,7 +5,7 @@ from .utils import (
 )
 
 
-def post_save_account_receiver(sender, instance=None, created=False, *args, **kwargs):
+def post_save_account_receiver(instance=None, created=False):
     """
     Send email notification
     """

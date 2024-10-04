@@ -1,34 +1,48 @@
-from django.http.response import JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
-from django.views.generic import CreateView, ListView
-from django.db.models import Q
-from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import get_template, render_to_string
+from django.utils.decorators import method_decorator
+from django.views.generic import CreateView
 from django_filters.views import FilterView
-from core.models import Session, Semester
-from course.models import Course
-from result.models import TakenCourse
-from .decorators import admin_required
-from .forms import (
+from xhtml2pdf import pisa
+
+from accounts.decorators import admin_required
+from accounts.filters import LecturerFilter, StudentFilter
+from accounts.forms import (
+    ParentAddForm,
+    ProfileUpdateForm,
+    ProgramUpdateForm,
     StaffAddForm,
     StudentAddForm,
-    ProfileUpdateForm,
-    ParentAddForm,
-    ProgramUpdateForm,
 )
-from .models import User, Student, Parent
-from .filters import LecturerFilter, StudentFilter
+from accounts.models import Parent, Student, User
+from core.models import Semester, Session
+from course.models import Course
+from result.models import TakenCourse
 
-# to generate pdf from template we need the following
-from django.http import HttpResponse
-from django.template.loader import get_template  # to get template which render as pdf
-from xhtml2pdf import pisa
-from django.template.loader import (
-    render_to_string,
-)  # to render a template into a string
+# ########################################################
+# Utility Functions
+# ########################################################
+
+
+def render_to_pdf(template_name, context):
+    """Render a given template to PDF format."""
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'filename="profile.pdf"'
+    template = render_to_string(template_name, context)
+    pdf = pisa.CreatePDF(template, dest=response)
+    if pdf.err:
+        return HttpResponse("We had some problems generating the PDF")
+    return response
+
+
+# ########################################################
+# Authentication and Registration
+# ########################################################
 
 
 def validate_username(request):
@@ -42,193 +56,125 @@ def register(request):
         form = StudentAddForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Account created successfuly.")
-        else:
-            messages.error(
-                request, f"Somthing is not correct, please fill all fields correctly."
-            )
+            messages.success(request, "Account created successfully.")
+            return redirect("login")
+        messages.error(
+            request, "Something is not correct, please fill all fields correctly."
+        )
     else:
-        form = StudentAddForm(request.POST)
+        form = StudentAddForm()
     return render(request, "registration/register.html", {"form": form})
+
+
+# ########################################################
+# Profile Views
+# ########################################################
 
 
 @login_required
 def profile(request):
-    """Show profile of any user that fire out the request"""
+    """Show profile of the current user."""
     current_session = Session.objects.filter(is_current_session=True).first()
     current_semester = Semester.objects.filter(
         is_current_semester=True, session=current_session
     ).first()
 
+    context = {
+        "title": request.user.get_full_name,
+        "current_session": current_session,
+        "current_semester": current_semester,
+    }
+
     if request.user.is_lecturer:
         courses = Course.objects.filter(
-            allocated_course__lecturer__pk=request.user.id
-        ).filter(semester=current_semester)
-        return render(
-            request,
-            "accounts/profile.html",
-            {
-                "title": request.user.get_full_name,
-                "courses": courses,
-                "current_session": current_session,
-                "current_semester": current_semester,
-            },
+            allocated_course__lecturer__pk=request.user.id, semester=current_semester
         )
-    elif request.user.is_student:
-        level = Student.objects.get(student__pk=request.user.id)
-        try:
-            parent = Parent.objects.get(student=level)
-        except:
-            parent = "no parent set"
-        courses = TakenCourse.objects.filter(
-            student__student__id=request.user.id, course__level=level.level
-        )
-        context = {
-            "title": request.user.get_full_name,
-            "parent": parent,
-            "courses": courses,
-            "level": level,
-            "current_session": current_session,
-            "current_semester": current_semester,
-        }
+        context["courses"] = courses
         return render(request, "accounts/profile.html", context)
-    else:
-        staff = User.objects.filter(is_lecturer=True)
-        return render(
-            request,
-            "accounts/profile.html",
-            {
-                "title": request.user.get_full_name,
-                "staff": staff,
-                "current_session": current_session,
-                "current_semester": current_semester,
-            },
+
+    if request.user.is_student:
+        student = get_object_or_404(Student, student__pk=request.user.id)
+        parent = Parent.objects.filter(student=student).first()
+        courses = TakenCourse.objects.filter(
+            student__student__id=request.user.id, course__level=student.level
         )
+        context.update(
+            {
+                "parent": parent,
+                "courses": courses,
+                "level": student.level,
+            }
+        )
+        return render(request, "accounts/profile.html", context)
 
-
-# function that generate pdf by taking Django template and its context,
-def render_to_pdf(template_name, context):
-    """Renders a given template to PDF format."""
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'filename="profile.pdf"'  # Set default filename
-
-    template = render_to_string(template_name, context)
-    pdf = pisa.CreatePDF(template, dest=response)
-    if pdf.err:
-        return HttpResponse("We had some problems generating the PDF")
-
-    return response
+    # For superuser or other staff
+    staff = User.objects.filter(is_lecturer=True)
+    context["staff"] = staff
+    return render(request, "accounts/profile.html", context)
 
 
 @login_required
 @admin_required
-def profile_single(request, id):
-    """Show profile of any selected user"""
-    if request.user.id == id:
-        return redirect("/profile/")
+def profile_single(request, user_id):
+    """Show profile of any selected user."""
+    if request.user.id == user_id:
+        return redirect("profile")
 
     current_session = Session.objects.filter(is_current_session=True).first()
     current_semester = Semester.objects.filter(
         is_current_semester=True, session=current_session
     ).first()
+    user = get_object_or_404(User, pk=user_id)
 
-    user = User.objects.get(pk=id)
-    """
-    If download_pdf exists, instead of calling render_to_pdf directly, 
-    pass the context dictionary built for the specific user type 
-    (lecturer, student, or superuser) to the render_to_pdf function.
-    """
-    if request.GET.get("download_pdf"):
-        if user.is_lecturer:
-            courses = Course.objects.filter(allocated_course__lecturer__pk=id).filter(
-                semester=current_semester
-            )
-            context = {
-                "title": user.get_full_name,
-                "user": user,
+    context = {
+        "title": user.get_full_name,
+        "user": user,
+        "current_session": current_session,
+        "current_semester": current_semester,
+    }
+
+    if user.is_lecturer:
+        courses = Course.objects.filter(
+            allocated_course__lecturer__pk=user_id, semester=current_semester
+        )
+        context.update(
+            {
                 "user_type": "Lecturer",
                 "courses": courses,
-                "current_session": current_session,
-                "current_semester": current_semester,
             }
-        elif user.is_student:
-            student = Student.objects.get(student__pk=id)
-            courses = TakenCourse.objects.filter(
-                student__student__id=id, course__level=student.level
-            )
-            context = {
-                "title": user.get_full_name,
-                "user": user,
-                "user_type": "student",
+        )
+    elif user.is_student:
+        student = get_object_or_404(Student, student__pk=user_id)
+        courses = TakenCourse.objects.filter(
+            student__student__id=user_id, course__level=student.level
+        )
+        context.update(
+            {
+                "user_type": "Student",
                 "courses": courses,
                 "student": student,
-                "current_session": current_session,
-                "current_semester": current_semester,
             }
-        else:
-            context = {
-                "title": user.get_full_name,
-                "user": user,
-                "user_type": "superuser",
-                "current_session": current_session,
-                "current_semester": current_semester,
-            }
+        )
+    else:
+        context["user_type"] = "Superuser"
+
+    if request.GET.get("download_pdf"):
         return render_to_pdf("pdf/profile_single.html", context)
 
-    else:
-        if user.is_lecturer:
-            courses = Course.objects.filter(allocated_course__lecturer__pk=id).filter(
-                semester=current_semester
-            )
-            context = {
-                "title": user.get_full_name,
-                "user": user,
-                "user_type": "Lecturer",
-                "courses": courses,
-                "current_session": current_session,
-                "current_semester": current_semester,
-            }
-            return render(request, "accounts/profile_single.html", context)
-        elif user.is_student:
-            student = Student.objects.get(student__pk=id)
-            courses = TakenCourse.objects.filter(
-                student__student__id=id, course__level=student.level
-            )
-            context = {
-                "title": user.get_full_name,
-                "user": user,
-                "user_type": "student",
-                "courses": courses,
-                "student": student,
-                "current_session": current_session,
-                "current_semester": current_semester,
-            }
-            return render(request, "accounts/profile_single.html", context)
-        else:
-            context = {
-                "title": user.get_full_name,
-                "user": user,
-                "user_type": "superuser",
-                "current_session": current_session,
-                "current_semester": current_semester,
-            }
-            return render(request, "accounts/profile_single.html", context)
+    return render(request, "accounts/profile_single.html", context)
 
 
 @login_required
 @admin_required
 def admin_panel(request):
-    return render(
-        request, "setting/admin_panel.html", {"title": request.user.get_full_name}
-    )
+    return render(request, "setting/admin_panel.html", {"title": "Admin Panel"})
 
 
 # ########################################################
+# Settings Views
+# ########################################################
 
 
-# ########################################################
-# Setting views
-# ########################################################
 @login_required
 def profile_update(request):
     if request.method == "POST":
@@ -237,18 +183,10 @@ def profile_update(request):
             form.save()
             messages.success(request, "Your profile has been updated successfully.")
             return redirect("profile")
-        else:
-            messages.error(request, "Please correct the error(s) below.")
+        messages.error(request, "Please correct the error(s) below.")
     else:
         form = ProfileUpdateForm(instance=request.user)
-    return render(
-        request,
-        "setting/profile_info_change.html",
-        {
-            "title": "Setting",
-            "form": form,
-        },
-    )
+    return render(request, "setting/profile_info_change.html", {"form": form})
 
 
 @login_required
@@ -260,19 +198,14 @@ def change_password(request):
             update_session_auth_hash(request, user)
             messages.success(request, "Your password was successfully updated!")
             return redirect("profile")
-        else:
-            messages.error(request, "Please correct the error(s) below. ")
+        messages.error(request, "Please correct the error(s) below.")
     else:
         form = PasswordChangeForm(request.user)
-    return render(
-        request,
-        "setting/password_change.html",
-        {
-            "form": form,
-        },
-    )
+    return render(request, "setting/password_change.html", {"form": form})
 
 
+# ########################################################
+# Staff (Lecturer) Views
 # ########################################################
 
 
@@ -281,58 +214,39 @@ def change_password(request):
 def staff_add_view(request):
     if request.method == "POST":
         form = StaffAddForm(request.POST)
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-        email = request.POST.get("email")
-
         if form.is_valid():
-
-            form.save()
+            lecturer = form.save()
+            full_name = lecturer.get_full_name
+            email = lecturer.email
             messages.success(
                 request,
-                "Account for lecturer "
-                + first_name
-                + " "
-                + last_name
-                + " has been created. An email with account credentials will be sent to "
-                + email
-                + " within a minute.",
+                f"Account for lecturer {full_name} has been created. "
+                f"An email with account credentials will be sent to {email} within a minute.",
             )
             return redirect("lecturer_list")
     else:
         form = StaffAddForm()
-
-    context = {
-        "title": "Lecturer Add",
-        "form": form,
-    }
-
-    return render(request, "accounts/add_staff.html", context)
+    return render(
+        request, "accounts/add_staff.html", {"title": "Add Lecturer", "form": form}
+    )
 
 
 @login_required
 @admin_required
 def edit_staff(request, pk):
-    instance = get_object_or_404(User, is_lecturer=True, pk=pk)
+    lecturer = get_object_or_404(User, is_lecturer=True, pk=pk)
     if request.method == "POST":
-        form = ProfileUpdateForm(request.POST, request.FILES, instance=instance)
-        full_name = instance.get_full_name
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=lecturer)
         if form.is_valid():
             form.save()
-
-            messages.success(request, "Lecturer " + full_name + " has been updated.")
+            full_name = lecturer.get_full_name
+            messages.success(request, f"Lecturer {full_name} has been updated.")
             return redirect("lecturer_list")
-        else:
-            messages.error(request, "Please correct the error below.")
+        messages.error(request, "Please correct the error below.")
     else:
-        form = ProfileUpdateForm(instance=instance)
+        form = ProfileUpdateForm(instance=lecturer)
     return render(
-        request,
-        "accounts/edit_lecturer.html",
-        {
-            "title": "Edit Lecturer",
-            "form": form,
-        },
+        request, "accounts/edit_lecturer.html", {"title": "Edit Lecturer", "form": form}
     )
 
 
@@ -341,7 +255,7 @@ class LecturerFilterView(FilterView):
     filterset_class = LecturerFilter
     queryset = User.objects.filter(is_lecturer=True)
     template_name = "accounts/lecturer_list.html"
-    paginate_by = 10  # if pagination is desired
+    paginate_by = 10
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -349,107 +263,76 @@ class LecturerFilterView(FilterView):
         return context
 
 
-# lecturers list pdf
+@login_required
+@admin_required
 def render_lecturer_pdf_list(request):
     lecturers = User.objects.filter(is_lecturer=True)
     template_path = "pdf/lecturer_list.html"
     context = {"lecturers": lecturers}
-    response = HttpResponse(
-        content_type="application/pdf"
-    )  # convert the response to pdf
+    response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = 'filename="lecturers_list.pdf"'
-    # find the template and render it.
     template = get_template(template_path)
     html = template.render(context)
-    # create a pdf
     pisa_status = pisa.CreatePDF(html, dest=response)
-    # if error then show some funny view
     if pisa_status.err:
-        return HttpResponse("We had some errors <pre>" + html + "</pre>")
+        return HttpResponse(f"We had some errors <pre>{html}</pre>")
     return response
-
-
-# @login_required
-# @lecturer_required
-# def delete_staff(request, pk):
-#     staff = get_object_or_404(User, pk=pk)
-#     staff.delete()
-#     return redirect('lecturer_list')
 
 
 @login_required
 @admin_required
 def delete_staff(request, pk):
-    lecturer = get_object_or_404(User, pk=pk)
+    lecturer = get_object_or_404(User, is_lecturer=True, pk=pk)
     full_name = lecturer.get_full_name
     lecturer.delete()
-    messages.success(request, "Lecturer " + full_name + " has been deleted.")
+    messages.success(request, f"Lecturer {full_name} has been deleted.")
     return redirect("lecturer_list")
 
 
 # ########################################################
+# Student Views
+# ########################################################
 
 
-# ########################################################
-# Student views
-# ########################################################
 @login_required
 @admin_required
 def student_add_view(request):
     if request.method == "POST":
         form = StudentAddForm(request.POST)
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-        email = request.POST.get("email")
         if form.is_valid():
-            form.save()
+            student = form.save()
+            full_name = student.get_full_name
+            email = student.email
             messages.success(
                 request,
-                "Account for "
-                + first_name
-                + " "
-                + last_name
-                + " has been created. An email with account credentials will be sent to "
-                + email
-                + " within a minute.",
+                f"Account for {full_name} has been created. "
+                f"An email with account credentials will be sent to {email} within a minute.",
             )
             return redirect("student_list")
-        else:
-            messages.error(request, "Correct the error(s) below.")
+        messages.error(request, "Correct the error(s) below.")
     else:
         form = StudentAddForm()
-
     return render(
-        request,
-        "accounts/add_student.html",
-        {"title": "Add Student", "form": form},
+        request, "accounts/add_student.html", {"title": "Add Student", "form": form}
     )
 
 
 @login_required
 @admin_required
 def edit_student(request, pk):
-    # instance = User.objects.get(pk=pk)
-    instance = get_object_or_404(User, is_student=True, pk=pk)
+    student_user = get_object_or_404(User, is_student=True, pk=pk)
     if request.method == "POST":
-        form = ProfileUpdateForm(request.POST, request.FILES, instance=instance)
-        full_name = instance.get_full_name
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=student_user)
         if form.is_valid():
             form.save()
-
-            messages.success(request, ("Student " + full_name + " has been updated."))
+            full_name = student_user.get_full_name
+            messages.success(request, f"Student {full_name} has been updated.")
             return redirect("student_list")
-        else:
-            messages.error(request, "Please correct the error below.")
+        messages.error(request, "Please correct the error below.")
     else:
-        form = ProfileUpdateForm(instance=instance)
+        form = ProfileUpdateForm(instance=student_user)
     return render(
-        request,
-        "accounts/edit_student.html",
-        {
-            "title": "Edit-profile",
-            "form": form,
-        },
+        request, "accounts/edit_student.html", {"title": "Edit Student", "form": form}
     )
 
 
@@ -466,23 +349,19 @@ class StudentListView(FilterView):
         return context
 
 
-# student list pdf
+@login_required
+@admin_required
 def render_student_pdf_list(request):
     students = Student.objects.all()
     template_path = "pdf/student_list.html"
     context = {"students": students}
-    response = HttpResponse(
-        content_type="application/pdf"
-    )  # convert the response to pdf
+    response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = 'filename="students_list.pdf"'
-    # find the template and render it.
     template = get_template(template_path)
     html = template.render(context)
-    # create a pdf
     pisa_status = pisa.CreatePDF(html, dest=response)
-    # if error then show some funny view
     if pisa_status.err:
-        return HttpResponse("We had some errors <pre>" + html + "</pre>")
+        return HttpResponse(f"We had some errors <pre>{html}</pre>")
     return response
 
 
@@ -490,53 +369,45 @@ def render_student_pdf_list(request):
 @admin_required
 def delete_student(request, pk):
     student = get_object_or_404(Student, pk=pk)
-    # full_name = student.user.get_full_name
+    full_name = student.student.get_full_name
     student.delete()
-    messages.success(request, "Student has been deleted.")
+    messages.success(request, f"Student {full_name} has been deleted.")
     return redirect("student_list")
 
 
 @login_required
 @admin_required
 def edit_student_program(request, pk):
-
-    instance = get_object_or_404(Student, student_id=pk)
+    student = get_object_or_404(Student, student_id=pk)
     user = get_object_or_404(User, pk=pk)
     if request.method == "POST":
-        form = ProgramUpdateForm(request.POST, request.FILES, instance=instance)
-        full_name = user.get_full_name
+        form = ProgramUpdateForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
             form.save()
-            messages.success(request, message=full_name + " program has been updated.")
-            url = (
-                "/accounts/profile/" + user.id.__str__() + "/detail/"
-            )  # Botched job, must optimize
-            return redirect(to=url)
-        else:
-            messages.error(request, "Please correct the error(s) below.")
+            full_name = user.get_full_name
+            messages.success(request, f"{full_name}'s program has been updated.")
+            return redirect("profile_single", user_id=pk)
+        messages.error(request, "Please correct the error(s) below.")
     else:
-        form = ProgramUpdateForm(instance=instance)
+        form = ProgramUpdateForm(instance=student)
     return render(
         request,
         "accounts/edit_student_program.html",
-        context={"title": "Edit-program", "form": form, "student": instance},
+        {"title": "Edit Program", "form": form, "student": student},
     )
 
 
 # ########################################################
+# Parent Views
+# ########################################################
 
 
+@method_decorator([login_required, admin_required], name="dispatch")
 class ParentAdd(CreateView):
     model = Parent
     form_class = ParentAddForm
     template_name = "accounts/parent_form.html"
 
-
-# def parent_add(request):
-#     if request.method == 'POST':
-#         form = ParentAddForm(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('student_list')
-#     else:
-#         form = ParentAddForm(request.POST)
+    def form_valid(self, form):
+        messages.success(self.request, "Parent added successfully.")
+        return super().form_valid(form)

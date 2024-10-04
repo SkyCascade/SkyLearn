@@ -104,9 +104,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-ASGI_APPLICATION = "config.asgi.application"
-
-
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
@@ -142,7 +139,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
-gettext = lambda s: s
+
+def gettext(s):
+    return s
+
 
 LANGUAGES = (
     ("en", gettext("English")),
