@@ -95,7 +95,9 @@
 </div>
   {% endif %}
   {% if not cat_scores and not exams %}
- 	<div class="col-12 p-4 text-center"><h3><i class="far fa-frown text-secondary"></i></h3> {% trans 'No recordes yet' %}</div> 
+  <h4 class="text-center mt-5 py-5 text-muted">
+	  <i class="fa-regular fa-folder-open me-2"></i>{% trans 'Progress records will appear here' %}
+  </h4>
   {% endif %}
 
 {% endblock %}
