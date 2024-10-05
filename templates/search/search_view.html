@@ -30,12 +30,6 @@
     .class-item a{padding: 2px; color: #343a40; text-decoration: none; transition: .5s;}
     .class-item:hover{
         transform: translateX(15px);
-        background: #6cbd45;
-    }
-    .class-item:hover h4 a {
-      color: #fff; }
-    .class-item:hover p, .class-item:hover span {
-      color: rgb(158, 239, 119); 
     }
 </style>
 
@@ -46,7 +40,7 @@
         {% with object|class_name as klass %}
         {% if klass == "Program" %}
             <div class="session-wrapper">
-                <div class="session"><div class="info-text bg-orange">{% trans 'Program' %}</div></div>
+                <div class="session"><div class="info-text bg-secondary text-light px-2 rounded-pill">{% trans 'Program' %}</div></div>
             </div>
             <div class="col-12 class-item">
                 <!-- <p><b>Program of</b> {{ object }}</p> -->
@@ -56,7 +50,7 @@
 
         {% elif klass == "Course" %}
             <div class="session-wrapper">
-                <div class="session"><div class="info-text bg-orange">{% trans 'Course' %}</div></div>
+                <div class="session"><div class="info-text bg-secondary text-light px-2 rounded-pill">{% trans 'Course' %}</div></div>
             </div>
             <div class="col-12 class-item">
                 <p><b>{% trans 'Program of' %}</b> {{ object.program }}</p>
@@ -66,7 +60,7 @@
             
         {% elif klass == "NewsAndEvents" %}
             <div class="session-wrapper">
-                <div class="session"><div class="info-text bg-orange">{% trans 'News And Events' %}</div></div>
+                <div class="session"><div class="info-text bg-secondary text-light px-2 rounded-pill">{% trans 'News And Events' %}</div></div>
             </div>
             <div class="col-12 class-item">
                 <p><b>{% trans 'Date:' %} </b> {{ object.updated_date|timesince }} ago</p>
@@ -76,7 +70,7 @@
 
         {% elif klass == "Quiz" %}
             <div class="session-wrapper">
-                <div class="session"><div class="info-text bg-orange">{% trans 'Quiz' %}</div></div>
+                <div class="session"><div class="info-text bg-secondary text-light px-2 rounded-pill">{% trans 'Quiz' %}</div></div>
             </div>
             <div class="col-12 class-item">
                 <p>{{ object.category }} {% trans 'quiz' %},  <b>{% trans 'Course:' %}</b> {{ object.course }}</p>
@@ -86,7 +80,7 @@
 
         {% else %}
             <div class="session-wrapper">
-                <div class="session"><div class="info-text bg-orange">{% trans 'Program' %}</div></div>
+                <div class="session"><div class="info-text bg-secondary text-light px-2 rounded-pill">{% trans 'Program' %}</div></div>
             </div>
             <div class="col-12 col-lg-8 offset-lg-4">
                 <a href="{{ object.get_absolute_url }}" class="class-item d-flex">{{ object }} | {{ object|class_name }}</a>
@@ -123,7 +117,7 @@
     <ul class="pl-3">
         <li>{% trans 'Program' %} <span class="text-orange">&gt;</span> {% trans 'Title or Description' %}</li>
         <li>{% trans 'Course' %} <span class="text-orange">&gt;</span>{% trans 'Title, Code or Description' %}</li>
-        <li>{% trans 'News And Events' %} <span class="text-orange">&gt;</span> {% trans 'Title, Description or just by typing "news" or "event %}li>
+        <li>{% trans 'News And Events' %} <span class="text-orange">&gt;</span> {% trans 'Title, Description or just by typing news or event' %}li>
         <li>{% trans 'Quiz' %} <span class="text-orange">&gt;</span>{% trans 'Title, Description or Category(practice, assignment and exam)' %}</li>
     </ul>
     </div>

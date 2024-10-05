@@ -25,7 +25,7 @@ from accounts.models import Student
 from core.models import Session, Semester
 from course.models import Course
 from accounts.decorators import lecturer_required, student_required
-from .models import TakenCourse, Result, FIRST, SECOND
+from .models import TakenCourse, Result
 
 
 cm = 2.54
@@ -583,7 +583,7 @@ def course_registration_form(request):
 
     first_semester_unit = 0
     for course in courses:
-        if course.course.semester == FIRST:
+        if course.course.semester == settings.FIRST:
             first_semester_unit += int(course.course.credit)
             data = [
                 (
@@ -672,7 +672,7 @@ def course_registration_form(request):
 
     second_semester_unit = 0
     for course in courses:
-        if course.course.semester == SECOND:
+        if course.course.semester == settings.SECOND:
             second_semester_unit += int(course.course.credit)
             data = [
                 (
