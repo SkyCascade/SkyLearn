@@ -246,12 +246,15 @@ class QuizTake(FormView):
                 "You have already completed this quiz. Only one attempt is permitted.",
             )
             return redirect("quiz_index", slug=self.course.slug)
+
+        # Set self.question and self.progress here
+        self.question = self.sitting.get_first_question()
+        self.progress = self.sitting.progress()
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        self.question = self.sitting.get_first_question()
-        self.progress = self.sitting.progress()
         kwargs["question"] = self.question
         return kwargs
 
@@ -291,6 +294,10 @@ class QuizTake(FormView):
 
         self.sitting.add_user_answer(self.question, guess)
         self.sitting.remove_first_question()
+
+        # Update self.question and self.progress for the next question
+        self.question = self.sitting.get_first_question()
+        self.progress = self.sitting.progress()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

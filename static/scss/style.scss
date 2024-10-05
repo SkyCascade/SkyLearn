@@ -690,7 +690,7 @@ a {
 }
 
 .progress-bar {
-  animation: loader-bar ease-in-out 7s forwards;
+  animation: loader-bar ease-in-out 3s forwards;
 }
 @keyframes loader-bar {
   0%,
@@ -1300,4 +1300,8 @@ video {
     0 2px 10px 0 rgba(0, 0, 0, 0.12);
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.16),
     0px 2px 10px 0px rgba(0, 0, 0, 0.12);
+}
+
+.breadcrumb-item a {
+  color: var(--bs-primary);
 }

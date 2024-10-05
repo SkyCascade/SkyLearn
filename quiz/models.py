@@ -423,7 +423,7 @@ class MCQuestion(Question):
 
     def order_choices(self, queryset):
         if self.choice_order == "content":
-            return queryset.order_by("choice")
+            return queryset.order_by("choice_text")
         elif self.choice_order == "random":
             return queryset.order_by("?")
         else:
