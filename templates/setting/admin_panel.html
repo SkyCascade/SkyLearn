@@ -16,19 +16,8 @@
 <div class="title-1"><i class="fas fa-user-tie"></i>{% trans 'Admin Panel' %}</div>
 <br>
 <br>
-{% if messages %}
-    {% for message in messages %}
-        {% if message.tags == 'error' %}
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle"></i>{{ message }}
-            </div>
-        {% else %}
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>{{ message }}
-            </div>
-        {% endif %}
-    {% endfor %}
-{% endif %}
+
+{% include 'snippets/messages.html' %}
 
 <div class="container-fluid">
     <div class="row">
