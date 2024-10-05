@@ -20,6 +20,8 @@
 
 {% include 'snippets/messages.html' %}
 
+{{ form.errors }}
+
 <form action="" method="POST" enctype="multipart/form-data">{% csrf_token %}
     <div class="row mb-3">
         <div class="col-md-6">
@@ -29,6 +31,7 @@
                     {{ form.email|as_crispy_field }}
                     {{ form.first_name|as_crispy_field }}
                     {{ form.last_name|as_crispy_field }}
+                    {{ form.gender|as_crispy_field }}
                     {{ form.phone|as_crispy_field }}
                     {{ form.address|as_crispy_field }}
                 </div>

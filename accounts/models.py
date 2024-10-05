@@ -118,7 +118,7 @@ class User(AbstractUser):
             return no_picture
 
     def get_absolute_url(self):
-        return reverse("profile_single", kwargs={"id": self.id})
+        return reverse("profile_single", kwargs={"user_id": self.id})
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -170,7 +170,7 @@ class Student(models.Model):
         return {"M": males_count, "F": females_count}
 
     def get_absolute_url(self):
-        return reverse("profile_single", kwargs={"id": self.id})
+        return reverse("profile_single", kwargs={"user_id": self.id})
 
     def delete(self, *args, **kwargs):
         self.student.delete()
