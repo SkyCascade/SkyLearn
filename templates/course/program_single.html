@@ -95,7 +95,7 @@
                   <span class="text-danger">
                     {% trans 'No course for this progrm.' %}
                     {% if request.user.is_superuser %}
-                    <a href="{% url 'course_add' pk=program.pk %}">
+                    <a href="{% url 'course_add' pk=program.pk %}" class="text-primary">
                     <i class="primary" style="font-size: 22px;">
                         {% trans 'Add one now.' %}
                     </i>

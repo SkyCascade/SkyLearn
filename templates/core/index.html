@@ -49,9 +49,9 @@
                         </button>
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="{% url 'edit_post' pk=item.id %}"><i
-                                    class="fas fa-pencil-alt"></i>{% trans 'Edit' %}</a>
+                                    class="unstyled me-2 fas fa-pencil-alt"></i>{% trans 'Edit' %}</a>
                             <a class="dropdown-item" href="{% url 'delete_post' pk=item.id %}"><i
-                                    class="fas fa-trash-alt"></i>{% trans 'Delete' %}</a>
+                                    class="unstyled me-2 fas fa-trash-alt"></i>{% trans 'Delete' %}</a>
                         </div>
                     </div>
                     {% endif %}

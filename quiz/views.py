@@ -111,10 +111,10 @@ class MCQuestionCreate(CreateView):
     form_class = MCQuestionForm
     template_name = "quiz/mcquestion_form.html"
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["quiz"] = get_object_or_404(Quiz, id=self.kwargs["quiz_id"])
-        return kwargs
+    # def get_form_kwargs(self):
+    #     kwargs = super().get_form_kwargs()
+    #     kwargs["quiz"] = get_object_or_404(Quiz, id=self.kwargs["quiz_id"])
+    #     return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -134,10 +134,20 @@ class MCQuestionCreate(CreateView):
         formset = context["formset"]
         if formset.is_valid():
             with transaction.atomic():
-                form.instance.quiz = get_object_or_404(Quiz, id=self.kwargs["quiz_id"])
-                self.object = form.save()
+                # Save the MCQuestion instance without committing to the database yet
+                self.object = form.save(commit=False)
+                self.object.save()
+
+                # Retrieve the Quiz instance
+                quiz = get_object_or_404(Quiz, id=self.kwargs["quiz_id"])
+
+                # set the many-to-many relationship
+                self.object.quiz.add(quiz)
+
+                # Save the formset (choices for the question)
                 formset.instance = self.object
                 formset.save()
+
                 if "another" in self.request.POST:
                     return redirect(
                         "mc_create",
