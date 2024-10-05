@@ -13,6 +13,8 @@
     </ol>
 </nav>
 
+<p class="title-1"><i class="fas fa-record-vinyl"></i>{% trans 'Quiz Progress Rec' %}</p>
+
   {% if cat_scores %}
 
   <div class="header-title text-center">{% trans "Question Category Scores" %}</div>
@@ -53,7 +55,11 @@
 
   <div class="header-title-xl">{% trans "Previous exam papers" %}</div>
   <p class="lead fw-bold">
-	{% trans "Below are the results of exams that you have sat." %}
+	{% if request.user.is_superuser %}
+	{% trans "Student exam results" %}
+	{% else %}
+	{% trans "Below are the results of exams that you have sat" %}
+	{% endif %}
   </p>
   <div class="text-light bg-secondary mb-2 p-1">{% trans 'Total complete exams:' %} {{ exams_counter }}</div>
 <div class="table-responsive">

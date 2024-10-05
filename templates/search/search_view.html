@@ -13,26 +13,6 @@
     </ol>
 </nav>  
 
-<style>
-    .session-wrapper{position: relative;}
-    .session{position: absolute; top: -15px; right: 25px; z-index: 2;}
-    .br-orange{border: 1px solid #fd7e14; border-radius: 7px;}
-    .class-item {
-        display: block;
-        border-left: 4px solid #6cbd45; 
-        padding: 1rem !important;
-        background: #f8f9fa;
-        border-radius: 3px;
-        box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
-        transition: .5s;
-    }
-    .class-item p{padding: 2px; margin: 0; color: #b4b4b4; transition: .5s;}
-    .class-item a{padding: 2px; color: #343a40; text-decoration: none; transition: .5s;}
-    .class-item:hover{
-        transform: translateX(15px);
-    }
-</style>
-
 <div class="card p-3" style="box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3); border-radius: 10px;">
     <h5 class="text-muted m-0">{{ count }} {% trans 'result' %}{{ count|pluralize }} {% trans 'for' %} <b><em class="text-orange"> {{ query }}</em></b></h5>
     <hr>

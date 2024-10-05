@@ -1,33 +1,6 @@
 {% block content %}
 {% load i18n %}
 
-<style>
-.user-picture {
-  width: 100px;
-  height: 100px;
-  border: 3px solid #fff;
-  margin-top: -50px;
-  object-fit: cover;
-}
-
-table .info{
-    margin-left: -240px;
-}
-
-/* Specific to the .dashboard-description class */
-.dashboard-description strong {
-  font-weight: 600;
-}
-
-/* Adjustments for headers within cards */
-.card .h5 {
-  font-size: 1.25rem;
-  color: #333;
-  margin-top: 15px;
-  margin-bottom: 15px;
-}
-</style>
-
 {% if user.is_authenticated %}
 <div class="row">
   <div class="card-header">

@@ -14,7 +14,7 @@
 	</ol>
 </nav>
 
-<div class="row col-12 justify-content-between">
+<div class="row col-12 justify-content-between">{{ sitting.quiz }}
 	<div class="header-title-md">{% trans "Quiz title" %}: {{ sitting.quiz.title }}</div>
 	<em class="info-text title-danger">{% trans "Category" %}: {{ sitting.quiz.category }}</em>
 </div>
@@ -59,7 +59,7 @@
 	  <td>
 		<form action="" method="POST">{% csrf_token %}
 		  <input type="hidden" name="qid" value="{{ question.id }}">
-		  <button type="submit" class="btn btn-warning">{% trans "Toggle whether correct" %}</button>
+		  <button type="submit" class="btn btn-sm btn-secondary">{% trans "Toggle whether correct" %}</button>
 		</form>
 	  </td>
 	</tr>

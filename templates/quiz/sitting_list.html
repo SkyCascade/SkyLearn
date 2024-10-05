@@ -11,8 +11,6 @@
 	</ol>
 </nav>
 
-<div class="container">
-
 <div class="title-1"><i class="fas fa-calendar-alt"></i>{% trans "List of complete exams" %}</div>
 
 {% for student in students %}<h3>{{ student.student.user.get_full_name }}</h3>{% endfor %}
@@ -62,5 +60,4 @@
 {% else %}
 	<p class="p-3 bg-light">{% trans "No completed exams for you" %}.</p>
 {% endif %}
-</div>
 {% endblock %}
