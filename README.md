@@ -4,7 +4,7 @@
 
 # SkyLearn: Open source learning management system
 
-Feature-rich learning management system using django web framework. You may want to build a learning management system(AKA school management system) for a school organization or just for the sake of learning the tech stack and building your portfolio, either way, this project would be a good kickstart for you.
+Learning management system using Django web framework. You might want to develop a learning management system (also known as a school/college management system) for a school/college organization, or simply for the purpose of learning the tech stack and enhancing your portfolio. In either case, this project would be a great way to get started. The aim is to create the world's most lightweight yet feature-rich learning management system. However, this is not possible without your support, so please give it a star ⭐️.
 
 Let's enhance the project by contributing! 👩‍💻👩‍💻
 
