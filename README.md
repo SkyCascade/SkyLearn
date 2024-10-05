@@ -1,5 +1,7 @@
 ![image 9](https://github.com/user-attachments/assets/2cad1d7a-b5ab-4860-9f59-78db710e0289)
 
+### The world’s most high-end designed, lightweight, and feature-rich learning management system.
+
 # SkyLearn: Open source learning management system
 
 Feature-rich learning management system using django web framework. You may want to build a learning management system(AKA school management system) for a school organization or just for the sake of learning the tech stack and building your portfolio, either way, this project would be a good kickstart for you.
@@ -84,7 +86,7 @@ python manage.py runserver
 
 Last but not least, go to this address http://127.0.0.1:8000
 
-#### _Check [this page](https://adilmohak.github.io/dj-lms-starter/) for quick up and running._
+#### _Check [this page](https://adilmohak.github.io/dj-lms-starter/) for more insight and support._
 
 # References
 
