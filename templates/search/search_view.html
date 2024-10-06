@@ -19,54 +19,43 @@
     {% for object in object_list %}
         {% with object|class_name as klass %}
         {% if klass == "Program" %}
-            <div class="session-wrapper">
-                <div class="session"><div class="info-text bg-secondary text-light px-2 rounded-pill">{% trans 'Program' %}</div></div>
-            </div>
             <div class="col-12 class-item">
-                <!-- <p><b>Program of</b> {{ object }}</p> -->
-                <h4><a href="{{ object.get_absolute_url }}"><b>{{ object.title}}</b></a></h4>
+                <span class="bg-secondary text-light small px-2 rounded-pill">{% trans 'Program' %}</span>
+                <h5><a href="{{ object.get_absolute_url }}"><b>{{ object.title}}</b></a></h5>
                 <p>{{ object.summary }}</p>
             </div><hr>
 
         {% elif klass == "Course" %}
-            <div class="session-wrapper">
-                <div class="session"><div class="info-text bg-secondary text-light px-2 rounded-pill">{% trans 'Course' %}</div></div>
-            </div>
             <div class="col-12 class-item">
+                <span class="bg-secondary text-light small px-2 rounded-pill">{% trans 'Course' %}</span>
                 <p><b>{% trans 'Program of' %}</b> {{ object.program }}</p>
-                <h4><a href="{{ object.get_absolute_url }}"><b>{{ object }}</b></a></h4>
+                <h5><a href="{{ object.get_absolute_url }}"><b>{{ object }}</b></a></h5>
                 <p>{{ object.summary }}</p>
             </div><hr>
             
         {% elif klass == "NewsAndEvents" %}
-            <div class="session-wrapper">
-                <div class="session"><div class="info-text bg-secondary text-light px-2 rounded-pill">{% trans 'News And Events' %}</div></div>
-            </div>
             <div class="col-12 class-item">
+                <span class="bg-secondary text-light small px-2 rounded-pill">{% trans 'News And Events' %}</span>
                 <p><b>{% trans 'Date:' %} </b> {{ object.updated_date|timesince }} ago</p>
-                <h4><a href="{{ object.get_absolute_url }}"><b>{{ object.title }}</b></a></h4>
+                <h5><a href="{{ object.get_absolute_url }}"><b>{{ object.title }}</b></a></h5>
                 <p>{{ object.summary }}</p>
             </div><hr>
 
         {% elif klass == "Quiz" %}
-            <div class="session-wrapper">
-                <div class="session"><div class="info-text bg-secondary text-light px-2 rounded-pill">{% trans 'Quiz' %}</div></div>
-            </div>
             <div class="col-12 class-item">
+                <span class="bg-secondary text-light small px-2 rounded-pill">{% trans 'Quiz' %}</span>
                 <p>{{ object.category }} {% trans 'quiz' %},  <b>{% trans 'Course:' %}</b> {{ object.course }}</p>
-                <h4><a href="{{ object.get_absolute_url }}"><b>{{ object.title }}</b></a></h4>
+                <h5><a href="{{ object.get_absolute_url }}"><b>{{ object.title }}</b></a></h5>
                 <p>{{ object.description }}</p>
             </div><hr>
 
         {% else %}
-            <div class="session-wrapper">
-                <div class="session"><div class="info-text bg-secondary text-light px-2 rounded-pill">{% trans 'Program' %}</div></div>
-            </div>
             <div class="col-12 col-lg-8 offset-lg-4">
+                <span class="bg-secondary text-light small px-2 rounded-pill">{% trans 'Program' %}</span>
                 <a href="{{ object.get_absolute_url }}" class="class-item d-flex">{{ object }} | {{ object|class_name }}</a>
             </div><hr>
             <div class="col-12 class-item">
-                <h4><a href="{{ object.get_absolute_url }}">{{ object }} | <b>{{ object|class_name }}</b></a></h4>
+                <h5><a href="{{ object.get_absolute_url }}">{{ object }} | <b>{{ object|class_name }}</b></a></h5>
                 <p>{{ object.description }}</p>
             </div><hr>
         {% endif %}
