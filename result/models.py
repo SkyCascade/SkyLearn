@@ -114,11 +114,11 @@ class TakenCourse(models.Model):
     def get_total(self):
         return sum(
             [
-                self.assignment,
-                self.mid_exam,
-                self.quiz,
-                self.attendance,
-                self.final_exam,
+                Decimal(self.assignment),
+                Decimal(self.mid_exam),
+                Decimal(self.quiz),
+                Decimal(self.attendance),
+                Decimal(self.final_exam),
             ]
         )
 

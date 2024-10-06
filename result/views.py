@@ -149,25 +149,18 @@ def add_score_for(request, id):
             obj.attendance = attendance  # set current student attendance score
             obj.final_exam = final_exam  # set current student final_exam score
 
-            obj.total = obj.get_total(
-                assignment=assignment,
-                mid_exam=mid_exam,
-                quiz=quiz,
-                attendance=attendance,
-                final_exam=final_exam,
-            )
-            obj.grade = obj.get_grade(total=obj.total)
+            obj.total = obj.get_total()
+            obj.grade = obj.get_grade()
 
             # obj.total = obj.get_total(assignment, mid_exam, quiz, attendance, final_exam)
             # obj.grade = obj.get_grade(assignment, mid_exam, quiz, attendance, final_exam)
 
-            obj.point = obj.get_point(grade=obj.grade)
-
-            obj.comment = obj.get_comment(grade=obj.grade)
+            obj.point = obj.get_point()
+            obj.comment = obj.get_comment()
             # obj.carry_over(obj.grade)
             # obj.is_repeating()
             obj.save()
-            gpa = obj.calculate_gpa(total_credit_in_semester)
+            gpa = obj.calculate_gpa()
             cgpa = obj.calculate_cgpa()
 
             try:
