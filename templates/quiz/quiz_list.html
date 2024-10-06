@@ -5,7 +5,6 @@
 {% load static %}
 
 {% block content %}
-<style>.bg-light-warning{background-color: rgb(252, 217, 111) !important;}</style>
 
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
     <ol class="breadcrumb">
@@ -66,10 +65,10 @@
                             <button class="btn btn-sm p-0 ms-2" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v m-0"></i></button>
                             <div class="dropdown-menu" aria-labelledby="dropdown01">
                                 <div class="dropdown-item">
-                                    <a href="{% url 'quiz_update' slug=course.slug pk=quiz.id %}" class="update"><i class="fas fa-pencil-alt"></i>{% trans 'Edit' %}</a>
+                                    <a href="{% url 'quiz_update' slug=course.slug pk=quiz.id %}" class="update"><i class="unstyled me-2 fas fa-pencil-alt"></i>{% trans 'Edit' %}</a>
                                 </div>
                                 <div class="dropdown-item">
-                                    <a href="{% url 'quiz_delete' slug=course.slug pk=quiz.id %}" class="delete"><i class="fas fa-trash-alt"></i>{% trans 'Delete' %}</a>
+                                    <a href="{% url 'quiz_delete' slug=course.slug pk=quiz.id %}" class="delete"><i class="unstyled me-2 fas fa-trash-alt"></i>{% trans 'Delete' %}</a>
                                 </div>
                             </div>
                         </div>
@@ -97,6 +96,6 @@
         document.getElementById('progress-card').style.display = 'none';
         document.getElementById('progress-main').style.display = 'block';
         clearInterval(timer)
-    }, 8000);           
+    }, 4000);           
 </script>
 {% endblock js %}

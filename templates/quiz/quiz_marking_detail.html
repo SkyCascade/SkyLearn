@@ -59,7 +59,7 @@
 	  <td>
 		<form action="" method="POST">{% csrf_token %}
 		  <input type="hidden" name="qid" value="{{ question.id }}">
-		  <button type="submit" class="btn btn-warning">{% trans "Toggle whether correct" %}</button>
+		  <button type="submit" class="btn btn-sm btn-secondary">{% trans "Toggle whether correct" %}</button>
 		</form>
 	  </td>
 	</tr>

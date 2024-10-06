@@ -1,7 +1,4 @@
 from django.db import models
-from django.urls import reverse
-from django.core.validators import FileExtensionValidator
-from django.contrib.auth.models import AbstractUser
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
@@ -64,7 +61,7 @@ class NewsAndEvents(models.Model):
     objects = NewsAndEventsManager()
 
     def __str__(self):
-        return self.title
+        return f"{self.title}"
 
 
 class Session(models.Model):
@@ -73,7 +70,7 @@ class Session(models.Model):
     next_session_begins = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return self.session
+        return f"{self.session}"
 
 
 class Semester(models.Model):
@@ -85,7 +82,7 @@ class Semester(models.Model):
     next_semester_begins = models.DateField(null=True, blank=True)
 
     def __str__(self):
-        return self.semester
+        return f"{self.semester}"
 
 
 class ActivityLog(models.Model):

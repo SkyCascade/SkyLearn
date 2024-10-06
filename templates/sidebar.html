@@ -1,13 +1,6 @@
 {% load static %}
 {% load i18n %}
 
-<style>
-	.top-side {
-		background-size: cover;
-		background-position: top center;
-	}
-</style>
-
 <div id="side-nav">
 	<div class="main-menu">
 		<div class="top-side text-center py-4" style="background-image: url({% static 'img/dotted.jpg' %});">
@@ -115,7 +108,7 @@
 			</li>
 			{% endif %}
 			<br />
-			<p class="ml-3">&RightArrow; Others</p>
+			<p class="ms-3 text-secondary">&RightArrow; Others</p>
 			<li class="{% if request.path == ep %}active{% endif %}">
 				<a href="{% url 'edit_profile' %}"><i class="fas fa-cogs"></i>{% trans 'Account Setting' %}</a>
 			</li>

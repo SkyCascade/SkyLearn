@@ -37,7 +37,7 @@ urlpatterns = [
     path("", include("django.contrib.auth.urls")),
     path("admin_panel/", admin_panel, name="admin_panel"),
     path("profile/", profile, name="profile"),
-    path("profile/<int:id>/detail/", profile_single, name="profile_single"),
+    path("profile/<int:user_id>/detail/", profile_single, name="profile_single"),
     path("setting/", profile_update, name="edit_profile"),
     path("change_password/", change_password, name="change_password"),
     path("lecturers/", LecturerFilterView.as_view(), name="lecturer_list"),

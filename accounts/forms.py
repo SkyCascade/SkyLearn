@@ -44,6 +44,15 @@ class StaffAddForm(UserCreationForm):
         label="Last Name",
     )
 
+    gender = forms.CharField(
+        widget=forms.Select(
+            choices=GENDERS,
+            attrs={
+                "class": "browser-default custom-select form-control",
+            },
+        ),
+    )
+
     address = forms.CharField(
         max_length=30,
         widget=forms.TextInput(

@@ -28,7 +28,7 @@
 {% endif %}
 
 <div class="container">
-    <div class="info-text bg-orange mb-3">{{ quizQuestions }} {% trans 'question added' %}</div>
+    <div class="mb-3 bg-secondary text-light py-1 px-3">{{ quiz_questions_count }} {% trans 'question added' %}</div>
 
     <form action="#" method="POST">{% csrf_token %}
         {% if form.errors %}<p class="alert alert-danger">{% trans 'Correct the error(s) below.' %}</p>{% endif %}
@@ -52,7 +52,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">{{ fs.correct }} <small class="ms-1">{% trans 'Correct' %}</small></span>
                         </div>
-                        {{ fs.choice }}
+                        {{ fs.choice_text }}
                         <div class="input-group-prepend">
                             <span class="input-group-text">{{ fs.DELETE }} <small class="ms-1">{% trans 'Delete' %}</small></span>
                         </div>

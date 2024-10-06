@@ -5,30 +5,6 @@
 
 {% block content %}
 
-<style>
-    .color-indicator {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 2px;
-    }
-
-    .bg-purple {
-        background-color: #6f42c1;
-    }
-
-    .card-header-ne {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .card-header-ne .title {
-        vertical-align: middle;
-    }
-</style>
-
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item active" aria-current="page">{% trans 'Home' %}</li>
@@ -73,9 +49,9 @@
                         </button>
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="{% url 'edit_post' pk=item.id %}"><i
-                                    class="fas fa-pencil-alt"></i>{% trans 'Edit' %}</a>
+                                    class="unstyled me-2 fas fa-pencil-alt"></i>{% trans 'Edit' %}</a>
                             <a class="dropdown-item" href="{% url 'delete_post' pk=item.id %}"><i
-                                    class="fas fa-trash-alt"></i>{% trans 'Delete' %}</a>
+                                    class="unstyled me-2 fas fa-trash-alt"></i>{% trans 'Delete' %}</a>
                         </div>
                     </div>
                     {% endif %}

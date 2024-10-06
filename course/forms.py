@@ -51,7 +51,6 @@ class CourseAllocationForm(forms.ModelForm):
         fields = ["lecturer", "courses"]
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop("user")
         super(CourseAllocationForm, self).__init__(*args, **kwargs)
         self.fields["lecturer"].queryset = User.objects.filter(is_lecturer=True)
 

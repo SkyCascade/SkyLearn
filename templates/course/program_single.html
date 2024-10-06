@@ -79,10 +79,10 @@
                             </button>
                             <div class="dropdown-menu position-fixed">
                                 <a class="dropdown-item" href="{% url 'edit_course' slug=course.slug %}">
-                                    <i class="fas fa-pencil-alt"></i> {% trans 'Edit' %}
+                                    <i class="unstyled me-2 fas fa-pencil-alt"></i> {% trans 'Edit' %}
                                 </a>
                                 <a class="dropdown-item" href="{% url 'delete_course' slug=course.slug %}">
-                                    <i class="fas fa-trash-alt"></i> {% trans 'Delete' %}
+                                    <i class="unstyled me-2 fas fa-trash-alt"></i> {% trans 'Delete' %}
                                 </a>
                             </div>
                         </div>
@@ -95,7 +95,7 @@
                   <span class="text-danger">
                     {% trans 'No course for this progrm.' %}
                     {% if request.user.is_superuser %}
-                    <a href="{% url 'course_add' pk=program.pk %}">
+                    <a href="{% url 'course_add' pk=program.pk %}" class="text-primary">
                     <i class="primary" style="font-size: 22px;">
                         {% trans 'Add one now.' %}
                     </i>

@@ -16,35 +16,24 @@
 <div class="title-1"><i class="fas fa-user-tie"></i>{% trans 'Admin Panel' %}</div>
 <br>
 <br>
-{% if messages %}
-    {% for message in messages %}
-        {% if message.tags == 'error' %}
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle"></i>{{ message }}
-            </div>
-        {% else %}
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>{{ message }}
-            </div>
-        {% endif %}
-    {% endfor %}
-{% endif %}
+
+{% include 'snippets/messages.html' %}
 
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-6">
             <div class="border-bottom">
-                {% trans 'Manage' %}<a class="link" href="{% url 'lecturer_list' %}">{% trans 'Lecturers' %} &raquo;</a>
+                {% trans 'Manage' %}<a class="link" href="{% url 'lecturer_list' %}"> {% trans 'Lecturers' %} &raquo;</a>
                 <p class="text-muted">CRUD (Create, Retrieve, Update &amp; Delete) lecturers</p>
             </div>
 
             <div class="border-bottom mt-3">
-                {% trans 'Manage' %}<a class="link" href="{% url 'student_list' %}">{% trans 'Students' %} &raquo;</a>
+                {% trans 'Manage' %}<a class="link" href="{% url 'student_list' %}"> {% trans 'Students' %} &raquo;</a>
             <p class="text-muted">CRUD (Create, Retrieve, Update &amp; Delete) {% trans 'students' %}</p>
             </div>
 
             <div class="border-bottom mt-3">
-                {% trans 'Manage' %}<a class="link" href="{% url 'session_list' %}">{% trans 'Session' %} &raquo;</a>
+                {% trans 'Manage' %}<a class="link" href="{% url 'session_list' %}"> {% trans 'Session' %} &raquo;</a>
             <p class="text-muted">CRUD (Create, Retrieve, Update &amp; Delete) {% trans 'sessions' %}</p>
             </div>
 

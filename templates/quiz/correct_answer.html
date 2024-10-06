@@ -1,19 +1,12 @@
 {% load i18n %}
 {% if previous.answers %}
-
-  {% if user_was_incorrect %}
-    <div class="alert alert-error">
-  	  <strong>{% trans "You answered the above question incorrectly" %}</strong>
-    </div>
-  {% endif %}
-
   <table class="table table-striped table-bordered">
     <tbody>
   	  {% for answer in previous.answers %}
         {% if answer.correct %}
   	    <tr class="success">
   		  <td>{{ answer }}</td>
-  		  <td><strong>{% trans "This is the correct answer" %}</strong></td>
+  		  <td class="text-success"><strong>{% trans "This is the correct answer" %}</strong></td>
 		</tr>
         {% else %}
   		<tr>
@@ -30,4 +23,10 @@
   	{% endfor %}
     </tbody>
   </table>
+
+  {% if user_was_incorrect %}
+    <div class="text-danger">
+  	  <strong>{% trans "You answered the above question incorrectly" %}</strong>
+    </div>
+  {% endif %}
 {% endif %}

@@ -63,7 +63,7 @@
                 {% if courses %}
                 <ul>
                     {% for course in courses %}
-                    <li><a href="{{ course.get_absolute_url }}">{{ course }}</a></li>
+                    <li><a href="{{ course.get_absolute_url }}" class="text-primary">{{ course }}</a></li>
                     {% endfor %}
                 </ul>
                 {% else %}
@@ -72,7 +72,7 @@
                 <hr>
                 {% endif %}
     
-                <p class="fw-bold"><i class="fas fa-user"></i>{% trans 'Personal Info' %}</p>
+                <p class="fw-bold"><i class="me-2 fas fa-user"></i>{% trans 'Personal Info' %}</p>
                 <div class="dashboard-description">
                     <p><strong>{% trans 'First Name:' %}</strong> {{ user.first_name|title }}</p>
                     <p><strong>{% trans 'Last Name:' %}</strong> {{ user.last_name|title }}</p>
@@ -80,7 +80,7 @@
                 </div>
                 {% if user.is_student %}
                 <hr>
-                <p class="fw-bold"><i class="fas fa-graduation-cap"></i>{% trans 'Applicant Info' %}</p>
+                <p class="fw-bold"><i class="me-2 fas fa-graduation-cap"></i>{% trans 'Applicant Info' %}</p>
                 <div class="dashboard-description">
                     <p><strong>{% trans 'School:' %} </strong>{% trans 'Hawas Preparatory School' %}</p>
                     <p><strong>{% trans 'Level:' %} </strong>{{ level.level }}</p>
@@ -88,7 +88,7 @@
                 {% endif %}
     
                 <hr>
-                <p class="fw-bold"><i class="fas fa-phone-square-alt"></i>{% trans 'Contact Info' %}</p>
+                <p class="fw-bold"><i class="me-2 fas fa-phone-square-alt"></i>{% trans 'Contact Info' %}</p>
                 <div class="dashboard-description">
                     <p><strong>{% trans 'Email:' %}</strong> {{ user.email }}</p>
                     <p><strong>{% trans 'Tel No.:' %}</strong> {{ user.phone }}</p>
@@ -96,7 +96,7 @@
                 </div>
     
                 <hr>
-                <p class="fw-bold"><i class="fa fa-calendar-day"></i>{% trans 'Important Dates' %}</p>
+                <p class="fw-bold"><i class="me-2 fa fa-calendar-day"></i>{% trans 'Important Dates' %}</p>
                 <div class="dashboard-description">
                     <p><strong>{% trans 'Last login:' %}</strong> {{ user.last_login }}</p>
                     {% if current_semester and current_session %}

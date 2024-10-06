@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 from decouple import config
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -104,9 +105,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-ASGI_APPLICATION = "config.asgi.application"
-
-
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
@@ -142,7 +140,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
-gettext = lambda s: s
+
+def gettext(s):
+    return s
+
 
 LANGUAGES = (
     ("en", gettext("English")),
@@ -251,3 +252,32 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 STUDENT_ID_PREFIX = config("STUDENT_ID_PREFIX", "ugr")
 LECTURER_ID_PREFIX = config("LECTURER_ID_PREFIX", "lec")
+
+
+# Constants
+YEARS = (
+    (1, "1"),
+    (2, "2"),
+    (3, "3"),
+    (4, "4"),
+    (5, "5"),
+    (6, "6"),
+)
+
+BACHELOR_DEGREE = "Bachelor"
+MASTER_DEGREE = "Master"
+
+LEVEL_CHOICES = (
+    (BACHELOR_DEGREE, _("Bachelor Degree")),
+    (MASTER_DEGREE, _("Master Degree")),
+)
+
+FIRST = "First"
+SECOND = "Second"
+THIRD = "Third"
+
+SEMESTER_CHOICES = (
+    (FIRST, _("First")),
+    (SECOND, _("Second")),
+    (THIRD, _("Third")),
+)

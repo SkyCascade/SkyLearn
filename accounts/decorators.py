@@ -1,5 +1,3 @@
-from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import redirect
 
 
@@ -21,9 +19,8 @@ def admin_required(
         if test_func(request.user):
             # Call the original function if the user passes the test
             return function(request, *args, **kwargs) if function else None
-        else:
-            # Redirect to the specified URL if the user fails the test
-            return redirect(redirect_to)
+        # Redirect to the specified URL if the user fails the test
+        return redirect(redirect_to)
 
     return wrapper if function else test_func
 
@@ -46,9 +43,8 @@ def lecturer_required(
         if test_func(request.user):
             # Call the original function if the user passes the test
             return function(request, *args, **kwargs) if function else None
-        else:
-            # Redirect to the specified URL if the user fails the test
-            return redirect(redirect_to)
+        # Redirect to the specified URL if the user fails the test
+        return redirect(redirect_to)
 
     return wrapper if function else test_func
 
@@ -71,8 +67,7 @@ def student_required(
         if test_func(request.user):
             # Call the original function if the user passes the test
             return function(request, *args, **kwargs) if function else None
-        else:
-            # Redirect to the specified URL if the user fails the test
-            return redirect(redirect_to)
+        # Redirect to the specified URL if the user fails the test
+        return redirect(redirect_to)
 
     return wrapper if function else test_func
