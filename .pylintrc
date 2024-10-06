@@ -663,4 +663,4 @@ redefining-builtins-modules=six.moves,past.builtins,future.builtins,builtins,io
 
 # Ignore migrations file
 [MASTER]
-ignore=migrations
+ignore=migrations,tests.py,tests,apps.py

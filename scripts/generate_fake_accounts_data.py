@@ -16,10 +16,11 @@ from course.models import Program
 
 fake = Faker()
 
+
 class UserFactory(DjangoModelFactory):
     """
     Factory for creating User instances with optional flags.
-    
+
     Attributes:
         username (str): The generated username.
         first_name (str): The generated first name.
@@ -33,7 +34,7 @@ class UserFactory(DjangoModelFactory):
         is_parent (bool): Flag indicating if the user is a parent.
         is_dep_head (bool): Flag indicating if the user is a department head.
     """
-    
+
     class Meta:
         model = User
 
@@ -53,7 +54,7 @@ class UserFactory(DjangoModelFactory):
     def _create(cls, model_class: type, *args, **kwargs) -> User:
         """
         Create a User instance with optional flags.
-        
+
         Args:
             model_class (type): The class of the model to create.
 
@@ -70,6 +71,7 @@ class UserFactory(DjangoModelFactory):
 
         user.save()
         return user
+
 
 class ProgramFactory(DjangoModelFactory):
     """
@@ -90,20 +92,23 @@ class ProgramFactory(DjangoModelFactory):
     def _create(cls, model_class: type, *args, **kwargs) -> Program:
         """
         Create a Program instance using get_or_create to avoid duplicates.
-        
+
         Args:
             model_class (type): The class of the model to create.
 
         Returns:
             Program: The created Program instance.
         """
-        program, created = Program.objects.get_or_create(title=kwargs.get("title"), defaults=kwargs)
+        program, created = Program.objects.get_or_create(
+            title=kwargs.get("title"), defaults=kwargs
+        )
         return program
+
 
 class StudentFactory(DjangoModelFactory):
     """
     Factory for creating Student instances with associated User and Program.
-    
+
     Attributes:
         student (User): The associated User instance.
         level (str): The level of the student.
@@ -117,10 +122,11 @@ class StudentFactory(DjangoModelFactory):
     level: str = Iterator([choice[0] for choice in LEVEL])
     program: Program = SubFactory(ProgramFactory)
 
+
 class ParentFactory(DjangoModelFactory):
     """
     Factory for creating Parent instances with associated User, Student, and Program.
-    
+
     Attributes:
         user (User): The associated User instance.
         student (Student): The associated Student instance.
@@ -143,7 +149,9 @@ class ParentFactory(DjangoModelFactory):
     relation_ship: str = Iterator([choice[0] for choice in RELATION_SHIP])
 
 
-def generate_fake_accounts_data(num_programs: int, num_students: int, num_parents: int) -> None:
+def generate_fake_accounts_data(
+    num_programs: int, num_students: int, num_parents: int
+) -> None:
     """
     Generate fake data for Programs, Students, Parents, and DepartmentHeads.
 
@@ -162,4 +170,3 @@ def generate_fake_accounts_data(num_programs: int, num_students: int, num_parent
 
 
 generate_fake_accounts_data(10, 10, 10)
-

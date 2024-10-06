@@ -3,7 +3,15 @@ from factory.django import DjangoModelFactory
 from factory import SubFactory, LazyAttribute, Iterator
 from faker import Faker
 
-from course.models import Program, Course, CourseAllocation,Upload, UploadVideo,CourseOffer, SEMESTER
+from course.models import (
+    Program,
+    Course,
+    CourseAllocation,
+    Upload,
+    UploadVideo,
+    CourseOffer,
+    SEMESTER,
+)
 from accounts.models import User, DepartmentHead
 from core.models import Session
 
@@ -11,6 +19,7 @@ from .generate_fake_accounts_data import UserFactory, ProgramFactory
 from .generate_fake_core_data import SessionFactory
 
 fake = Faker()
+
 
 class DepartmentHeadFactory(DjangoModelFactory):
     class Meta:
@@ -34,6 +43,7 @@ class ProgramFactory(DjangoModelFactory):
 
     title: str = LazyAttribute(lambda x: fake.sentence(nb_words=3))
     summary: str = LazyAttribute(lambda x: fake.paragraph())
+
 
 class CourseFactory(DjangoModelFactory):
     """
@@ -66,6 +76,7 @@ class CourseFactory(DjangoModelFactory):
     semester: str = Iterator([choice[0] for choice in SEMESTER])
     is_elective: bool = LazyAttribute(lambda x: fake.boolean())
 
+
 class CourseAllocationFactory(DjangoModelFactory):
     """
     Factory for creating CourseAllocation instances.
@@ -80,6 +91,7 @@ class CourseAllocationFactory(DjangoModelFactory):
 
     lecturer: Type[User] = SubFactory(UserFactory, is_lecturer=True)
     session: Type[Session] = SubFactory(SessionFactory)
+
 
 class UploadFactory(DjangoModelFactory):
     """
@@ -101,6 +113,7 @@ class UploadFactory(DjangoModelFactory):
     file: str = LazyAttribute(lambda x: fake.file_path(extension="pdf"))
     updated_date = fake.date_time_this_year()
     upload_time = fake.date_time_this_year()
+
 
 class UploadVideoFactory(DjangoModelFactory):
     """
@@ -125,6 +138,7 @@ class UploadVideoFactory(DjangoModelFactory):
     summary: str = LazyAttribute(lambda x: fake.paragraph())
     timestamp = fake.date_time_this_year()
 
+
 class CourseOfferFactory(DjangoModelFactory):
     """
     Factory for creating CourseOffer instances.
@@ -136,10 +150,17 @@ class CourseOfferFactory(DjangoModelFactory):
     class Meta:
         model = CourseOffer
 
-    dep_head = SubFactory(DepartmentHeadFactory) 
+    dep_head = SubFactory(DepartmentHeadFactory)
 
 
-def generate_fake_course_data(num_programs: int, num_courses: int, num_course_allocations: int, num_uploads: int, num_upload_videos: int, num_course_offers: int) -> None:
+def generate_fake_course_data(
+    num_programs: int,
+    num_courses: int,
+    num_course_allocations: int,
+    num_uploads: int,
+    num_upload_videos: int,
+    num_course_offers: int,
+) -> None:
     """Generate fake data using various factories.
 
     Args:
@@ -173,7 +194,6 @@ def generate_fake_course_data(num_programs: int, num_courses: int, num_course_al
     # Generate fake course offers
     course_offers = CourseOfferFactory.create_batch(num_course_offers)
     print(f"Created {len(course_offers)} course offers.")
-
 
 
 generate_fake_course_data(10, 10, 10, 10, 10, 10)

@@ -14,6 +14,7 @@ django.setup()
 
 fake = Faker()
 
+
 class NewsAndEventsFactory(DjangoModelFactory):
     """
     Factory for creating NewsAndEvents instances.
@@ -35,6 +36,7 @@ class NewsAndEventsFactory(DjangoModelFactory):
     updated_date: timezone.datetime = fake.date_time_this_year()
     upload_time: timezone.datetime = fake.date_time_this_year()
 
+
 class SessionFactory(DjangoModelFactory):
     """
     Factory for creating Session instances.
@@ -51,7 +53,7 @@ class SessionFactory(DjangoModelFactory):
     session: str = LazyAttribute(lambda x: fake.sentence(nb_words=2))
     is_current_session: bool = fake.boolean(chance_of_getting_true=50)
     next_session_begins = LazyAttribute(lambda x: fake.future_datetime())
-    
+
 
 class SemesterFactory(DjangoModelFactory):
     """
@@ -72,6 +74,7 @@ class SemesterFactory(DjangoModelFactory):
     session: Session = SubFactory(SessionFactory)
     next_semester_begins = LazyAttribute(lambda x: fake.future_datetime())
 
+
 class ActivityLogFactory(DjangoModelFactory):
     """
     Factory for creating ActivityLog instances.
@@ -86,7 +89,12 @@ class ActivityLogFactory(DjangoModelFactory):
     message: str = LazyAttribute(lambda x: fake.text())
 
 
-def generate_fake_core_data(num_news_and_events: int, num_sessions: int, num_semesters: int, num_activity_logs: int) -> None:
+def generate_fake_core_data(
+    num_news_and_events: int,
+    num_sessions: int,
+    num_semesters: int,
+    num_activity_logs: int,
+) -> None:
     """
     Generate fake data for core models: NewsAndEvents, Session, Semester, and ActivityLog.
 
@@ -97,7 +105,9 @@ def generate_fake_core_data(num_news_and_events: int, num_sessions: int, num_sem
         num_activity_logs (int): Number of ActivityLog instances to generate.
     """
     # Generate fake NewsAndEvents instances
-    news_and_events: List[NewsAndEvents] = NewsAndEventsFactory.create_batch(num_news_and_events)
+    news_and_events: List[NewsAndEvents] = NewsAndEventsFactory.create_batch(
+        num_news_and_events
+    )
     print(f"Generated {num_news_and_events} NewsAndEvents instances.")
 
     # Generate fake Session instances
@@ -109,6 +119,7 @@ def generate_fake_core_data(num_news_and_events: int, num_sessions: int, num_sem
     print(f"Generated {num_semesters} Semester instances.")
 
     # Generate fake ActivityLog instances
-    activity_logs: List[ActivityLog] = ActivityLogFactory.create_batch(num_activity_logs)
+    activity_logs: List[ActivityLog] = ActivityLogFactory.create_batch(
+        num_activity_logs
+    )
     print(f"Generated {num_activity_logs} ActivityLog instances.")
-

@@ -5,7 +5,6 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
-from django.utils.text import slugify
 
 
 def send_email(user, subject, msg):
@@ -50,11 +49,9 @@ def unique_slug_generator(instance, new_slug=None):
     else:
         slug = slugify(instance.title)
 
-    Klass = instance.__class__
-    qs_exists = Klass.objects.filter(slug=slug).exists()
+    klass = instance.__class__
+    qs_exists = klass.objects.filter(slug=slug).exists()
     if qs_exists:
-        new_slug = "{slug}-{randstr}".format(
-            slug=slug, randstr=random_string_generator(size=4)
-        )
+        new_slug = f"{slug}-{random_string_generator(size=4)}"
         return unique_slug_generator(instance, new_slug=new_slug)
     return slug
