@@ -182,30 +182,17 @@
 
 {% if not no_course_is_registered %}
 
-<a class="btn btn-warning" href="{% url 'course_registration_form' %}" target="_blank" title="{% trans 'Print Registration Form' %}">
-    <i class="fas fa-print"></i> {% trans 'Print Registerd Courses' %}
-</a>
-
 <div class="col-md-12 p-0 bg-white">
-    <p class="form-title"><b>{% trans 'Course Drop' %}</b>
-    <div class="level-wrapper">
-        <div class="info-text">{{ student.level }}</div>
-    </div>
-    </p>
+    <p class="form-title"><b>{% trans 'Course Drop' %}</b></p>
     <div class="container">
+        <p class="fw-bold">{{ student.level }}</p>
         <form action="{% url 'course_drop' %}" method="POST">
             {% csrf_token %}
             <div class="d-flex justify-content-between mb-4">
-                <button title="{% trans 'Save Score' %}" type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary">
                     <i class="fa fa-times"></i> {% trans 'Drop Selected' %}
                 </button>
             </div>
-
-            <!-- <div>
-            <a target="_blank" href="{% url 'course_registration_form' %}" class="btn btn-outline-white btn-rounded btn-sm px-2">
-                <i class="fa fa-file-pdf-o" aria-hidden="true"></i> Print Registration Form
-              </a>
-            </div> -->
 
             <div class="table-responsive p-0 px-2 mt-2">
                 <div class="table-shadow">
@@ -225,7 +212,7 @@
                             {% for course in registered_courses %}
                             <tr>
                                 <th scope="row">
-                                    <input name="{{ course.pk }}" value="{{ course.courseUnit }}" type="checkbox">
+                                    <input name="course_ids" value="{{ course.id }}" type="checkbox">
                                 </th>
                                 <td>{{ course.code }}</td>
                                 <td>{{ course.title }}</td>
@@ -269,6 +256,10 @@
         </form>
     </div>
 </div>
+
+<a class="btn btn-sm btn-secondary mt-3" href="{% url 'course_registration_form' %}" target="_blank" title="{% trans 'Print Registration Form' %}">
+    <i class="fas fa-print"></i> {% trans 'Print Registerd Courses' %}
+</a>
 
 {% endif %}
 {% endif %}

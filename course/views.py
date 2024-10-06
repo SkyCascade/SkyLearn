@@ -472,6 +472,7 @@ def course_drop(request):
     if request.method == "POST":
         student = get_object_or_404(Student, student__pk=request.user.id)
         course_ids = request.POST.getlist("course_ids")
+        print("course_ids", course_ids)
         for course_id in course_ids:
             course = get_object_or_404(Course, pk=course_id)
             TakenCourse.objects.filter(student=student, course=course).delete()
