@@ -1,6 +1,12 @@
 # TODO
 
+- **School calendar**
+  - School calendar should be implemented displayed on the home page along with news and events
+  - Managed by admin/superadmin
+- **News and events**
+  - News and events should be associated with the calendar
 - **Add and Drop**:
+  - Department head
   - The add and drop page should only include courses offered by the department head.
   - Add and drop date should be restricted by the school calendar.
 - **Payment integration**:
