@@ -21,10 +21,6 @@ class ChoiceInline(admin.TabularInline):
 
 
 class QuizAdminForm(TranslationModelForm):
-    class Meta:
-        model = Quiz
-        exclude = []
-
     questions = forms.ModelMultipleChoiceField(
         queryset=Question.objects.all().select_subclasses(),
         required=False,
@@ -32,12 +28,16 @@ class QuizAdminForm(TranslationModelForm):
         widget=FilteredSelectMultiple(verbose_name=_("Questions"), is_stacked=False),
     )
 
+    class Meta:
+        model = Quiz
+        fields = ["title_en"]
+
     def __init__(self, *args, **kwargs):
         super(QuizAdminForm, self).__init__(*args, **kwargs)
         if self.instance.pk:
-            self.fields[
-                "questions"
-            ].initial = self.instance.question_set.all().select_subclasses()
+            self.fields["questions"].initial = (
+                self.instance.question_set.all().select_subclasses()
+            )
 
     def save(self, commit=True):
         quiz = super(QuizAdminForm, self).save(commit=False)
@@ -48,20 +48,26 @@ class QuizAdminForm(TranslationModelForm):
 
 
 class QuizAdmin(TranslationAdmin):
-    form = QuizAdminForm
-    fields = ('title', 'description',)
-    list_display = ("title",)
-    # list_filter = ('category',)
-    search_fields = (
-        "description",
-        "category",
-    )
+    pass
+    # form = QuizAdminForm
+    # fields = (
+    #     "title",
+    #     "description",
+    # )
+    # list_display = ("title",)
+    # # list_filter = ('category',)
+    # search_fields = (
+    #     "description",
+    #     "category",
+    # )
 
 
 class MCQuestionAdmin(TranslationAdmin):
     list_display = ("content",)
     # list_filter = ('category',)
-    fieldsets = [(u'figure' 'quiz' 'choice_order', {'fields': ("content","explanation")})]
+    fieldsets = [
+        ("figure" "quiz" "choice_order", {"fields": ("content", "explanation")})
+    ]
 
     search_fields = ("content", "explanation")
     filter_horizontal = ("quiz",)
