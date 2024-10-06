@@ -17,18 +17,19 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
-from reportlab.platypus.tables import Table
+
+# from reportlab.platypus.tables import Table
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 
-from accounts.models import Student
 from core.models import Session, Semester
 from course.models import Course
+from accounts.models import Student
 from accounts.decorators import lecturer_required, student_required
 from .models import TakenCourse, Result
 
 
-cm = 2.54
+CM = 2.54
 
 
 # ########################################################
@@ -130,8 +131,7 @@ def add_score_for(request, id):
             for i in courses:
                 if i == courses.count():
                     break
-                else:
-                    total_credit_in_semester += int(i.credit)
+                total_credit_in_semester += int(i.credit)
             score = data.getlist(
                 ids[s]
             )  # get list of score for current student in the loop
@@ -304,8 +304,8 @@ def result_sheet_pdf_view(request, id):
     doc = SimpleDocTemplate(
         flocation,
         rightMargin=0,
-        leftMargin=6.5 * cm,
-        topMargin=0.3 * cm,
+        leftMargin=6.5 * CM,
+        topMargin=0.3 * CM,
         bottomMargin=0,
     )
     styles = getSampleStyleSheet()
@@ -683,7 +683,7 @@ def course_registration_form(request):
                     "",
                 )
             ]
-            color = colors.black
+            # color = colors.black
             count += 1
             table_body = Table(data, 1 * [1.4 * inch], 1 * [0.3 * inch])
             table_body.setStyle(
@@ -738,14 +738,14 @@ def course_registration_form(request):
 
     logo = settings.STATICFILES_DIRS[0] + "/img/brand.png"
     im_logo = Image(logo, 1 * inch, 1 * inch)
-    im_logo.__setattr__("_offs_x", -218)
-    im_logo.__setattr__("_offs_y", 480)
+    setattr(im_logo, "_offs_x", -218)
+    setattr(im_logo, "_offs_y", 480)
     Story.append(im_logo)
 
     picture = settings.BASE_DIR + request.user.get_picture()
     im = Image(picture, 1.0 * inch, 1.0 * inch)
-    im.__setattr__("_offs_x", 218)
-    im.__setattr__("_offs_y", 550)
+    setattr(im, "_offs_x", 218)
+    setattr(im, "_offs_y", 550)
     Story.append(im)
 
     doc.build(Story)
