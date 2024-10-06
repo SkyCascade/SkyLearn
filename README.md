@@ -1,4 +1,4 @@
-![skylearn101](https://github.com/user-attachments/assets/85459ff0-e3d0-4cd1-9a01-1fc71ce0357b)
+![Group 23](https://github.com/user-attachments/assets/4e84251a-27b0-462b-bd5e-fb0bcadc4694)
 
 ### The world’s most high-end designed, lightweight, and feature-rich learning management system.
 
