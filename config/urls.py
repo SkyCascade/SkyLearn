@@ -26,7 +26,6 @@ urlpatterns += i18n_patterns(
     path("search/", include("search.urls")),
     path("quiz/", include("quiz.urls")),
     path("payments/", include("payments.urls")),
-    path("accounts/api/", include("accounts.api.urls", namespace="accounts-api")),
 )
 
 

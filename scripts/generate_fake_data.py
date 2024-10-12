@@ -2,7 +2,7 @@ from typing import Type
 from factory.django import DjangoModelFactory
 from factory import SubFactory, LazyAttribute, Iterator
 from faker import Faker
-
+from django.conf import settings
 from course.models import (
     Program,
     Course,
@@ -10,7 +10,6 @@ from course.models import (
     Upload,
     UploadVideo,
     CourseOffer,
-    SEMESTER,
 )
 from accounts.models import User, DepartmentHead
 from core.models import Session
@@ -73,7 +72,7 @@ class CourseFactory(DjangoModelFactory):
     program: Type[Program] = SubFactory(ProgramFactory)
     level: str = Iterator(["Beginner", "Intermediate", "Advanced"])
     year: int = LazyAttribute(lambda x: fake.random_int(min=1, max=4))
-    semester: str = Iterator([choice[0] for choice in SEMESTER])
+    semester: str = Iterator([choice[0] for choice in settings.SEMESTER_CHOICES])
     is_elective: bool = LazyAttribute(lambda x: fake.boolean())
 
 
