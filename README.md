@@ -6,6 +6,8 @@
 
 Learning management system using Django web framework. You might want to develop a learning management system (also known as a school/college management system) for a school/college organization, or simply for the purpose of learning the tech stack and enhancing your portfolio. In either case, this project would be a great way to get started. The aim is to create the world's most lightweight yet feature-rich learning management system. However, this is not possible without your support, so please give it a star ⭐️.
 
+_Documentation is under development_
+
 Let's enhance the project by contributing! 👩‍💻👩‍💻
 
 <img width="1440" alt="screenshot" src="https://github.com/user-attachments/assets/08644f49-6ae0-4695-86cc-afe331c6f61a">
@@ -38,8 +40,8 @@ Let's enhance the project by contributing! 👩‍💻👩‍💻
 - Explanation for each question result can be given
 - Pass marks can be set
 - Multiple choice question type
-- True/False question type
-- Essay question type
+- True/False question type............_Coming soon_
+- Essay question type................._Coming soon_
 - Custom message displayed for those that pass or fail a quiz
 - Custom permission (view_sittings) added, allowing users with that permission to view quiz results from users
 - A marking page which lists completed quizzes, can be filtered by quiz or user, and is used to mark essay questions
