@@ -52,7 +52,7 @@
                             <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa fa-ellipsis-vertical"></i>
                             </button>
-                            <ul class="dropdown-menu position-fixed">
+                            <ul class="dropdown-menu">
                               <li><a class="dropdown-item" href="{% url 'edit_program' pk=program.pk %}"><i class="unstyled me-2 fas fa-edit"></i>{% trans 'Update' %}</a></li>
                               <li><a class="dropdown-item text-danger" href="{% url 'program_delete' pk=program.pk %}"><i class="unstyled me-2 fas fa-trash-alt"></i>{% trans 'Delete' %}</a></li>
                             </ul>

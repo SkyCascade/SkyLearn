@@ -1,3 +1,4 @@
+import random
 from typing import Type
 from factory.django import DjangoModelFactory
 from factory import SubFactory, LazyAttribute, Iterator
@@ -152,6 +153,59 @@ class CourseOfferFactory(DjangoModelFactory):
     dep_head = SubFactory(DepartmentHeadFactory)
 
 
+def populate_course_allocation(num_allocations: int) -> None:
+    """
+    Populate the CourseAllocation model with fake data.
+
+    Args:
+        num_allocations (int): The number of CourseAllocation instances to generate.
+    """
+    # Fetch all available courses and sessions
+    courses = list(Course.objects.all())
+    sessions = list(Session.objects.all())
+
+    if not courses:
+        print("No courses found. Please add some courses before running this script.")
+        return
+
+    if not sessions:
+        print("No sessions found. Please add some sessions before running this script.")
+        return
+
+    # Fetch all available users (lecturers)
+    lecturers = list(
+        User.objects.filter(is_lecturer=True)
+    )  # Assuming lecturers are lecturer
+
+    if not lecturers:
+        print(
+            "No lecturers found. Please add some lecturers before running this script."
+        )
+        return
+
+    for _ in range(num_allocations):
+        lecturer = random.choice(lecturers)
+        session = random.choice(sessions)
+
+        # Create a CourseAllocation instance
+        allocation = CourseAllocation.objects.create(
+            lecturer=lecturer,
+            session=session,
+        )
+
+        # Assign random courses to the course allocation
+        random_courses = random.sample(
+            courses, random.randint(1, len(courses))
+        )  # Pick 1 to n random courses
+        allocation.courses.set(random_courses)
+
+        print(
+            f"Created CourseAllocation for lecturer: {lecturer.username} with {len(random_courses)} courses."
+        )
+
+    print(f"Successfully populated {num_allocations} CourseAllocation instances.")
+
+
 def generate_fake_course_data(
     num_programs: int,
     num_courses: int,
@@ -193,6 +247,3 @@ def generate_fake_course_data(
     # Generate fake course offers
     course_offers = CourseOfferFactory.create_batch(num_course_offers)
     print(f"Created {len(course_offers)} course offers.")
-
-
-generate_fake_course_data(10, 10, 10, 10, 10, 10)

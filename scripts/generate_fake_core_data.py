@@ -5,7 +5,7 @@ from typing import List
 from django.utils import timezone
 from faker import Faker
 from factory.django import DjangoModelFactory
-from factory import SubFactory, LazyAttribute, Iterator
+from factory import SubFactory, LazyAttribute, Iterator, LazyFunction
 from core.models import ActivityLog, NewsAndEvents, Session, Semester, SEMESTER, POST
 
 # Set up Django environment
@@ -32,9 +32,11 @@ class NewsAndEventsFactory(DjangoModelFactory):
 
     title: str = LazyAttribute(lambda x: fake.sentence(nb_words=4))
     summary: str = LazyAttribute(lambda x: fake.paragraph(nb_sentences=3))
-    posted_as: str = fake.random_element(elements=[choice[0] for choice in POST])
-    updated_date: timezone.datetime = fake.date_time_this_year()
-    upload_time: timezone.datetime = fake.date_time_this_year()
+    posted_as: str = LazyFunction(
+        lambda: fake.random_element(elements=[choice[0] for choice in POST])
+    )
+    # updated_date: timezone.datetime = fake.date_time_this_year()
+    # upload_time: timezone.datetime = fake.date_time_this_year()
 
 
 class SessionFactory(DjangoModelFactory):
@@ -50,7 +52,7 @@ class SessionFactory(DjangoModelFactory):
     class Meta:
         model = Session
 
-    session: str = LazyAttribute(lambda x: fake.sentence(nb_words=2))
+    session: str = LazyAttribute(lambda x: str(fake.random_int(min=2020, max=2030)))
     is_current_session: bool = fake.boolean(chance_of_getting_true=50)
     next_session_begins = LazyAttribute(lambda x: fake.future_datetime())
 

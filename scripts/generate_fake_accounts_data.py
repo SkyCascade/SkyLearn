@@ -167,6 +167,3 @@ def generate_fake_accounts_data(
     print(f"Created {len(programs)} programs.")
     print(f"Created {len(students)} students.")
     print(f"Created {len(parents)} parents.")
-
-
-generate_fake_accounts_data(10, 10, 10)
