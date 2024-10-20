@@ -1,2 +1,2 @@
-# from .test_decorators import AdminRequiredDecoratorTests
-# __all__ = [""]
+# accounts/tests/__init__.py
+# This ensures that tests is treated as a package.
