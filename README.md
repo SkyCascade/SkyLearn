@@ -40,7 +40,7 @@ Let's enhance the project by contributing! 👩‍💻👩‍💻
 - Explanation for each question result can be given
 - Pass marks can be set
 - Multiple choice question type
-- True/False question type............_Coming soon_
+- True/False question type
 - Essay question type................._Coming soon_
 - Custom message displayed for those that pass or fail a quiz
 - Custom permission (view_sittings) added, allowing users with that permission to view quiz results from users
