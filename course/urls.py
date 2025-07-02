@@ -74,4 +74,6 @@ urlpatterns = [
     path("course/registration/", views.course_registration, name="course_registration"),
     path("course/drop/", views.course_drop, name="course_drop"),
     path("my_courses/", views.user_course_list, name="user_course_list"),
+     # Playlist upload
+    path("course/<slug:slug>/upload_playlist/", views.handle_playlist_upload, name="upload_playlist"),
 ]

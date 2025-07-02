@@ -1,3 +1,4 @@
+import yt_dlp
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -7,6 +8,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView
 from django_filters.views import FilterView
+from .forms import VideoBulkUploadForm
+from django.utils.text import slugify
 
 from accounts.decorators import lecturer_required, student_required
 from accounts.models import Student
@@ -322,17 +325,43 @@ def handle_file_delete(request, slug, file_id):
 @lecturer_required
 def handle_video_upload(request, slug):
     course = get_object_or_404(Course, slug=slug)
+
     if request.method == "POST":
         form = UploadFormVideo(request.POST, request.FILES)
+
         if form.is_valid():
-            video = form.save(commit=False)
-            video.course = course
-            video.save()
-            messages.success(request, f"{video.title} has been uploaded.")
+            video_instance = form.save(commit=False)
+            video_instance.course = course
+
+            # Generate slug from title
+            slugified_title = slugify(video_instance.title)
+
+            # Check for duplicate slug (title)
+            if UploadVideo.objects.filter(slug=slugified_title, course=course).exists():
+                messages.warning(request, "A video with this title already exists.")
+                return redirect("course_detail", slug=slug)
+
+            # Check for duplicate video file (if uploaded)
+            if video_instance.video and UploadVideo.objects.filter(video=video_instance.video.name, course=course).exists():
+                messages.warning(request, "This video file is already uploaded.")
+                return redirect("course_detail", slug=slug)
+
+            # Check for duplicate video URL (if provided)
+            if video_instance.video_url and UploadVideo.objects.filter(video_url=video_instance.video_url, course=course).exists():
+                messages.warning(request, "This video URL already exists.")
+                return redirect("course_detail", slug=slug)
+
+            # Save if all checks pass
+            video_instance.slug = slugified_title
+            video_instance.save()
+            messages.success(request, f"{video_instance.title} has been uploaded.")
             return redirect("course_detail", slug=slug)
+
         messages.error(request, "Correct the error(s) below.")
+
     else:
         form = UploadFormVideo()
+
     return render(
         request,
         "upload/upload_video_form.html",
@@ -502,3 +531,81 @@ def user_course_list(request):
 
     # For other users
     return render(request, "course/user_course_list.html")
+# ==================================================
+# view for playlist upload
+# ==================================================
+def handle_playlist_upload(request, slug):
+    course = get_object_or_404(Course, slug=slug)
+
+    if request.method == "POST":
+        form = VideoBulkUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            playlist_url = form.cleaned_data.get('playlist_url')
+            videos = request.FILES.getlist('videos')
+            imported_count = 0
+
+            # Handle Playlist URL
+            if playlist_url:
+                ydl_opts = {
+                    'quiet': True,
+                    'extract_flat': 'in_playlist',
+                    'skip_download': True,
+                }
+                try:
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info_dict = ydl.extract_info(playlist_url, download=False)
+                        print("INFO_DICT:", info_dict)  # <-- DEBUG
+                        entries = info_dict.get('entries', [])
+
+                        for idx, entry in enumerate(entries, start=1):
+                            video_id = entry.get('id')
+                            if not video_id:
+                                continue
+
+                            embed_url = f'https://www.youtube.com/embed/{video_id}'
+                            title = f"Lecture {idx}"
+                            slugified = slugify(title)
+
+                            if UploadVideo.objects.filter(slug=slugified, course=course).exists():
+                                continue
+
+                            UploadVideo.objects.create(
+                                title=title,
+                                slug=slugified,
+                                course=course,
+                                video_url=embed_url,
+                                summary=f"Imported from playlist: {playlist_url}"
+                            )
+                            imported_count += 1
+
+                except Exception as e:
+                    messages.error(request, f"Error while importing playlist: {str(e)}")
+
+            # Handle Uploaded Files
+            for file in videos:
+                title = file.name.rsplit('.', 1)[0]
+                slugified = slugify(title)
+
+                if UploadVideo.objects.filter(slug=slugified, course=course).exists():
+                    continue
+
+                UploadVideo.objects.create(
+                    title=title,
+                    slug=slugified,
+                    course=course,
+                    video=file,
+                    summary="Uploaded by user"
+                )
+                imported_count += 1
+
+            messages.success(request, f"{imported_count} videos uploaded/imported successfully.")
+            return redirect("course_detail", slug=slug)
+
+    else:
+        form = VideoBulkUploadForm()
+
+    return render(request, "upload/upload_playlist_form.html", {
+        "title": "Upload Playlist or Videos",
+        "form": form,
+        "course": course,
+    })

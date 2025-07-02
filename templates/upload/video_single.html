@@ -19,12 +19,33 @@
 <br><br>
 
 <div class="col-md-10 mx-auto d-block">
-    <div class=""><video src="{{ video.video.url }}" controls ></video></div>
-    <p><i class="fas fa-calendar"></i> {{ video.timestamp|timesince }} {% trans 'ago' %}</p>
-    {% if video.summary %}
-    <p class="text-orange text-center">{{ video.summary }}</p>
+
+    {% if video.video %}
+        <div class="mb-3">
+            <video src="{{ video.video.url }}" controls width="100%" style="border-radius: 10px;"></video>
+        </div>
+    {% elif video.video_url %}
+        <div class="mb-3 text-center">
+            <iframe 
+                src="{{ video.video_url }}" 
+                width="100%" 
+                height="500" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen
+                style="border-radius: 10px;">
+            </iframe>
+        </div>
     {% else %}
-    {% trans 'No video description set.' %}
+        <p class="text-danger text-center">{% trans "No video available." %}</p>
+    {% endif %}
+
+    <p><i class="fas fa-calendar"></i> {{ video.timestamp|timesince }} {% trans 'ago' %}</p>
+
+    {% if video.summary %}
+        <p class="text-orange text-center">{{ video.summary }}</p>
+    {% else %}
+        <p class="text-muted text-center">{% trans 'No video description set.' %}</p>
     {% endif %}
 </div>
 

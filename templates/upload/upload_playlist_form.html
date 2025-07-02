@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+  {{ title }} | {% trans 'Learning management system' %}
+{% endblock title %}
+
+{% block content %}
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'programs' %}">{% trans 'Programs' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'program_detail' course.program.id %}">{{ course.program }}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'course_detail' course.slug %}">{{ course }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{% trans 'Playlist Upload' %}</li>
+  </ol>
+</nav>
+
+<p class="title-1">{% trans 'Upload Playlist or Videos for' %} {{ course }}</p>
+
+{% include 'snippets/messages.html' %}
+
+<div class="row">
+  <div class="col-md-8 mx-auto">
+<div class="card">
+   <div class="card-header text-white text-center" style="background: linear-gradient(to right, #3bb3f3, #324da8); font-weight: normal;">
+    Upload Bulk
+  </div>
+  <div class="card-body">
+    <form id="video-upload-form" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form|crispy }}
+
+      <div class="form-group mt-3">
+        <button class="btn btn-primary" type="submit">{% trans 'Upload' %}</button>
+        <a class="btn btn-danger" href="{% url 'course_detail' course.slug %}" style="float: right;">
+          {% trans 'Cancel' %}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+  </div>
+</div>
+
+<script>
+  const playlistInput = document.getElementById('id_playlist_url');
+  const videosInput = document.getElementById('id_videos');
+
+  function toggleInputs() {
+    if (playlistInput.value.trim() !== "") {
+      videosInput.disabled = true;
+    } else {
+      videosInput.disabled = false;
+    }
+
+    if (videosInput.files.length > 0) {
+      playlistInput.disabled = true;
+    } else {
+      playlistInput.disabled = false;
+    }
+  }
+
+  playlistInput.addEventListener("input", toggleInputs);
+  videosInput.addEventListener("change", toggleInputs);
+
+  window.onload = toggleInputs;
+</script>
+{% endblock %}

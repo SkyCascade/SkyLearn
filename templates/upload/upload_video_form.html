@@ -25,7 +25,7 @@
     <div class="card">
     <p class="form-title">{% trans 'Video Upload Form' %}</p>
     <div class="card-body">
-        <form action="" method="POST" enctype="multipart/form-data">{% csrf_token %}
+        <form id="video-upload-form" action="" method="POST" enctype="multipart/form-data">{% csrf_token %}
             {{ form|crispy }}
             
             <div class="form-group">
@@ -36,5 +36,32 @@
     </div>
 </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const videoInput = document.getElementById("id_video");
+        const urlInput = document.getElementById("id_video_url");
+
+        function toggleFields() {
+            if (videoInput.value) {
+                urlInput.disabled = true;
+            } else {
+                urlInput.disabled = false;
+            }
+
+            if (urlInput.value) {
+                videoInput.disabled = true;
+            } else {
+                videoInput.disabled = false;
+            }
+        }
+
+        videoInput.addEventListener("change", toggleFields);
+        urlInput.addEventListener("input", toggleFields);
+
+        // Run once on load in case of form errors with pre-filled values
+        toggleFields();
+    });
+</script>
 
 {% endblock content %}

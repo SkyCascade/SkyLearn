@@ -99,9 +99,48 @@ class UploadFormVideo(forms.ModelForm):
         fields = (
             "title",
             "video",
+            "video_url",
         )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["title"].widget.attrs.update({"class": "form-control"})
         self.fields["video"].widget.attrs.update({"class": "form-control"})
+        self.fields["video_url"].widget.attrs.update({"class": "form-control", "placeholder": "https://example.com/video"})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        video = cleaned_data.get("video")
+        video_url = cleaned_data.get("video_url")
+
+        if not video and not video_url:
+            raise forms.ValidationError("Please upload a video file or provide a video URL.")
+
+        if video and video_url:
+            raise forms.ValidationError("Please provide either a video file or a video URL, not both.")
+
+        return cleaned_data
+
+class VideoBulkUploadForm(forms.Form):
+    playlist_url = forms.URLField(
+        required=False,
+        label="YouTube Playlist URL"
+    )
+    
+    videos = forms.FileField(
+        widget=forms.ClearableFileInput(attrs={'multiple': True}),
+        required=False,
+        label="Upload Video Files"
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        playlist_url = cleaned_data.get("playlist_url")
+        videos = self.files.getlist("videos")  # Use self.files for uploaded files
+
+        if not playlist_url and not videos:
+            raise forms.ValidationError(
+                "Please provide either a YouTube playlist URL or upload at least one video file."
+            )
+
+        return cleaned_data
