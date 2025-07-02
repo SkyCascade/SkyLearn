@@ -33,6 +33,9 @@
             <a class="btn btn-sm btn-primary" href="{% url 'upload_video' course.slug %}"><i class="fas fa-plus"></i>
                 {% trans 'Upload new video' %}
             </a>
+            <a class="btn btn-sm btn-primary" href="{% url 'upload_playlist' course.slug %}">
+             <i class="fas fa-list"></i> {% trans 'Upload Playlist' %}
+            </a>
             {% endif %}
         </div>
         <div class="ms-auto">

@@ -1,7 +1,7 @@
 pytz==2022.7  # https://github.com/stub42/pytz
 Pillow==9.3.0  # https://github.com/python-pillow/Pillow        
 whitenoise==6.2.0  # https://github.com/evansd/whitenoise
-
+yt_dlp==2025.06.30  # https://github.com/yt-dlp/yt-dlp
 # Django
 # ------------------------------------------------------------------------------
 django==4.0.8  # pyup: < 4.1  # https://www.djangoproject.com/

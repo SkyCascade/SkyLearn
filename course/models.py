@@ -192,17 +192,32 @@ def log_upload_delete(sender, instance, **kwargs):
     )
 
 
+from django.core.validators import FileExtensionValidator
+from django.utils.translation import gettext_lazy as _
+from django.db import models
+from django.urls import reverse
+
 class UploadVideo(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey('Course', on_delete=models.CASCADE)
+
     video = models.FileField(
         upload_to="course_videos/",
         help_text=_("Valid video formats: mp4, mkv, wmv, 3gp, f4v, avi, mp3"),
         validators=[
             FileExtensionValidator(["mp4", "mkv", "wmv", "3gp", "f4v", "avi", "mp3"])
         ],
+        blank=True,  # Make file optional if using URL
+        null=True,
     )
+
+    video_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text=_("Paste external video URL (e.g., YouTube, Vimeo, etc.)")
+    )
+
     summary = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -215,8 +230,10 @@ class UploadVideo(models.Model):
         )
 
     def delete(self, *args, **kwargs):
-        self.video.delete(save=False)
+        if self.video:
+            self.video.delete(save=False)
         super().delete(*args, **kwargs)
+
 
 
 @receiver(pre_save, sender=UploadVideo)
