@@ -1,53 +1,231 @@
-{% load i18n%}
-<div id="top-navbar" class="py-1">
-	<div class="container">
-		<div class="nav-wrapper">
+{% load i18n %}
+<div id="top-navbar" class="bg-white border-b border-gray-200 shadow-sm py-3">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            
+            <!-- Left Section: Toggle Button -->
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleSidebar()" class="p-2 rounded-lg text-gray-600 hover:text-blue-800 hover:bg-blue-50 transition duration-200 lg:hidden">
+                    <i class="fas fa-bars text-lg"></i>
+                </button>
+                
+                <!-- University Logo/Brand -->
+                <div class="hidden md:flex items-center">
+                    <span class="text-blue-800 font-bold text-xl">Salymbekov University</span>
+                </div>
+            </div>
 
-			<div class="toggle-btn" onclick="toggleSidebar()">
-				<i class="fas fa-bars"></i>
-			</div>
+            <!-- Center Section: Search Form -->
+            <div class="flex-1 max-w-2xl mx-4">
+                <form class="relative" action="{% url 'query' %}" method="GET">
+                    <div class="flex shadow-sm rounded-lg overflow-hidden">
+                        <input id="primary-search" 
+                               class="flex-1 px-4 py-3 text-gray-700 placeholder-gray-500 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition duration-200" 
+                               type="text" 
+                               name="q" 
+                               value="{{ request.GET.q }}"
+                               placeholder="{% trans 'Search All... #course, #program, #Quiz, #News, #Events' %}" 
+                               required />
+                        <button class="bg-blue-800 hover:bg-blue-700 text-white px-6 py-3 border border-blue-800 transition duration-200 flex items-center" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-			<form class="form-header" action="{% url 'query' %}" method="GET">
-				<input id="primary-search" class="form-control rounded-end-0" type="text" name="q" value="{{ request.GET.q }}"
-					placeholder="{% trans 'Search All... #course, #program, #Quiz, #News, #Events' %}" required />
-				<button class="btn btn-dark rounded-start-0" type="submit">
-					<i class="fas fa-search"></i>
-				</button>
-			</form>
+            <!-- Right Section: User Dropdown -->
+            <div class="flex items-center space-x-4">
+                <!-- Desktop User Info -->
+                <div class="hidden md:flex items-center space-x-3 text-sm text-gray-600">
+                    <span class="font-medium text-blue-800">{{ request.user.get_full_name|default:request.user.username }}</span>
+                    <span class="text-gray-400">•</span>
+                    <span class="text-gray-500">{% trans 'Last login:' %} {{ request.user.last_login|date }}</span>
+                </div>
 
-			<div class="dropdown">
-				<div class="avatar border border-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-					<img src="{{ request.user.picture.url }}">
-				</div>
-				<div class="dropdown-menu" style="min-width: 14rem !important;">
-					<div class="d-flex flex-column align-items-center">
-						<div class="avatar avatar-md border">
-							<img src="{{ request.user.picture.url }}">
-						</div>
-	
-						<p class="small text-muted text-center mb-0">
-							{% trans 'Last login:' %} {{ request.user.last_login|date }}</p>
-					</div>
-					<hr>
+                <!-- User Avatar Dropdown -->
+                <div class="relative">
+                    <button id="user-dropdown-button" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                        <div class="w-10 h-10 rounded-full border-2 border-blue-800 overflow-hidden shadow-sm">
+                            <img src="{{ request.user.picture.url }}" alt="Profile" class="w-full h-full object-cover">
+                        </div>
+                        <i class="fas fa-chevron-down text-gray-400 text-sm hidden md:block" id="dropdown-chevron"></i>
+                    </button>
 
-					{% if request.user.is_lecturer or request.user.is_student %}
-					<a class="dropdown-item" href="{% url 'user_course_list' %}"><i class="fas fa-book me-2"></i>{% trans 'My Courses' %}</a>
-					{% endif %}
+                    <!-- Dropdown Menu -->
+                    <div id="user-dropdown-menu" class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50 hidden transition-all duration-200 transform origin-top-right">
+                        
+                        <!-- User Header -->
+                        <div class="px-4 py-3 border-b border-gray-100">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-full border-2 border-blue-800 overflow-hidden">
+                                    <img src="{{ request.user.picture.url }}" alt="Profile" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-gray-900 truncate">
+                                        {{ request.user.get_full_name|default:request.user.username }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 truncate">{{ request.user.email }}</p>
+                                    <p class="text-xs text-blue-600 mt-1">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        {% trans 'Last login:' %} {{ request.user.last_login|date }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
-					{% if request.user.is_superuser %}
-					<a class="dropdown-item" href="{% url 'admin_panel' %}"><i class="fas fa-user-tie me-2"></i>{% trans 'Admin Panel' %}</a>
-					{% endif %}
+                        <!-- Navigation Links -->
+                        <div class="py-2">
+                            {% if request.user.is_lecturer or request.user.is_student %}
+                            <a href="{% url 'user_course_list' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800 transition duration-150 dropdown-link">
+                                <i class="fas fa-book mr-3 text-blue-600 w-5"></i>
+                                {% trans 'My Courses' %}
+                            </a>
+                            {% endif %}
 
-					<a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user me-2"></i>{% trans 'Profile' %}</a>
-					<a class="dropdown-item" href="{% url 'edit_profile' %}"><i class="fas fa-cog me-2"></i>{% trans 'Setting' %}</a>
-					<hr>
-					<div style="display: flex; justify-content: center; align-items: center;">
-						<a class="btn btn-secondary" href="{% url 'logout' %}">
-							<i class="fas fa-sign-out-alt"></i> {% trans 'Signout' %}
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                            {% if request.user.is_superuser %}
+                            <a href="{% url 'admin_panel' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800 transition duration-150 dropdown-link">
+                                <i class="fas fa-user-tie mr-3 text-blue-600 w-5"></i>
+                                {% trans 'Admin Panel' %}
+                            </a>
+                            {% endif %}
+
+                            <a href="{% url 'profile' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800 transition duration-150 dropdown-link">
+                                <i class="fas fa-user mr-3 text-blue-600 w-5"></i>
+                                {% trans 'Profile' %}
+                            </a>
+                            <a href="{% url 'edit_profile' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800 transition duration-150 dropdown-link">
+                                <i class="fas fa-cog mr-3 text-blue-600 w-5"></i>
+                                {% trans 'Settings' %}
+                            </a>
+                        </div>
+
+                        <!-- Logout Section -->
+                        <div class="border-t border-gray-100 pt-2 pb-2">
+                            <a href="{% url 'logout' %}" class="flex items-center justify-center mx-4 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition duration-150 group dropdown-link">
+                                <i class="fas fa-sign-out-alt mr-2 group-hover:rotate-180 transition-transform duration-200"></i>
+                                {% trans 'Sign Out' %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdownButton = document.getElementById('user-dropdown-button');
+    const dropdownMenu = document.getElementById('user-dropdown-menu');
+    const dropdownChevron = document.getElementById('dropdown-chevron');
+    
+    // Проверяем, что элементы существуют
+    if (!dropdownButton || !dropdownMenu) {
+        console.error('Dropdown elements not found');
+        return;
+    }
+
+    console.log('Dropdown elements found, setting up event listeners');
+
+    // Функция для открытия/закрытия dropdown
+    function toggleDropdown() {
+        const isHidden = dropdownMenu.classList.contains('hidden');
+        
+        if (isHidden) {
+            // Открываем dropdown
+            dropdownMenu.classList.remove('hidden');
+            dropdownMenu.classList.add('scale-100', 'opacity-100');
+            dropdownMenu.classList.remove('scale-95', 'opacity-0');
+            dropdownChevron.classList.add('rotate-180');
+            dropdownButton.classList.add('bg-gray-50');
+        } else {
+            // Закрываем dropdown
+            dropdownMenu.classList.add('hidden');
+            dropdownMenu.classList.remove('scale-100', 'opacity-100');
+            dropdownChevron.classList.remove('rotate-180');
+            dropdownButton.classList.remove('bg-gray-50');
+        }
+    }
+
+    // Обработчик клика по кнопке
+    dropdownButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        console.log('Dropdown button clicked');
+        toggleDropdown();
+    });
+
+    // Закрытие dropdown при клике вне его
+    document.addEventListener('click', function(e) {
+        if (!dropdownButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
+            if (!dropdownMenu.classList.contains('hidden')) {
+                console.log('Closing dropdown - click outside');
+                dropdownMenu.classList.add('hidden');
+                dropdownMenu.classList.remove('scale-100', 'opacity-100');
+                dropdownChevron.classList.remove('rotate-180');
+                dropdownButton.classList.remove('bg-gray-50');
+            }
+        }
+    });
+
+    // Закрытие dropdown при нажатии Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !dropdownMenu.classList.contains('hidden')) {
+            console.log('Closing dropdown - Escape key');
+            dropdownMenu.classList.add('hidden');
+            dropdownMenu.classList.remove('scale-100', 'opacity-100');
+            dropdownChevron.classList.remove('rotate-180');
+            dropdownButton.classList.remove('bg-gray-50');
+        }
+    });
+
+    // Закрытие dropdown при клике на ссылки
+    const dropdownLinks = document.querySelectorAll('.dropdown-link');
+    dropdownLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            console.log('Closing dropdown - link clicked');
+            setTimeout(() => {
+                dropdownMenu.classList.add('hidden');
+                dropdownMenu.classList.remove('scale-100', 'opacity-100');
+                dropdownChevron.classList.remove('rotate-180');
+                dropdownButton.classList.remove('bg-gray-50');
+            }, 100);
+        });
+    });
+});
+
+// Функция для sidebar (если нужна)
+function toggleSidebar() {
+    console.log('Toggle sidebar function called');
+    // Ваш код для переключения sidebar
+}
+</script>
+
+<style>
+    /* Анимации для dropdown */
+    #user-dropdown-menu {
+        transform: scale(0.95);
+        opacity: 0;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    #user-dropdown-menu.scale-100 {
+        transform: scale(1);
+        opacity: 1;
+    }
+    
+    #user-dropdown-menu.scale-95 {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    
+    /* Плавный поворот шеврона */
+    #dropdown-chevron {
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    /* Custom styles for better appearance */
+    #primary-search::placeholder {
+        color: #9CA3AF;
+        opacity: 1;
+    }
+</style>

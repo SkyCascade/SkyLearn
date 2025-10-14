@@ -1,268 +1,311 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
 {% load static %}
 
+{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
 {% load crispy_forms_tags %}
 
 {% block content %}
 
-<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{% trans 'Course Registration' %}</li>
-    </ol>
-</nav>
+<div class="page-container">
 
-<p class="title-1">{% trans 'Course Add' %} &amp; {% trans 'Drop' %}</p>
-
-{% include 'snippets/messages.html' %}
-
-{% if current_semester %}
-{% if is_calender_on == False %}
-
-<div class="alert bg-danger">
-    <h1 class="text-light text-center">{% trans 'Calender is off' %}</h1>
-    <h5 class="text-light text-center">{% trans 'Check the university calender' %}</h5>
-</div>
-
-{% else %}
-
-{% if not all_courses_are_registered %}
-
-<form action="{% url 'course_registration' %}" method="POST">{% csrf_token %}
-    <div class="col-md-12 p-0 bg-white">
-        <p class="form-title fw-bold">{% trans 'Course Add' %}</p>
-        <div class="container">
-            <div class="d-flex justify-content-between mb-3">
-                <button title="{% trans 'Save Score' %}" type="submit" class="btn btn-primary"><i class="fa fa-plus"></i> {% trans 'Add Selected' %}</button>
-            </div>
-
-            <div class="table-responsive p-0 px-2 mt-2">
-                <div class="table-title"><u>{% trans 'First Semester:' %}</u></div>
-                <div class="table-shadow">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>{% trans 'Mark' %}</th>
-                                <th>{% trans 'Course Code' %}</th>
-                                <th>{% trans 'Course Title' %}</th>
-                                <th>{% trans 'Cr.Hr(s)' %}</th>
-                                <th>{% trans 'Year' %}</th>
-                                <th>{% trans 'Classification' %}</th>
-                                <th>{% trans 'Elective Group' %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for course in courses %}
-                            {% if course.semester == "First" %}
-                            <tr>
-                                <th scope="row">
-                                    <input name="{{ course.pk }}" value="{{ course.courseUnit }}" type="checkbox">
-                                </th>
-                                <td>{{ course.code }}</td>
-                                <td>{{ course.title }}</td>
-                                <td>{{ course.credit }}</td>
-                                <td>{{ course.year }}</td>
-                                {% if course.is_elective %}
-                                <td>{% trans 'Elective' %}</td>
-                                {% else %}
-                                <td>{% trans 'Core' %}</td>
-                                {% endif %}
-                                <th>-</th>
-                            </tr>
-                            {% endif %}
-                            {% empty %}
-                            <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>
-                                    <span class="text-danger">
-                                        {% trans 'No Course.' %}
-                                    </span>
-                                </td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                            {% endfor %}
-                            <tr>
-                                <th></th>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td><b>{% trans 'First semester Credit(s):' %}</b> {{ total_first_semester_credit }} </td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="table-responsive p-0 px-2 mt-2">
-                <div class="table-title"><u>{% trans 'Second Semester:' %}</u></div>
-                <div class="table-shadow">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>{% trans 'Mark' %}</th>
-                                <th>{% trans 'Course Code' %}</th>
-                                <th>{% trans 'Course Title' %}</th>
-                                <th>{% trans 'Cr.Hr(s)' %}</th>
-                                <th>{% trans 'Year' %}</th>
-                                <th>{% trans 'Classification' %}</th>
-                                <th>{% trans 'Elective Group' %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for course in courses %}
-                            {% if course.semester == "Second" %}
-                            <tr>
-                                <th scope="row">
-                                    <input name="{{ course.pk }}" value="{{ course.courseUnit }}" type="checkbox">
-                                </th>
-                                <td>{{ course.code }}</td>
-                                <td>{{ course.title }}</td>
-                                <td>{{ course.credit }}</td>
-                                <td>{{ course.year }}</td>
-                                {% if course.is_elective %}
-                                <td>{% trans 'Elective' %}</td>
-                                {% else %}
-                                <td>{% trans 'Core' %}</td>
-                                {% endif %}
-                                <th>-</th>
-                            </tr>
-                            {% endif %}
-                            {% empty %}
-                            <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>
-                                    <span class="text-danger">
-                                        {% trans 'No Course.' %}
-                                    </span>
-                                </td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                            {% endfor %}
-                            <tr>
-                                <th></th>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td><b>{% trans 'Second semester credit(s):' %}</b> {{ total_sec_semester_credit }} </td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"></th>
-                                <td><b>{% trans 'Registerd course credit(s):' %}' <a id="units">{{ total_registered_credit }}</a></b>
-                                </td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td><b>{% trans 'Total credit(s):' %}</b> {{ total_sec_semester_credit|add:total_first_semester_credit }} </td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</form>
-{% endif %}
-<br>
-<br>
-
-{% if not no_course_is_registered %}
-
-<div class="col-md-12 p-0 bg-white">
-    <p class="form-title"><b>{% trans 'Course Drop' %}</b></p>
-    <div class="container">
-        <p class="fw-bold">{{ student.level }}</p>
-        <form action="{% url 'course_drop' %}" method="POST">
-            {% csrf_token %}
-            <div class="d-flex justify-content-between mb-4">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa fa-times"></i> {% trans 'Drop Selected' %}
-                </button>
-            </div>
-
-            <div class="table-responsive p-0 px-2 mt-2">
-                <div class="table-shadow">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>{% trans 'Mark' %}</th>
-                                <th>{% trans 'Course Code' %}</th>
-                                <th>{% trans 'Course Title' %}</th>
-                                <th>{% trans 'Cr.Hr(s)' %}</th>
-                                <th>{% trans 'Year' %}</th>
-                                <th>{% trans 'Classification' %}</th>
-                                <th>{% trans 'Elective Group' %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for course in registered_courses %}
-                            <tr>
-                                <th scope="row">
-                                    <input name="course_ids" value="{{ course.id }}" type="checkbox">
-                                </th>
-                                <td>{{ course.code }}</td>
-                                <td>{{ course.title }}</td>
-                                <td>{{ course.credit }}</td>
-                                <td>{{ course.year }}</td>
-                                {% if course.is_elective %}
-                                <td>{% trans 'Elective' %}</td>
-                                {% else %}
-                                <td>{% trans 'Core' %}</td>
-                                {% endif %}
-                                <th>-</th>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>
-                                    <span class="text-danger">
-                                        {% trans 'No Course.' %}
-                                    </span>
-                                </td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                            {% endfor %}
-                            <tr>
-                                <th></th>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td><b>{% trans 'Total credit(s):' %}</b> {{ total_registered_credit }} </td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </form>
+<div class="min-h-screen bg-gray-50"> <!-- Breadcrumb --> <nav class="bg-blue-800 text-white px-4 py-3"> <ol class="list-none p-0 inline-flex"> <li class="flex items-center"> <a href="/" class="text-white hover:text-blue-200">{% trans 'Home' %}</a> <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"> <path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/> </svg> </li> <li class="flex items-center"> <span class="text-blue-200">{% trans 'Course Registration' %}</span> </li> </ol> </nav>
+text
+<!-- University Header -->
+<div class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto py-4 px-4">
+        <h1 class="text-2xl font-bold text-blue-800 text-center">Salymbekov University</h1>
+        <p class="text-xl font-semibold text-gray-700 text-center mt-2">{% trans 'Course Add' %} &amp; {% trans 'Drop' %}</p>
     </div>
 </div>
 
-<a class="btn btn-sm btn-secondary mt-3" href="{% url 'course_registration_form' %}" target="_blank" title="{% trans 'Print Registration Form' %}">
-    <i class="fas fa-print"></i> {% trans 'Print Registerd Courses' %}
-</a>
+<div class="max-w-7xl mx-auto py-6 px-4">
+    {% include 'snippets/messages.html' %}
 
-{% endif %}
-{% endif %}
-{% endif %}
+    {% if current_semester %}
+        {% if is_calender_on == False %}
+            <!-- Calendar Off Warning -->
+            <div class="bg-red-600 text-white rounded-lg p-6 text-center mb-6">
+                <h2 class="text-xl font-bold mb-2">{% trans 'Calendar is off' %}</h2>
+                <p class="text-lg">{% trans 'Check the university calendar' %}</p>
+            </div>
+        {% else %}
+            <!-- Course Add Section -->
+            {% if not all_courses_are_registered %}
+            <form action="{% url 'course_registration' %}" method="POST">
+                {% csrf_token %}
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+                    <!-- Header -->
+                    <div class="bg-blue-800 px-6 py-4">
+                        <h2 class="text-xl font-bold text-white">{% trans 'Course Add' %}</h2>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="px-6 py-4 border-b">
+                        <button type="submit" class="bg-blue-800 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            {% trans 'Add Selected' %}
+                        </button>
+                    </div>
 
+                    <!-- First Semester Courses -->
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">{% trans 'First Semester:' %}</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Select' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Course Code' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Course Title' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Cr.Hr(s)' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Year' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Classification' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Elective Group' %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for course in courses %}
+                                        {% if course.semester == "First" %}
+                                        <tr class="hover:bg-gray-50 transition duration-150">
+                                            <td class="px-4 py-3">
+                                                <input name="{{ course.pk }}" value="{{ course.courseUnit }}" type="checkbox" 
+                                                       class="w-4 h-4 text-blue-800 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                                            </td>
+                                            <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ course.code }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">{{ course.title }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">{{ course.credit }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">{{ course.year }}</td>
+                                            <td class="px-4 py-3 text-sm">
+                                                {% if course.is_elective %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    {% trans 'Elective' %}
+                                                </span>
+                                                {% else %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    {% trans 'Core' %}
+                                                </span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">-</td>
+                                        </tr>
+                                        {% endif %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="px-4 py-4 text-center text-sm text-gray-500">
+                                            {% trans 'No courses available.' %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="bg-gray-50 font-semibold">
+                                        <td colspan="6" class="px-4 py-3 text-sm text-gray-700 text-right">
+                                            {% trans 'First semester Credit(s):' %}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-900">{{ total_first_semester_credit }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Second Semester Courses -->
+                        <h3 class="text-lg font-semibold text-gray-800 mt-8 mb-4 border-b pb-2">{% trans 'Second Semester:' %}</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Select' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Course Code' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Course Title' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Cr.Hr(s)' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Year' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Classification' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Elective Group' %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for course in courses %}
+                                        {% if course.semester == "Second" %}
+                                        <tr class="hover:bg-gray-50 transition duration-150">
+                                            <td class="px-4 py-3">
+                                                <input name="{{ course.pk }}" value="{{ course.courseUnit }}" type="checkbox"
+                                                       class="w-4 h-4 text-blue-800 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                                            </td>
+                                            <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ course.code }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">{{ course.title }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">{{ course.credit }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">{{ course.year }}</td>
+                                            <td class="px-4 py-3 text-sm">
+                                                {% if course.is_elective %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    {% trans 'Elective' %}
+                                                </span>
+                                                {% else %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    {% trans 'Core' %}
+                                                </span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">-</td>
+                                        </tr>
+                                        {% endif %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="px-4 py-4 text-center text-sm text-gray-500">
+                                            {% trans 'No courses available.' %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="bg-gray-50 font-semibold">
+                                        <td colspan="6" class="px-4 py-3 text-sm text-gray-700 text-right">
+                                            {% trans 'Second semester credit(s):' %}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-900">{{ total_sec_semester_credit }}</td>
+                                    </tr>
+                                    <tr class="bg-gray-100 font-semibold">
+                                        <td colspan="6" class="px-4 py-3 text-sm text-gray-700 text-right">
+                                            {% trans 'Registered course credit(s):' %}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-900" id="units">{{ total_registered_credit }}</td>
+                                    </tr>
+                                    <tr class="bg-blue-50 font-bold">
+                                        <td colspan="6" class="px-4 py-3 text-sm text-blue-800 text-right">
+                                            {% trans 'Total credit(s):' %}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            {{ total_sec_semester_credit|add:total_first_semester_credit }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            {% endif %}
+
+            <!-- Course Drop Section -->
+            {% if not no_course_is_registered %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+                <!-- Header -->
+                <div class="bg-red-700 px-6 py-4">
+                    <h2 class="text-xl font-bold text-white">{% trans 'Course Drop' %}</h2>
+                </div>
+                
+                <!-- Student Info -->
+                <div class="px-6 py-4 border-b">
+                    <p class="text-lg font-semibold text-gray-800">{{ student.level }}</p>
+                </div>
+
+                <form action="{% url 'course_drop' %}" method="POST">
+                    {% csrf_token %}
+                    <!-- Actions -->
+                    <div class="px-6 py-4 border-b">
+                        <button type="submit" class="bg-red-700 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            {% trans 'Drop Selected' %}
+                        </button>
+                    </div>
+
+                    <!-- Registered Courses Table -->
+                    <div class="p-6">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Select' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Course Code' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Course Title' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Cr.Hr(s)' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Year' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Classification' %}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans 'Elective Group' %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for course in registered_courses %}
+                                    <tr class="hover:bg-gray-50 transition duration-150">
+                                        <td class="px-4 py-3">
+                                            <input name="course_ids" value="{{ course.id }}" type="checkbox"
+                                                   class="w-4 h-4 text-red-700 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2">
+                                        </td>
+                                        <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ course.code }}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-700">{{ course.title }}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-700">{{ course.credit }}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-700">{{ course.year }}</td>
+                                        <td class="px-4 py-3 text-sm">
+                                            {% if course.is_elective %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                {% trans 'Elective' %}
+                                            </span>
+                                            {% else %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {% trans 'Core' %}
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-700">-</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="px-4 py-4 text-center text-sm text-gray-500">
+                                            {% trans 'No registered courses.' %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="bg-gray-50 font-semibold">
+                                        <td colspan="6" class="px-4 py-3 text-sm text-gray-700 text-right">
+                                            {% trans 'Total credit(s):' %}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-900">{{ total_registered_credit }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Print Button -->
+            <div class="flex justify-end">
+                <a href="{% url 'course_registration_form' %}" target="_blank" 
+                   class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    {% trans 'Print Registered Courses' %}
+                </a>
+            </div>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+</div>
+</div>
+
+</div> <!-- Закрываем page-container -->
+
+<style>
+    /* Стили для страницы с правильными отступами */
+    .page-container {
+        margin-top: 20px; /* Дополнительный отступ сверху для хедера */
+        margin-bottom: 20px; /* Отступ снизу */
+        margin-left: 20px; /* Отступ слева */
+        margin-right: 20px; /* Отступ справа */
+        min-height: calc(100vh - 140px); /* Минимальная высота с учетом хедера и отступов */
+    }
+
+    /* Для мобильных устройств */
+    @media (max-width: 768px) {
+        .page-container {
+            margin-top: 30px; /* Больше отступа сверху на мобильных */
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+    }
+
+    /* Custom checkbox styling */ input[type="checkbox"] { border: 1px solid #d1d5db; border-radius: 0.25rem; transition: all 0.2s ease-in-out; } input[type="checkbox"]:checked { background-color: #1e40af; border-color: #1e40af; } /* Hover effects for table rows */ tr:hover { background-color: #f9fafb; } /* Smooth transitions */ .transition { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; } </style>
 {% endblock content %}
+

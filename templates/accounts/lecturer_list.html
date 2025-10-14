@@ -1,89 +1,336 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{{ title }} | {% trans 'Salymbekov University' %}{% endblock title %}
 
 {% block content %}
 
-<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{% trans 'Lecturers' %}</li>
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    .slide-in-left {
+        animation: slideInLeft 0.5s ease-out forwards;
+    }
+    
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px -5px rgba(30, 64, 175, 0.15);
+    }
+    
+    .table-row-animation {
+        transition: all 0.3s ease;
+        opacity: 0;
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+    
+    .table-row-animation:hover {
+        background-color: #f8fafc !important;
+        transform: translateX(5px);
+    }
+    
+    .btn-primary-university {
+        background: linear-gradient(135deg, #1e40af, #3730a3);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary-university:hover {
+        background: linear-gradient(135deg, #3730a3, #1e40af);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(30, 64, 175, 0.3);
+    }
+    
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        padding: 8px;
+    }
+    
+    .dropdown-item {
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin: 2px 0;
+        transition: all 0.2s ease;
+    }
+    
+    .dropdown-item:hover {
+        background-color: #eff6ff;
+        color: #1e40af;
+    }
+     .page-container {
+        margin-top: 60px; /* Дополнительный отступ сверху для хедера */
+        margin-bottom: 20px; /* Отступ снизу */
+        margin-left: 20px; /* Отступ слева */
+        margin-right: 20px; /* Отступ справа */
+        min-height: calc(100vh - 140px); /* Минимальная высота с учетом хедера и отступов */
+    }
+
+    /* Для мобильных устройств */
+    @media (max-width: 768px) {
+        .page-container {
+            margin-top: 50px; /* Больше отступа сверху на мобильных */
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+    }
+</style>
+
+<!-- Навигационная цепочка -->
+ <div class="page-container ">
+<nav class="flex mb-6 slide-in-left" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="/" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-800 transition-all duration-300">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                {% trans 'Home' %}
+            </a>
+        </li>
+        <li aria-current="page">
+            <div class="flex items-center">
+                <svg class="w-4 h-4 mx-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span class="ml-1 text-sm font-medium text-gray-500">{% trans 'Lecturers' %}</span>
+            </div>
+        </li>
     </ol>
 </nav>
 
-{% if request.user.is_superuser %}
-<div class="manage-wrap">
-    <a class="btn btn-primary" href="{% url 'add_lecturer' %}"><i class="fas fa-plus"></i>{% trans 'Add Lecturer' %}</a>
-    <a class="btn btn-primary" target="_blank" href="{% url 'lecturer_list_pdf' %}"><i class="fas fa-download"></i> {% trans 'Download pdf' %}</a><!--new-->
+<!-- Заголовок страницы -->
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 fade-in-up">
+    <div class="mb-4 lg:mb-0">
+        <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+            <div class="w-10 h-10 bg-blue-800 rounded-lg flex items-center justify-center mr-3">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+            </div>
+            <span class="text-blue-800">Salymbekov University</span>
+            <span class="text-gray-500 mx-2">|</span>
+            <span class="text-gray-700">{% trans 'Lecturers' %}</span>
+        </h1>
+        <p class="text-gray-600 mt-2 ml-13">{% trans 'Manage university teaching staff' %}</p>
+    </div>
+    
+    {% if request.user.is_superuser %}
+    <div class="flex flex-wrap gap-3">
+        <a class="btn-primary-university px-4 py-2.5 text-sm font-medium text-white rounded-lg flex items-center transition-all duration-300 hover-lift" href="{% url 'add_lecturer' %}">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            {% trans 'Add Lecturer' %}
+        </a>
+        <a class="px-4 py-2.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all duration-300 hover-lift flex items-center" target="_blank" href="{% url 'lecturer_list_pdf' %}">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            {% trans 'Download PDF' %}
+        </a>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
-
-<p class="title-1"><i class="fas fa-chalkboard-teacher"></i>{% trans 'Lecturers' %}</p>
 
 {% include 'snippets/messages.html' %}
-{% include 'snippets/filter_form.html' %}
 
-<div class="table-responsive table-shadow table-light table-striped m-0 mt-4">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th> {% trans 'ID No.' %}' </th>
-                <th> {% trans 'Full Name' %} </th>
-                <th> {% trans 'Email' %} </th>
-                <th> {% trans 'Mob No.' %} </th>
-                <th> {% trans 'Address/city' %} </th>
-                <th> {% trans 'Last login' %}  </th>
-                {% if request.user.is_superuser %}
-                <th> {% trans 'Action' %} </th>
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for lecturer in filter.qs %}
-            <tr>
-                <td> {{ forloop.counter }}.</td>
-                <td>{{ lecturer.username }}</td>
-                <td><a href="{% url 'profile_single' lecturer.id %}">{{ lecturer.get_full_name }}</a></td>
-                <td>{{ lecturer.email }}</td>
-                <td>{{ lecturer.phone }}</td>
-                <td>{{ lecturer.address }}</td>
-                <td>{{ lecturer.last_login }}</td>
-                {% if request.user.is_superuser %}
-                <td> 
-                    <div class="dropdown">
-                        <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa fa-ellipsis-vertical"></i>
-                        </button>
-                        <ul class="dropdown-menu">
-                          <li><a class="dropdown-item" href="{% url 'staff_edit' pk=lecturer.pk %}"><i class="unstyled me-2 fas fa-edit"></i>{% trans 'Update' %}</a></li>
-                          <li><a class="dropdown-item"  target="_blank" href="{% url 'profile_single' lecturer.id %}?download_pdf=1"><i class="unstyled me-2 fas fa-download"></i>{% trans 'Download PDF' %}</a></li>
-                          <li><a class="dropdown-item text-danger" href="{% url 'lecturer_delete' pk=lecturer.pk %}"><i class="unstyled me-2 fas fa-trash-alt"></i> {% trans 'Delete' %}</a></li>
-                        </ul>
-                    </div>
-                </td>
-                {% endif %}
-                
+<!-- Фильтры -->
+<div class="bg-white rounded-xl shadow-sm border border-blue-100 p-4 mb-6 fade-in-up">
+    {% include 'snippets/filter_form.html' %}
+</div>
+
+<!-- Таблица преподавателей -->
+<div class="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden fade-in-up">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="bg-gradient-to-r from-blue-50 to-indigo-50 text-left">
+                    <th class="px-6 py-4 text-xs font-semibold text-blue-800 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-blue-800 uppercase tracking-wider">{% trans 'ID No.' %}</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-blue-800 uppercase tracking-wider">{% trans 'Full Name' %}</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-blue-800 uppercase tracking-wider">{% trans 'Email' %}</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-blue-800 uppercase tracking-wider">{% trans 'Mob No.' %}</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-blue-800 uppercase tracking-wider">{% trans 'Address/City' %}</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-blue-800 uppercase tracking-wider">{% trans 'Last Login' %}</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-blue-800 uppercase tracking-wider">{% trans 'Status' %}</th>
+                    {% if request.user.is_superuser %}
+                    <th class="px-6 py-4 text-xs font-semibold text-blue-800 uppercase tracking-wider">{% trans 'Actions' %}</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for lecturer in filter.qs %}
+                <tr class="table-row-animation hover:bg-blue-50/50 transition-all duration-300" style="animation-delay: {{ forloop.counter0|add:1 }}00ms">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ forloop.counter }}.
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-mono">
+                        {{ lecturer.username }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <a href="{% url 'profile_single' lecturer.id %}" class="text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors duration-200 flex items-center">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            {{ lecturer.get_full_name }}
+                        </a>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {{ lecturer.email }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {{ lecturer.phone|default:"-" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {{ lecturer.address|default:"-" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ lecturer.last_login|date:"M j, Y"|default:"Never" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-badge status-active">
+                            {% if lecturer.is_active %}{% trans 'Active' %}{% else %}{% trans 'Inactive' %}{% endif %}
+                        </span>
+                    </td>
+                    {% if request.user.is_superuser %}
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="dropdown relative">
+                            <button class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                </svg>
+                            </button>
+                            <ul class="dropdown-menu absolute right-0 z-10 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 hidden">
+                                <li>
+                                    <a class="dropdown-item flex items-center" href="{% url 'staff_edit' pk=lecturer.pk %}">
+                                        <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        {% trans 'Update' %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item flex items-center" target="_blank" href="{% url 'profile_single' lecturer.id %}?download_pdf=1">
+                                        <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        {% trans 'Download PDF' %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item flex items-center text-red-600 hover:text-red-700" href="{% url 'lecturer_delete' pk=lecturer.pk %}">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        {% trans 'Delete' %}
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="8">
-                  <span class="text-danger">
-                    {% trans 'No Lecturer(s).' %}
-                    {% if request.user.is_superuser %}
-                    <a href="{% url 'add_lecturer' %}">
-                    <i class="primary" style="font-size: 22px;">
-                        {% trans 'Add Lecturer Now.' %}
-                    </i>
-                    {% endif %}
-                    </a>
-                  </span>
-                </td>
+                    <td colspan="{% if request.user.is_superuser %}9{% else %}8{% endif %}" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center justify-center text-gray-500">
+                            <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-700 mb-2">{% trans 'No Lecturers Found' %}</h3>
+                            <p class="text-gray-500 mb-4">{% trans 'There are currently no lecturers in the system.' %}</p>
+                            {% if request.user.is_superuser %}
+                            <a href="{% url 'add_lecturer' %}" class="btn-primary-university px-4 py-2 text-sm font-medium text-white rounded-lg flex items-center transition-all duration-300">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                {% trans 'Add First Lecturer' %}
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
                 </tr>
-
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
-{% endblock content %}
+ </div>
+<!-- Футер -->
+<div class="mt-8 text-center text-sm text-gray-500 border-t border-gray-200 pt-4">
+    <p>{% trans 'Salymbekov University Faculty Management System' %} • {% trans 'Academic Year' %} 2023-2024</p>
+</div>
 
+<script>
+    // Анимация для dropdown меню
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdownButtons = document.querySelectorAll('.dropdown button');
+        
+        dropdownButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const dropdownMenu = this.nextElementSibling;
+                dropdownMenu.classList.toggle('hidden');
+            });
+        });
+        
+        // Закрытие dropdown при клике вне его
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        });
+        
+        // Анимация строк таблицы
+        const tableRows = document.querySelectorAll('tbody tr');
+        tableRows.forEach((row, index) => {
+            row.style.animationDelay = `${index * 0.1}s`;
+        });
+    });
+</script>
+
+{% endblock content %}

@@ -5,116 +5,243 @@
 
 {% block content %}
 
-<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-        <li class="breadcrumb-item"><a href="{{ course.get_absolute_url }}">{{ course }}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{% trans 'Manage Score' %}</li>
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="/" class="inline-flex items-center text-sm font-medium text-blue-800 hover:text-blue-600">
+                <i class="fas fa-home mr-2"></i>
+                {% trans 'Home' %}
+            </a>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                <a href="{{ course.get_absolute_url }}" class="ml-1 text-sm font-medium text-blue-800 hover:text-blue-600">
+                    {{ course }}
+                </a>
+            </div>
+        </li>
+        <li aria-current="page">
+            <div class="flex items-center">
+                <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">{% trans 'Manage Score' %}</span>
+            </div>
+        </li>
     </ol>
 </nav>
 
-<div class="dropdown">
-    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        {{ course }}
-    </button>
-    <div class="dropdown-menu">
-        {% for course in courses %}
-            <a class="dropdown-item" href="{% url 'add_score_for' course.id %}" title="{{ course.code }}">{{ course.title }}</a>
-        {% empty %}
-            <p class="dropdown-item">{% trans 'No course.' %}</p>
-        {% endfor %}
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-blue-800 mb-2">{% trans 'Students Result Form' %}</h1>
+        <p class="text-gray-600 text-lg">{{ course.summary }}</p>
+        <p class="text-blue-800 font-semibold mt-2">Salymbekov University</p>
     </div>
 </div>
 
-<br>
-<h4 class="title-1">{% trans 'Students result form' %} | {{ course|truncatechars:15 }}</h4>
-<p>{{ course.summary }}</p>
+<!-- Course Dropdown -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{% trans 'Select Course' %}</label>
+            <div class="relative inline-block w-full md:w-64">
+                <select class="appearance-none w-full bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition duration-150" onchange="location = this.value;">
+                    <option value="" disabled selected>{{ course.title|truncatechars:30 }}</option>
+                    {% for course_item in courses %}
+                    <option value="{% url 'add_score_for' course_item.id %}">{{ course_item.title }}</option>
+                    {% empty %}
+                    <option disabled>{% trans 'No courses available' %}</option>
+                    {% endfor %}
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap gap-3">
+            <button type="submit" form="scoreForm" class="bg-blue-800 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg flex items-center transition duration-200">
+                <i class="fas fa-save mr-2"></i>
+                {% trans 'Save Scores' %}
+            </button>
+            <a target="_blank" href="{% url 'result_sheet_pdf_view' id=course.id %}" class="bg-amber-500 hover:bg-amber-400 text-white font-medium py-3 px-6 rounded-lg flex items-center transition duration-200">
+                <i class="far fa-file-pdf mr-2"></i>
+                {% trans 'Grade Report' %}
+            </a>
+        </div>
+    </div>
+</div>
 
+<!-- Current Semester Info -->
+<div class="bg-blue-50 rounded-xl border border-blue-200 p-4 mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h3 class="text-lg font-semibold text-blue-800">{{ current_semester }} {% trans 'Semester' %}</h3>
+            <p class="text-blue-600">{% trans 'Academic Session' %} {{ current_session }}</p>
+        </div>
+        <span class="bg-red-500 text-white text-sm font-medium px-3 py-1 rounded-full">
+            <i class="fas fa-calendar-alt mr-1"></i>
+            {{ current_session }}
+        </span>
+    </div>
+</div>
+
+<!-- Messages -->
 {% include 'snippets/messages.html' %}
 
-<form action="" method="POST">
+<!-- Scores Form -->
+<form id="scoreForm" action="" method="POST">
     {% csrf_token %}
-    <div class="btn-flex">
-        <button title="Save Score" type="submit" class="btn btn-primary">{% trans 'Save' %}</button>
-        <a target="_blank" href="{% url 'result_sheet_pdf_view' id=course.id %}">
-            <span data-toggle="tooltip" title="Print Result sheet" class="btn btn-warning">
-                <i class="far fa-file-pdf"></i> {% trans 'Grade report' %}
-            </span>
-        </a>
-    </div>
-
-    <h4 class="mt-3">{{ current_semester }} {% trans 'Semester' %} <i class="text-light px-2 rounded small bg-danger">{{ current_session }}</i></h4>
-    <div class="table-responsive">
-        <table class="table table-light">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>{% trans 'Student' %}</th>
-                    <th>{% trans 'Assignment' %}</th>
-                    <th>{% trans 'Mid exam' %}</th>
-                    <th>{% trans 'Quiz' %}</th>
-                    <th>{% trans 'Attendance' %}</th>
-                    <th>{% trans 'Final exam' %}</th>
-                    <th>{% trans 'Total' %}</th>
-                    <th>{% trans 'Point' %}</th>
-                    <th>{% trans 'Grade' %}</th>
-                    <th>{% trans 'Comment' %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for student in students %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td><a href="{{ student.student.student.get_absolute_url }}">{{ student.student.student.username }}</a></td>
-                    <td>
-                        <input id="assignment" type="number" name="{{ student.id }}" value="{{ student.assignment }}" width="20px">
-                    </td>
-                    <td>
-                        <input id="mid_exam" type="number" name="{{ student.id }}" value="{{ student.mid_exam }}">
-                    </td>
-                    <td>
-                        <input id="quiz" type="number" name="{{ student.id }}" value="{{ student.quiz }}">
-                    </td>
-                    <td>
-                        <input id="attendance" type="number" name="{{ student.id }}" value="{{ student.attendance }}">
-                    </td>
-                    <td>
-                        <input id="final_exam" type="number" name="{{ student.id }}" value="{{ student.final_exam }}">
-                    </td>
-                    <td>{{ student.total }}</td>
-
-                    <td>{{ student.point }}</td>
-                    <td class="{% if student.grade == 'F' %}text-danger{% else %}text-success{% endif %}">{{ student.grade }}</td>
-                    {% if student.comment == 'PASS' %}
-                    <td class="text-success">&check; {{ student.comment }}</td>
-                    {% elif student.comment == 'FAIL' %}
-                    <td class="text-danger">&xotime; {{ student.comment }}</td>
-                    {% else %}<td></td>
-                    {% endif %}
-                </tr>
-
-                {% empty %}
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                        <span class="text-danger">
-                            {% trans 'No Student.' %}
-                        </span>
-                    </td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-blue-800 text-white">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">#</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Student' %}</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Assignment' %}</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Mid Exam' %}</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Quiz' %}</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Attendance' %}</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Final Exam' %}</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Total' %}</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Point' %}</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Grade' %}</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Comment' %}</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for student in students %}
+                    <tr class="hover:bg-gray-50 transition duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ forloop.counter }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{{ student.student.student.get_absolute_url }}" class="text-blue-800 hover:text-blue-600 font-medium flex items-center">
+                                <i class="fas fa-user-graduate mr-2 text-blue-600"></i>
+                                {{ student.student.student.username }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="number" name="{{ student.id }}" value="{{ student.assignment }}" 
+                                   class="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition duration-150"
+                                   min="0" max="100" step="0.1">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="number" name="{{ student.id }}" value="{{ student.mid_exam }}" 
+                                   class="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition duration-150"
+                                   min="0" max="100" step="0.1">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="number" name="{{ student.id }}" value="{{ student.quiz }}" 
+                                   class="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition duration-150"
+                                   min="0" max="100" step="0.1">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="number" name="{{ student.id }}" value="{{ student.attendance }}" 
+                                   class="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition duration-150"
+                                   min="0" max="100" step="0.1">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="number" name="{{ student.id }}" value="{{ student.final_exam }}" 
+                                   class="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition duration-150"
+                                   min="0" max="100" step="0.1">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 text-center">
+                            <span class="bg-gray-100 px-3 py-1 rounded-full text-xs">
+                                {{ student.total }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                            {{ student.point }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-center {% if student.grade == 'F' %}text-red-600{% else %}text-green-600{% endif %}">
+                            {{ student.grade }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                            {% if student.comment == 'PASS' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check mr-1"></i>
+                                {{ student.comment }}
+                            </span>
+                            {% elif student.comment == 'FAIL' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-times mr-1"></i>
+                                {{ student.comment }}
+                            </span>
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center justify-center text-gray-500">
+                                <i class="fas fa-user-slash text-4xl mb-4 text-gray-300"></i>
+                                <p class="text-lg font-medium mb-2">{% trans 'No Students Found' %}</p>
+                                <p class="text-sm">{% trans 'There are no students enrolled in this course.' %}</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </form>
+
+<!-- University Branding -->
+<div class="mt-12 pt-6 border-t border-gray-200 text-center">
+    <p class="text-blue-800 font-bold text-xl mb-2">Salymbekov University</p>
+    <p class="text-gray-600">{% trans 'Academic Excellence and Student Success' %}</p>
+</div>
+
+<style>
+    /* Custom number input styling */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+    
+    /* Focus states for better accessibility */
+    input:focus {
+        outline: none;
+        ring: 2px;
+        ring-color: #1e40af;
+    }
+</style>
+
+<script>
+    // Auto-save functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('input[type="number"]');
+        let saveTimeout;
+        
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                // Clear previous timeout
+                clearTimeout(saveTimeout);
+                
+                // Set new timeout to save after 2 seconds of inactivity
+                saveTimeout = setTimeout(() => {
+                    document.getElementById('scoreForm').dispatchEvent(new Event('submit', {cancelable: true}));
+                }, 2000);
+                
+                // Visual feedback
+                this.classList.add('border-blue-500', 'bg-blue-50');
+                setTimeout(() => {
+                    this.classList.remove('border-blue-500', 'bg-blue-50');
+                }, 1000);
+            });
+        });
+    });
+</script>
 
 {% endblock content %}

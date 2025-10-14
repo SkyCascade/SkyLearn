@@ -8,42 +8,92 @@
 {% endblock %}
 
 {% block content %}
-<style type="text/css">
-	.counter-wrapper {
-		background-color: #d1e5e1;
-		padding: 10px 20px;
-	}
-	.bg-counter {
-		padding: 5px 10px;
-		border-radius: 5px;
-		background-color: #aae9df;
-	}
-</style>
-<div class="container">
-	<center>
-		<h3><i class="fa fa-check-circle-o text-success" aria-hidden="true"></i>{% trans 'Payment Succeed, You has been make payment successfuly.' %}</h3>
-		<div class="counter-wrapper">{% trans 'Redirect to your dashboard in' %} <span class="bg-counter" id="counter">8</span></div>
-	</center>
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-lg overflow-hidden">
+        <!-- Header -->
+        <div class="bg-blue-800 py-6 px-8">
+            <h1 class="text-2xl font-bold text-white text-center">Salymbekov University</h1>
+        </div>
+        
+        <!-- Content -->
+        <div class="p-8">
+            <!-- Success Icon -->
+            <div class="flex justify-center mb-6">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
 
+            <!-- Success Message -->
+            <h3 class="text-xl font-semibold text-gray-800 text-center mb-4">
+                {% trans 'Payment Successful' %}
+            </h3>
+            <p class="text-gray-600 text-center mb-8">
+                {% trans 'You have successfully completed your payment.' %}
+            </p>
+
+            <!-- Counter -->
+            <div class="bg-blue-50 rounded-lg p-4 text-center">
+                <p class="text-gray-700 mb-2">
+                    {% trans 'Redirecting to your dashboard in' %}
+                </p>
+                <div class="inline-block bg-blue-800 text-white px-4 py-2 rounded-lg font-mono text-lg">
+                    <span id="counter">8</span>
+                </div>
+            </div>
+
+            <!-- Manual Redirect Button -->
+            <div class="mt-6">
+                <a href="/" class="w-full bg-blue-800 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    {% trans 'Go to Dashboard Now' %}
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-gray-50 py-4 px-8 border-t">
+            <p class="text-sm text-gray-500 text-center">
+                {% trans 'Thank you for choosing Salymbekov University' %}
+            </p>
+        </div>
+    </div>
 </div>
 {% endblock content %}
 
 {% block js %}
-
 <script type="text/javascript">
-	var counterEl = document.getElementById('counter');
-	var num = parseInt(counterEl.innerText);
+    var counterEl = document.getElementById('counter');
+    var num = parseInt(counterEl.innerText);
 
-	setInterval(counter, 1000)
-	function counter() {
-		num = num - 1;
-		if (num < 0) { return }
-		counterEl.innerText = num;
-	}
-	setTimeout(changeWindowLocation, 9000)
-	function changeWindowLocation() {
-		window.location = "/";
-	}
+    var countdown = setInterval(function() {
+        num = num - 1;
+        if (num < 0) {
+            clearInterval(countdown);
+            return;
+        }
+        counterEl.innerText = num;
+        
+        // Add pulse animation when counter updates
+        counterEl.classList.add('scale-110');
+        setTimeout(() => {
+            counterEl.classList.remove('scale-110');
+        }, 200);
+    }, 1000);
+
+    setTimeout(function() {
+        window.location.href = "/";
+    }, 9000);
 </script>
 
+<style>
+    .scale-110 {
+        transform: scale(1.1);
+        transition: transform 0.2s ease-in-out;
+    }
+</style>
 {% endblock %}

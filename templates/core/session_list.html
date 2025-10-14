@@ -4,82 +4,127 @@
 
 {% block content %}
 
-<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{% trans 'Session List' %}</li>
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="/" class="inline-flex items-center text-sm font-medium text-blue-800 hover:text-blue-600">
+                <i class="fas fa-home mr-2"></i>
+                {% trans 'Home' %}
+            </a>
+        </li>
+        <li aria-current="page">
+            <div class="flex items-center">
+                <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">{% trans 'Session List' %}</span>
+            </div>
+        </li>
     </ol>
 </nav>
 
-{% if request.user.is_superuser %}
-<div class="manage-wrap">
-    <a class="btn btn-primary" href="{% url 'add_session' %}"><i class="fas fa-plus"></i>{% trans 'Add New Session' %}</a>
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+    <div>
+        <h1 class="text-2xl font-bold text-blue-800 flex items-center">
+            <i class="fas fa-calendar-week mr-3"></i>
+            {% trans 'Session List' %}
+        </h1>
+        <p class="text-gray-600 mt-2">Salymbekov University</p>
+    </div>
+    
+    {% if request.user.is_superuser %}
+    <div class="mt-4 md:mt-0">
+        <a href="{% url 'add_session' %}" class="bg-blue-800 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition duration-200">
+            <i class="fas fa-plus mr-2"></i>
+            {% trans 'Add New Session' %}
+        </a>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
 
-<div class="title-1"><i class="fas fa-calendar-week"></i>{% trans 'Session List' %}</div>
-
+<!-- Messages -->
 {% include 'snippets/messages.html' %}
 
-<div class="table-responsive table-shadow p-0 mt-5">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th> {% trans 'Session' %} </th>
-                <th> {% trans 'Is Current Session' %} </th>
-                <th> {% trans 'Next Session Begins' %} </th>
-                {% if request.user.is_superuser %}
-                <th> {% trans 'Actions' %} </th>
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for session in sessions %}
-            <tr>
-                <td>{{ forloop.counter }}.</td>
-                <td>{{ session.session }}</td>
-                <th>
-                    {% if session.is_current_session == True %}
-                    <i class="fas fa-check-circle fa-1-5x"></i>
-                    {% else %}
-                    <i class="fas fa-times-circle fa-1-5x danger"></i>
+<!-- Sessions Table -->
+<div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-blue-800 text-white">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">#</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Session' %}</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Is Current Session' %}</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Next Session Begins' %}</th>
+                    {% if request.user.is_superuser %}
+                    <th class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">{% trans 'Actions' %}</th>
                     {% endif %}
-                </th>
-                <td>{{ session.next_session_begins }}</td>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for session in sessions %}
+                <tr class="hover:bg-gray-50 transition duration-150">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ forloop.counter }}.
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-semibold">
+                        {{ session.session }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        {% if session.is_current_session == True %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            {% trans 'Current' %}
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <i class="fas fa-times-circle mr-1"></i>
+                            {% trans 'Not Current' %}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {{ session.next_session_begins }}
+                    </td>
 
-                {% if request.user.is_superuser %}
-                <td> <div class="update-delete">
-                    <a href="{% url 'edit_session' pk=session.pk %}" class="update" title="{% trans 'Edit' %}"><i class="fas fa-pencil-alt"></i></a>
-                    <a href="{% url 'delete_session' pk=session.pk %}" class="delete" title="{% trans 'Delete' %}"><i class="fas fa-trash-alt"></i></a>
-                    </div>
-                </td>
-                {% endif %}
-                
+                    {% if request.user.is_superuser %}
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-3">
+                            <a href="{% url 'edit_session' pk=session.pk %}" class="text-blue-600 hover:text-blue-800 transition duration-150" title="{% trans 'Edit' %}">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                            <a href="{% url 'delete_session' pk=session.pk %}" class="text-red-600 hover:text-red-800 transition duration-150" title="{% trans 'Delete' %}">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
                 {% empty %}
                 <tr>
-                  <td></td>
-                  <td></td>
-                  <td>
-                  <span class="text-danger">
-                    {% trans 'No Session.' %}
-                    {% if request.user.is_superuser %}
-                    <a href="{% url 'add_session' %}">
-                    <i class="primary" style="font-size: 22px;">
-                        {% trans 'Add Session Now.' %}
-                    </i>
-                    {% endif %}
-                    </a>
-                  </span>
-                </td>
-                <td></td>
-                <td></td>
-                <td></td>
+                    <td colspan="{% if request.user.is_superuser %}5{% else %}4{% endif %}" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center justify-center text-gray-500">
+                            <i class="fas fa-calendar-times text-4xl mb-4 text-gray-300"></i>
+                            <p class="text-lg font-medium mb-2">{% trans 'No Sessions Found' %}</p>
+                            <p class="text-sm mb-4">{% trans 'There are no sessions available at the moment.' %}</p>
+                            {% if request.user.is_superuser %}
+                            <a href="{% url 'add_session' %}" class="bg-blue-800 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center transition duration-200">
+                                <i class="fas fa-plus mr-2"></i>
+                                {% trans 'Add First Session' %}
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
                 </tr>
-
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<!-- University Branding -->
+<div class="mt-12 pt-6 border-t border-gray-200 text-center">
+    <p class="text-blue-800 font-semibold text-lg">Salymbekov University</p>
+    <p class="text-gray-600 text-sm mt-1">{% trans 'Quality Education for Future Leaders' %}</p>
+</div>
+
 {% endblock content %}

@@ -1,130 +1,254 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %} {{ title }} | {% trans 'Learning management system' %}{% endblock title %}
-
+{% block title %} {{ title }} | {% trans 'Salymbekov University' %}{% endblock title %}
 {% load static %}
-
 
 {% block content %}
 
 {% if user.is_authenticated %}
 
-<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{{ user.get_full_name }}</li>
+        <li class="breadcrumb-item"><a href="/" class="text-blue-800 hover:text-blue-600">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item active text-blue-800 font-semibold" aria-current="page">{{ user.get_full_name }}</li>
     </ol>
 </nav>
 
 {% include 'snippets/messages.html' %}
 
-<div class="row">
-
-    <div class="col-md-3 mx-auto">
-        <div class="card  p-2">
-            <div class="text-center">
-                <img src="{{ user.picture.url }}" class="w-100">
-                <ul class="px-2 list-unstyled">
-                    <li>{{ user.get_full_name|title }}</li>
-                    <li><strong>{% trans 'Last login' %}: </strong>{{ user.last_login|date }}</li>
-                    <li><strong>{% trans 'Role' %}: </strong>
-                        {{ user.get_user_role }}
-                    </li>
-                </ul>
+<div class="row g-4">
+    <!-- Left Sidebar - Profile Card -->
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 rounded-lg h-100">
+            <div class="card-header bg-blue-800 text-white text-center py-4 rounded-top">
+                <div class="position-relative">
+                    <img src="{{ user.picture.url }}" class="rounded-circle border border-4 border-white" 
+                         style="width: 120px; height: 120px; object-fit: cover;">
+                    <div class="position-absolute bottom-0 end-0 bg-blue-600 rounded-circle p-2 border border-2 border-white">
+                        <i class="fas fa-user-check text-white fs-6"></i>
+                    </div>
+                </div>
+                <h5 class="fw-bold mt-3 mb-1">{{ user.get_full_name|title }}</h5>
+                <span class="badge bg-blue-100 text-blue-800 fs-6">{{ user.get_user_role }}</span>
             </div>
-            <hr>
-            {% if request.user.is_superuser %}
-            <div class="d-flex flex-column">
-                {% if user.is_student %}
-                <a href="{% url 'student_edit' pk=user.id %}">
-                    <i class="fas fa-user-edit unstyled"></i><span class="mobile-hide">{% trans 'Edit Profile' %}</span>
-                </a>
-                <a href="{% url 'student_program_edit' user.id %}">
-                    <i class="fas fa-pen-to-square unstyled"></i><span class="mobile-hide">{% trans 'Change Program' %}</span>
-                </a>
-                {% endif %}
-                {% if user.is_lecturer %}
-                <a href="{% url 'staff_edit' pk=user.id %}">
-                    <i class="fas fa-user-edit unstyled"></i><span class="mobile-hide">{% trans 'Edit Profile' %}</span>
-                </a>
+            
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <p class="text-muted mb-1"><i class="fas fa-clock me-2 text-blue-800"></i>{% trans 'Last login' %}</p>
+                    <p class="fw-semibold">{{ user.last_login|date }}</p>
+                </div>
+                
+                {% if request.user.is_superuser %}
+                <hr>
+                <div class="d-grid gap-2">
+                    {% if user.is_student %}
+                    <a href="{% url 'student_edit' pk=user.id %}" class="btn btn-outline-blue-800 btn-sm">
+                        <i class="fas fa-user-edit me-2"></i>{% trans 'Edit Profile' %}
+                    </a>
+                    <a href="{% url 'student_program_edit' user.id %}" class="btn btn-outline-blue-800 btn-sm">
+                        <i class="fas fa-pen-to-square me-2"></i>{% trans 'Change Program' %}
+                    </a>
+                    {% endif %}
+                    {% if user.is_lecturer %}
+                    <a href="{% url 'staff_edit' pk=user.id %}" class="btn btn-outline-blue-800 btn-sm">
+                        <i class="fas fa-user-edit me-2"></i>{% trans 'Edit Profile' %}
+                    </a>
+                    {% endif %}
+                </div>
                 {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 
-    <div class="col-md-9 mx-auto">
-        <div class="card">
+    <!-- Main Content -->
+    <div class="col-md-9">
+        <div class="card shadow-sm border-0 rounded-lg">
+            <div class="card-header bg-blue-50 text-blue-800 py-3 rounded-top">
+                <h5 class="fw-bold mb-0"><i class="fas fa-id-card me-2"></i>{% trans 'Profile Information' %}</h5>
+            </div>
+            
             <div class="card-body">
-                <!-- {% if user.is_student %}
-                <p class="form-title"><i class="fas fa-book-open"></i>Enrolled Courses</p>
-                <div class="dashboard-description">
-                    {% if courses %}
-                        <div class="flex">
-                            {% for course in courses %}
-                                <div class="flex"><a class="edit-btn" href="{{ course.get_absolute_url }}">{{ course }}</a></div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                            <div class="text-danger"><i class="far fa-frown"></i>No courses!</div>
-                    {% endif %}
-                </div>
-                {% endif %} -->
-    
+                <!-- Lecturer Courses Section -->
                 {% if user.is_lecturer %}
-                <p class="fw-bold"><i class="fas fa-book-open"></i> {% trans 'My Courses' %}</p>
-                {% if courses %}
-                <ul>
-                    {% for course in courses %}
-                    <li><a href="{{ course.get_absolute_url }}" class="text-primary">{{ course }}</a></li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <div class="text-danger">{% trans 'No courses assigned!' %}</div>
-                {% endif %}
-                <hr>
-                {% endif %}
-    
-                <p class="fw-bold"><i class="me-2 fas fa-user"></i> {% trans 'Personal Info' %}</p>
-                <div class="dashboard-description">
-                    <p><strong>{% trans 'First Name' %}:</strong> {{ user.first_name|title }}</p>
-                    <p><strong>{% trans 'Last Name' %}:</strong> {{ user.last_name|title }}</p>
-                    <p><strong>{% trans 'ID No.' %}:</strong> {{ user.username }}</p>
-                </div>
-                {% if user.is_student %}
-                <hr>
-                <p class="fw-bold"><i class="me-2 fas fa-graduation-cap"></i> {% trans 'Applicant Info' %}</p>
-                <div class="dashboard-description">
-                    <p><strong>{% trans 'School' %}: </strong>Unity College</p>
-                    <p><strong>{% trans 'Level' %}: </strong>{{ level.level }}</p>
-                    <p><strong>{% trans 'Program' %}: </strong>{{ student.program }}</p>
-                </div>
-                {% endif %}
-    
-                <hr>
-                <p class="fw-bold"><i class="me-2 fas fa-phone-square-alt"></i>{% trans 'Contact Info' %}</p>
-                <div class="dashboard-description">
-                    <p><strong>{% trans 'Email' %}:</strong> {{ user.email }}</p>
-                    <p><strong>{% trans 'Tel No.' %}:</strong> {{ user.phone }}</p>
-                    <p><strong>{% trans 'Address/city' %}:</strong> {{ user.address }}</p>
-                </div>
-    
-                <hr>
-                <p class="fw-bold"><i class="me-2 fa fa-calendar-day"></i>{% trans 'Important Dates' %}</p>
-                <div class="dashboard-description">
-                    <p><strong>{% trans 'Last login' %}:</strong> {{ user.last_login }}</p>
-                    {% if current_semester and current_session %}
-                    <p><strong>{% trans 'Academic Year' %}:</strong> {{ current_semester }} {% trans 'Semester' %} {{ current_session }}</p>
+                <div class="mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-book-open text-blue-800 me-2 fs-5"></i>
+                        <h6 class="fw-bold mb-0 text-blue-800">{% trans 'My Courses' %}</h6>
+                    </div>
+                    {% if courses %}
+                    <div class="row g-2">
+                        {% for course in courses %}
+                        <div class="col-md-6">
+                            <a href="{{ course.get_absolute_url }}" class="text-decoration-none">
+                                <div class="card border-blue-200 hover-shadow h-100">
+                                    <div class="card-body py-2">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-book text-blue-600 me-2"></i>
+                                            <span class="fw-semibold text-dark">{{ course }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% trans 'No courses assigned!' %}
+                    </div>
                     {% endif %}
-                    <p><strong>{% trans 'Registered Date' %}:</strong> {{ user.date_joined|date }}</p>
+                </div>
+                <hr>
+                {% endif %}
+
+                <!-- Personal Information -->
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-user text-blue-800 me-2 fs-5"></i>
+                            <h6 class="fw-bold mb-0 text-blue-800">{% trans 'Personal Information' %}</h6>
+                        </div>
+                        <div class="ps-4">
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'First Name' %}</small>
+                                <p class="fw-semibold mb-0">{{ user.first_name|title }}</p>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'Last Name' %}</small>
+                                <p class="fw-semibold mb-0">{{ user.last_name|title }}</p>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'ID Number' %}</small>
+                                <p class="fw-semibold mb-0">{{ user.username }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Student Information -->
+                    {% if user.is_student %}
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-graduation-cap text-blue-800 me-2 fs-5"></i>
+                            <h6 class="fw-bold mb-0 text-blue-800">{% trans 'Academic Information' %}</h6>
+                        </div>
+                        <div class="ps-4">
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'University' %}</small>
+                                <p class="fw-semibold mb-0">Salymbekov University</p>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'Level' %}</small>
+                                <p class="fw-semibold mb-0">{{ level.level }}</p>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'Program' %}</small>
+                                <p class="fw-semibold mb-0">{{ student.program }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <hr>
+
+                <!-- Contact Information -->
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-phone-alt text-blue-800 me-2 fs-5"></i>
+                            <h6 class="fw-bold mb-0 text-blue-800">{% trans 'Contact Information' %}</h6>
+                        </div>
+                        <div class="ps-4">
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'Email Address' %}</small>
+                                <p class="fw-semibold mb-0">{{ user.email }}</p>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'Phone Number' %}</small>
+                                <p class="fw-semibold mb-0">{{ user.phone }}</p>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'Address' %}</small>
+                                <p class="fw-semibold mb-0">{{ user.address }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Important Dates -->
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-calendar-day text-blue-800 me-2 fs-5"></i>
+                            <h6 class="fw-bold mb-0 text-blue-800">{% trans 'Important Dates' %}</h6>
+                        </div>
+                        <div class="ps-4">
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'Last Login' %}</small>
+                                <p class="fw-semibold mb-0">{{ user.last_login }}</p>
+                            </div>
+                            {% if current_semester and current_session %}
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'Academic Year' %}</small>
+                                <p class="fw-semibold mb-0">{{ current_semester }} {% trans 'Semester' %} {{ current_session }}</p>
+                            </div>
+                            {% endif %}
+                            <div class="mb-2">
+                                <small class="text-muted">{% trans 'Registration Date' %}</small>
+                                <p class="fw-semibold mb-0">{{ user.date_joined|date }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="col-md-3 mx-auto"></div>
-
 </div>
+
+<style>
+.btn-blue-800 {
+    background-color: #1e40af;
+    border-color: #1e40af;
+    color: white;
+}
+.btn-blue-800:hover {
+    background-color: #1e3a8a;
+    border-color: #1e3a8a;
+    color: white;
+}
+.btn-outline-blue-800 {
+    border-color: #1e40af;
+    color: #1e40af;
+}
+.btn-outline-blue-800:hover {
+    background-color: #1e40af;
+    color: white;
+}
+.text-blue-800 {
+    color: #1e40af;
+}
+.bg-blue-800 {
+    background-color: #1e40af;
+}
+.bg-blue-50 {
+    background-color: #eff6ff;
+}
+.bg-blue-100 {
+    background-color: #dbeafe;
+}
+.bg-blue-600 {
+    background-color: #2563eb;
+}
+.border-blue-200 {
+    border-color: #bfdbfe;
+}
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(30, 64, 175, 0.15);
+}
+.hover\:text-blue-600:hover {
+    color: #2563eb;
+}
+</style>
+
 {% endif %}
 
 {% endblock content %}

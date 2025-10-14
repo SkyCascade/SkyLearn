@@ -1,54 +1,65 @@
-{% load static %}
-{% load i18n %}
+{% load static tailwind_tags i18n %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}Salymbekov University{% endblock %}</title>
 
-    <title>{% block title %}DjangoSMS{% endblock title %}</title>
+    <!-- Tailwind CSS сначала -->
+    {% tailwind_css %}
 
-    <link rel="shortcut icon" href="{% static 'img/favicon.png' %}" type="image/x-icon">
+    <!-- Bootstrap после Tailwind -->
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap-5.3.2/css/bootstrap.min.css' %}">
+    
+    <!-- Дополнительные стили -->
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome-6.5.1/css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.min.css' %}">
 
-    <!-- Fontawesome icons -->
-    <link rel="stylesheet" type="text/css" href="{% static 'vendor/fontawesome-6.5.1/css/all.min.css' %}">
-
-    <!-- Bootstrap5 -->
-    <link rel="stylesheet" type="text/css" href="{% static 'vendor/bootstrap-5.3.2/css/bootstrap.min.css' %}">
-
-    <link rel="stylesheet" type="text/css" href="{% static 'css/style.min.css' %}">
-
-    <!-- <script src="https://js.stripe.com/v3/"></script> -->
-    {% block header %}{% endblock %}
+    <style>
+        /* Сброс конфликтующих стилей */
+        .bg-gray-50 {
+            background-color: #f9fafb !important;
+        }
+        
+        /* Убедимся, что Bootstrap не переопределяет наши цвета */
+        body {
+            background-color: #f9fafb !important;
+        }
+        
+        /* Дополнительные кастомные стили для предотвращения конфликтов */
+        .container-fluid {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        
+        /* Улучшенное позиционирование контента относительно фиксированного хедера */
+        #main-content {
+            padding: 0; /* Убираем все отступы, они будут управляться в дочерних компонентах */
+        }
+        
+        /* Переопределяем стили из style.min.css для лучшего контроля отступов */
+        #main {
+            padding-top: 0 !important; /* Убираем верхний отступ из основного CSS */
+        }
+    </style>
 </head>
+<body class="bg-gray-50">
 
-<body>
-    {% block sidebar %}
-        {% include 'sidebar.html' %}
-    {% endblock %}
+    {% block sidebar %}{% include 'sidebar.html' %}{% endblock %}
 
-    {% block maincontent %}
-    <div id="main">
-        {% block topbar %}
-            {% include 'navbar.html' %}
-        {% endblock %}
+    <div id="main" class="min-h-screen">
+        {% block topbar %}{% include 'navbar.html' %}{% endblock %}
 
         <div class="container-fluid" id="main-content">
-            {% block content %}{% endblock content %}
+            {% block content %}{% endblock %}
         </div>
-
     </div>
-    {% endblock %}
-    <script src="{% url 'javascript-catalog' %}"></script>
-    <script type="text/javascript" src="{% static 'vendor/jquery-3.7.1/jquery-3.7.1.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'vendor/bootstrap-5.3.2/js/bootstrap.bundle.min.js' %}"></script>
 
-    <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'vendor/jquery-3.7.1/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap-5.3.2/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
 
-    {% block js %}
-    {% endblock js %}
+    {% block js %}{% endblock %}
 </body>
-
 </html>

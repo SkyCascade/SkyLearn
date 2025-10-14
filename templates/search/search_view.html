@@ -1,98 +1,261 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{% trans 'Search result for' %} {{ query }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{% trans 'Search result for' %} {{ query }} | {% trans 'Salymbekov University LMS' %}{% endblock title %}
 
 {% load class_name %}
 
 {% block content %}
 
-<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{% trans 'Search' %}</li>
-    </ol>
-</nav>  
+<div class="min-h-screen bg-gray-50">
+    <!-- Breadcrumb -->
+    <nav class="bg-blue-800 text-white px-4 py-3">
+        <ol class="list-none p-0 inline-flex">
+            <li class="flex items-center">
+                <a href="/" class="text-white hover:text-blue-200">{% trans 'Home' %}</a>
+                <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                    <path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/>
+                </svg>
+            </li>
+            <li class="flex items-center">
+                <span class="text-blue-200">{% trans 'Search Results' %}</span>
+            </li>
+        </ol>
+    </nav>
 
-<div class="card p-3" style="box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3); border-radius: 10px;">
-    <h5 class="text-muted m-0">{{ count }} {% trans 'result' %}{{ count|pluralize }} {% trans 'for' %} <b><em class="text-orange"> {{ query }}</em></b></h5>
-    <hr>
-    {% for object in object_list %}
-        {% with object|class_name as klass %}
-        {% if klass == "Program" %}
-            <div class="col-12 class-item">
-                <span class="bg-secondary text-light small px-2 rounded-pill">{% trans 'Program' %}</span>
-                <h5><a href="{{ object.get_absolute_url }}"><b>{{ object.title}}</b></a></h5>
-                <p>{{ object.summary }}</p>
-            </div><hr>
+    <!-- University Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto py-4 px-4">
+            <h1 class="text-2xl font-bold text-blue-800 text-center">Salymbekov University</h1>
+        </div>
+    </div>
 
-        {% elif klass == "Course" %}
-            <div class="col-12 class-item">
-                <span class="bg-secondary text-light small px-2 rounded-pill">{% trans 'Course' %}</span>
-                <p><b>{% trans 'Program of' %}</b> {{ object.program }}</p>
-                <h5><a href="{{ object.get_absolute_url }}"><b>{{ object }}</b></a></h5>
-                <p>{{ object.summary }}</p>
-            </div><hr>
-            
-        {% elif klass == "NewsAndEvents" %}
-            <div class="col-12 class-item">
-                <span class="bg-secondary text-light small px-2 rounded-pill">{% trans 'News And Events' %}</span>
-                <p><b>{% trans 'Date:' %} </b> {{ object.updated_date|timesince }} ago</p>
-                <h5><a href="{{ object.get_absolute_url }}"><b>{{ object.title }}</b></a></h5>
-                <p>{{ object.summary }}</p>
-            </div><hr>
+    <div class="max-w-6xl mx-auto py-8 px-4">
+        <!-- Search Results Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                        <svg class="w-6 h-6 text-blue-800 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        {% trans 'Search Results' %}
+                    </h1>
+                    <p class="text-gray-600 mt-2">
+                        <span class="font-semibold text-blue-800">{{ count }}</span>
+                        {% trans 'result' %}{{ count|pluralize }} {% trans 'for' %}
+                        <span class="font-bold text-orange-600">"{{ query }}"</span>
+                    </p>
+                </div>
+                <div class="bg-blue-50 rounded-lg px-4 py-2">
+                    <span class="text-sm font-medium text-blue-800">{% trans 'University Search' %}</span>
+                </div>
+            </div>
 
-        {% elif klass == "Quiz" %}
-            <div class="col-12 class-item">
-                <span class="bg-secondary text-light small px-2 rounded-pill">{% trans 'Quiz' %}</span>
-                <p>{{ object.category }} {% trans 'quiz' %},  <b>{% trans 'Course:' %}</b> {{ object.course }}</p>
-                <h5><a href="{{ object.get_absolute_url }}"><b>{{ object.title }}</b></a></h5>
-                <p>{{ object.description }}</p>
-            </div><hr>
-
-        {% else %}
-            <div class="col-12 col-lg-8 offset-lg-4">
-                <span class="bg-secondary text-light small px-2 rounded-pill">{% trans 'Program' %}</span>
-                <a href="{{ object.get_absolute_url }}" class="class-item d-flex">{{ object }} | {{ object|class_name }}</a>
-            </div><hr>
-            <div class="col-12 class-item">
-                <h5><a href="{{ object.get_absolute_url }}">{{ object }} | <b>{{ object|class_name }}</b></a></h5>
-                <p>{{ object.description }}</p>
-            </div><hr>
-        {% endif %}
-
-        {% endwith %}
-
-{% empty %}
-
-<div class="row">
-    <div class="col-12 col-md-6 mx-auto py-5">
-    <form method="GET" action=".">
-    
-        <div class="input-group form-group-no-border mx-auto" style="margin-bottom: 0px; font-size: 32px;">
-            <input type="text" name="q" data-toggle="popover" data-placement="bottom" 
-            data-content="Press enter to search" class="form-control cfe-nav" 
-            placeholder="Search..." value="{{ request.GET.q }}" data-original-title="" title="" 
-            autofocus="autofocus" required>
-            <button type="submit" class="btn btn-dark">
-                <i class="fa fa-search" aria-hidden="true"></i>
-            </button>
+            <!-- Search Form -->
+            <form method="GET" action="." class="max-w-2xl">
+                <div class="flex space-x-2">
+                    <div class="flex-1 relative">
+                        <input 
+                            type="text" 
+                            name="q" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition duration-200"
+                            placeholder="{% trans 'Search programs, courses, news, quizzes...' %}" 
+                            value="{{ request.GET.q }}" 
+                            autofocus
+                            required
+                        >
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <button type="submit" class="bg-blue-800 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-200 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        {% trans 'Search' %}
+                    </button>
+                </div>
+            </form>
         </div>
 
-    </form>
+        <!-- Search Results -->
+        {% if object_list %}
+        <div class="space-y-4">
+            {% for object in object_list %}
+                {% with object|class_name as klass %}
+                <div class="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition duration-200">
+                    <div class="p-6">
+                        {% if klass == "Program" %}
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-blue-100 text-blue-800 rounded-lg p-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <span class="inline-block bg-blue-800 text-white text-xs font-medium px-3 py-1 rounded-full mb-2">
+                                    {% trans 'Program' %}
+                                </span>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                                    <a href="{{ object.get_absolute_url }}" class="hover:text-blue-800 transition duration-150">
+                                        {{ object.title }}
+                                    </a>
+                                </h3>
+                                <p class="text-gray-600">{{ object.summary }}</p>
+                            </div>
+                        </div>
 
-    </div>
-    <div class="col-12 pl-5">
-    <h5>{% trans 'Search by:' %}</h5>
-    <ul class="pl-3">
-        <li>{% trans 'Program' %} <span class="text-orange">&gt;</span> {% trans 'Title or Description' %}</li>
-        <li>{% trans 'Course' %} <span class="text-orange">&gt;</span>{% trans 'Title, Code or Description' %}</li>
-        <li>{% trans 'News And Events' %} <span class="text-orange">&gt;</span> {% trans 'Title, Description or just by typing news or event' %}li>
-        <li>{% trans 'Quiz' %} <span class="text-orange">&gt;</span>{% trans 'Title, Description or Category(practice, assignment and exam)' %}</li>
-    </ul>
+                        {% elif klass == "Course" %}
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-green-100 text-green-800 rounded-lg p-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <span class="inline-block bg-green-600 text-white text-xs font-medium px-3 py-1 rounded-full mb-2">
+                                    {% trans 'Course' %}
+                                </span>
+                                <p class="text-sm text-gray-500 mb-1">
+                                    <span class="font-medium">{% trans 'Program:' %}</span> {{ object.program }}
+                                </p>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                                    <a href="{{ object.get_absolute_url }}" class="hover:text-green-700 transition duration-150">
+                                        {{ object }}
+                                    </a>
+                                </h3>
+                                <p class="text-gray-600">{{ object.summary }}</p>
+                            </div>
+                        </div>
+
+                        {% elif klass == "NewsAndEvents" %}
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-orange-100 text-orange-800 rounded-lg p-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <span class="inline-block bg-orange-600 text-white text-xs font-medium px-3 py-1 rounded-full mb-2">
+                                    {% trans 'News & Events' %}
+                                </span>
+                                <p class="text-sm text-gray-500 mb-1">
+                                    <span class="font-medium">{% trans 'Posted:' %}</span> {{ object.updated_date|timesince }} {% trans 'ago' %}
+                                </p>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                                    <a href="{{ object.get_absolute_url }}" class="hover:text-orange-600 transition duration-150">
+                                        {{ object.title }}
+                                    </a>
+                                </h3>
+                                <p class="text-gray-600">{{ object.summary }}</p>
+                            </div>
+                        </div>
+
+                        {% elif klass == "Quiz" %}
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-purple-100 text-purple-800 rounded-lg p-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <span class="inline-block bg-purple-600 text-white text-xs font-medium px-3 py-1 rounded-full mb-2">
+                                    {% trans 'Quiz' %}
+                                </span>
+                                <p class="text-sm text-gray-500 mb-1">
+                                    <span class="font-medium">{{ object.category }} {% trans 'quiz' %},</span>
+                                    <span class="font-medium">{% trans 'Course:' %}</span> {{ object.course }}
+                                </p>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                                    <a href="{{ object.get_absolute_url }}" class="hover:text-purple-700 transition duration-150">
+                                        {{ object.title }}
+                                    </a>
+                                </h3>
+                                <p class="text-gray-600">{{ object.description }}</p>
+                            </div>
+                        </div>
+
+                        {% else %}
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-gray-100 text-gray-800 rounded-lg p-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <span class="inline-block bg-gray-600 text-white text-xs font-medium px-3 py-1 rounded-full mb-2">
+                                    {{ object|class_name }}
+                                </span>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                                    <a href="{{ object.get_absolute_url }}" class="hover:text-blue-800 transition duration-150">
+                                        {{ object }}
+                                    </a>
+                                </h3>
+                                <p class="text-gray-600">{{ object.description }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endwith %}
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div class="max-w-md mx-auto">
+                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">{% trans 'No results found' %}</h3>
+                <p class="text-gray-600 mb-6">{% trans 'Try adjusting your search terms or explore the suggestions below.' %}</p>
+                
+                <!-- Search Tips -->
+                <div class="bg-blue-50 rounded-lg p-6 text-left">
+                    <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {% trans 'Search Tips' %}
+                    </h4>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-start">
+                            <span class="text-blue-800 mr-2">•</span>
+                            <span><strong>{% trans 'Programs' %}</strong> - {% trans 'Search by title or description' %}</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-800 mr-2">•</span>
+                            <span><strong>{% trans 'Courses' %}</strong> - {% trans 'Search by title, code or description' %}</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-800 mr-2">•</span>
+                            <span><strong>{% trans 'News & Events' %}</strong> - {% trans 'Search by title, description or type "news" or "event"' %}</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-800 mr-2">•</span>
+                            <span><strong>{% trans 'Quizzes' %}</strong> - {% trans 'Search by title, description or category (practice, assignment, exam)' %}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
-{% endfor %}
-</div>
+<style>
+    .transition {
+        transition-property: all;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 200ms;
+    }
+    
+    .hover\:shadow-lg:hover {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+</style>
 
 {% endblock content %}

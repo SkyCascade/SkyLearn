@@ -45,7 +45,15 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "tailwind",
+    "theme",
 ]
+if DEBUG:
+    # Add django_browser_reload only in DEBUG mode
+    DJANGO_APPS += ['django_browser_reload']
+
+TAILWIND_APP_NAME = 'theme'
+
 
 # Third party apps
 THIRD_PARTY_APPS = [
@@ -79,6 +87,12 @@ MIDDLEWARE = [
     "django.middleware.locale.LocaleMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # whitenoise to serve static files
 ]
+if DEBUG:
+    # Add django_browser_reload middleware only in DEBUG mode
+    MIDDLEWARE += [
+        "django_browser_reload.middleware.BrowserReloadMiddleware",
+    ]
+
 
 ROOT_URLCONF = "config.urls"
 

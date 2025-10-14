@@ -1,16 +1,78 @@
 {% load i18n %}
 {% if filter.form %}
 
-<form action="" method="get">
-    <div class="d-flex flex-wrap align-items-center">
+<form action="" method="get" class="w-full">
+    <div class="flex flex-col sm:flex-row flex-wrap items-end gap-4 p-6 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md">
         {% for field in filter.form %}
-        <div class="mb-2 me-2">
-            {{ field }}
+        <div class="flex-1 min-w-[200px]">
+            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ field.label }}
+                {% if field.field.required %}<span class="text-red-500 ml-1">*</span>{% endif %}
+            </label>
+            <div class="relative">
+                {{ field }}
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                </div>
+            </div>
+            {% if field.help_text %}
+            <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+            {% endif %}
         </div>
         {% endfor %}
-        <button class="btn btn-sm mb-2" type="submit">
-            <i class="fa fa-sliders"></i> {% trans 'Filter' %}
-        </button>
+        
+        <div class="flex gap-3 mt-2">
+            <button class="inline-flex items-center px-5 py-2.5 bg-blue-800 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-300 ease-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm" 
+                    type="submit">
+                <i class="fas fa-sliders mr-2"></i>
+                {% trans 'Apply Filters' %}
+            </button>
+            
+            <a href="{{ request.path }}" 
+               class="inline-flex items-center px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 border border-gray-300">
+                <i class="fas fa-redo mr-2"></i>
+                {% trans 'Reset' %}
+            </a>
+        </div>
     </div>
 </form>
+
+<style>
+    /* Custom styling for form inputs to match Tailwind */
+    select, input[type="text"], input[type="search"], input[type="number"], input[type="email"], input[type="date"] {
+        @apply w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200;
+    }
+    
+    /* Focus states */
+    select:focus, input:focus {
+        @apply ring-2 ring-blue-500 ring-opacity-20 border-blue-500;
+    }
+    
+    /* Hover states */
+    select:hover, input:hover {
+        @apply border-gray-400;
+    }
+    
+    /* Disabled state */
+    select:disabled, input:disabled {
+        @apply bg-gray-100 cursor-not-allowed opacity-60;
+    }
+    
+    /* Animation for filter form */
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    form {
+        animation: slideDown 0.4s ease-out;
+    }
+</style>
+
 {% endif %}

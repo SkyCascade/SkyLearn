@@ -1,52 +1,344 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{{ title }} | {% trans 'Salymbekov University' %}{% endblock title %}
 {% load crispy_forms_tags %}
 {% load static %}
 
 {% block content %}
 
-<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'programs' %}">{% trans 'Programs' %}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{% trans 'Course Form' %}</li>
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    .slide-in-left {
+        animation: slideInLeft 0.5s ease-out forwards;
+    }
+    
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px -5px rgba(30, 64, 175, 0.15);
+    }
+    
+    .btn-primary-university {
+        background: linear-gradient(135deg, #1e40af, #3730a3);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary-university:hover {
+        background: linear-gradient(135deg, #3730a3, #1e40af);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(30, 64, 175, 0.3);
+    }
+    
+    .form-card {
+        transition: all 0.3s ease;
+        opacity: 0;
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    .input-focus:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        border-color: #3b82f6;
+    }
+    
+    .checkbox-container {
+        transition: all 0.3s ease;
+    }
+    
+    .checkbox-container:hover {
+        transform: scale(1.02);
+    }
+     .page-container {
+        margin-top: 60px; /* Дополнительный отступ сверху для хедера */
+        margin-bottom: 20px; /* Отступ снизу */
+        margin-left: 20px; /* Отступ слева */
+        margin-right: 20px; /* Отступ справа */
+        min-height: calc(100vh - 140px); /* Минимальная высота с учетом хедера и отступов */
+    }
+
+    /* Для мобильных устройств */
+    @media (max-width: 768px) {
+        .page-container {
+            margin-top: 50px; /* Больше отступа сверху на мобильных */
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+    }
+</style>
+
+<div class="page-container">
+<!-- Навигационная цепочка -->
+<nav class="flex mb-6 slide-in-left" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="/" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-800 transition-all duration-300">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                {% trans 'Home' %}
+            </a>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <svg class="w-4 h-4 mx-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <a href="{% url 'programs' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-800 transition-all duration-300">{% trans 'Programs' %}</a>
+            </div>
+        </li>
+        <li aria-current="page">
+            <div class="flex items-center">
+                <svg class="w-4 h-4 mx-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span class="ml-1 text-sm font-medium text-gray-500">{% trans 'Course Form' %}</span>
+            </div>
+        </li>
     </ol>
 </nav>
 
-<div class="title-1">{% trans 'Course Form' %}</div>
-<br>
-<br>
+<!-- Заголовок страницы -->
+<div class="mb-8 fade-in-up">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <div class="w-10 h-10 bg-blue-800 rounded-lg flex items-center justify-center mr-3 transition-all duration-300 hover:scale-110">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                </div>
+                <span class="text-blue-800">Salymbekov University</span>
+                <span class="text-gray-500 mx-2">|</span>
+                <span class="text-gray-700">{% trans 'Course Management' %}</span>
+            </h1>
+            <p class="text-gray-600 mt-2 ml-13">{% trans 'Create or update course information' %}</p>
+        </div>
+    </div>
+</div>
 
 {% include 'snippets/messages.html' %}
 
-<form action="" method="POST">{% csrf_token %}
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <p class="form-title">{% trans 'Course Detail' %}</p>
-                <div class="p-3">
+<form action="" method="POST" class="space-y-6">{% csrf_token %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Левая колонка - Детали курса -->
+        <div class="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden form-card hover-lift" style="animation-delay: 0.1s">
+            <div class="bg-gradient-to-r from-blue-800 to-blue-700 px-6 py-4">
+                <h2 class="text-lg font-semibold text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    {% trans 'Course Details' %}
+                </h2>
+            </div>
+            <div class="p-6 space-y-5">
+                <div class="transition-all duration-300 transform hover:scale-[1.02]">
                     {{ form.title|as_crispy_field }}
+                </div>
+                
+                <div class="transition-all duration-300 transform hover:scale-[1.02]">
                     {{ form.code|as_crispy_field }}
+                </div>
+                
+                <div class="transition-all duration-300 transform hover:scale-[1.02]">
                     {{ form.summary|as_crispy_field }}
+                </div>
+                
+                <!-- Информационный блок -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 transition-all duration-300 hover:shadow-md">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">
+                                {% trans 'Course Information' %}
+                            </h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <p>{% trans 'Provide clear and descriptive course information for better student understanding.' %}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card">
-                <p class="form-title">{% trans 'Other Info' %}</p>
-                <div class="p-3">
+        
+        <!-- Правая колонка - Дополнительная информация -->
+        <div class="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden form-card hover-lift" style="animation-delay: 0.2s">
+            <div class="bg-gradient-to-r from-blue-800 to-blue-700 px-6 py-4">
+                <h2 class="text-lg font-semibold text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    {% trans 'Academic Information' %}
+                </h2>
+            </div>
+            <div class="p-6 space-y-5">
+                <div class="transition-all duration-300 transform hover:scale-[1.02]">
                     {{ form.program|as_crispy_field }}
-                    {{ form.credit|as_crispy_field }}
-                    {{ form.year|as_crispy_field }}
-                    {{ form.semester|as_crispy_field }}
-                    {{ form.level|as_crispy_field }}
-                    {{ form.is_elective|as_crispy_field }}
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="transition-all duration-300 transform hover:scale-[1.02]">
+                        {{ form.credit|as_crispy_field }}
+                    </div>
+                    <div class="transition-all duration-300 transform hover:scale-[1.02]">
+                        {{ form.year|as_crispy_field }}
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="transition-all duration-300 transform hover:scale-[1.02]">
+                        {{ form.semester|as_crispy_field }}
+                    </div>
+                    <div class="transition-all duration-300 transform hover:scale-[1.02]">
+                        {{ form.level|as_crispy_field }}
+                    </div>
+                </div>
+                
+                <div class="checkbox-container bg-gray-50 border border-gray-200 rounded-lg p-4 transition-all duration-300 hover:shadow-md">
+                    <div class="flex items-center">
+                        {{ form.is_elective }}
+                        <label for="{{ form.is_elective.id_for_label }}" class="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
+                            {% trans 'This is an elective course' %}
+                        </label>
+                    </div>
+                    {% if form.is_elective.help_text %}
+                    <p class="mt-2 text-sm text-gray-500">{{ form.is_elective.help_text }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Статистика курса -->
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 transition-all duration-300 hover:shadow-md">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">{% trans 'Course Requirements' %}</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-blue-800">{{ form.credit.value|default:"0" }}</div>
+                            <div class="text-gray-600">{% trans 'Credits' %}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-blue-800">{{ form.level.value|default:"-" }}</div>
+                            <div class="text-gray-600">{% trans 'Level' %}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <input class="btn btn-primary mt-3" type="submit" value="{% trans 'Save' %}">
+    
+    <!-- Кнопки действий -->
+    <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200 bg-white rounded-xl shadow-sm border border-blue-100 p-6 fade-in-up" style="animation-delay: 0.3s">
+        <a href="{% url 'programs' %}" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-105 hover:shadow-md flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            {% trans 'Cancel' %}
+        </a>
+        <button type="submit" class="btn-primary-university px-5 py-2.5 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            {% trans 'Save Course' %}
+        </button>
+    </div>
 </form>
+
+<!-- Футер -->
+<div class="mt-8 text-center text-sm text-gray-500 border-t border-gray-200 pt-4 fade-in-up" style="animation-delay: 0.4s">
+    <p>{% trans 'Salymbekov University Course Management System' %} • {% trans 'Academic Year' %} 2023-2024</p>
+</div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Анимация для полей ввода
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.classList.add('transition-all', 'duration-300', 'input-focus');
+            
+            // Специфичные стили для разных типов полей
+            if (input.type === 'select-one') {
+                input.classList.add('appearance-none', 'pr-8');
+            }
+            
+            if (input.type === 'checkbox') {
+                input.classList.add('w-4', 'h-4', 'text-blue-600', 'rounded', 'focus:ring-blue-500', 'border-gray-300');
+            }
+            
+            if (input.tagName === 'TEXTAREA') {
+                input.classList.add('resize-vertical', 'min-h-[100px]');
+            }
+        });
+        
+        // Стили для select элементов
+        const selects = document.querySelectorAll('select');
+        selects.forEach(select => {
+            select.classList.add('appearance-none', 'pr-8');
+        });
+        
+        // Обновление статистики при изменении полей
+        const creditField = document.querySelector('#id_credit');
+        const levelField = document.querySelector('#id_level');
+        
+        function updateStats() {
+            const creditValue = creditField?.value || '0';
+            const levelValue = levelField?.value || '-';
+            
+            document.querySelectorAll('.text-lg.font-bold.text-blue-800')[0].textContent = creditValue;
+            document.querySelectorAll('.text-lg.font-bold.text-blue-800')[1].textContent = levelValue;
+        }
+        
+        if (creditField) creditField.addEventListener('input', updateStats);
+        if (levelField) levelField.addEventListener('change', updateStats);
+        
+        // Плавная анимация отправки формы
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {% trans 'Saving...' %}
+            `;
+            submitBtn.disabled = true;
+            submitBtn.classList.remove('hover:scale-105');
+        });
+        
+        // Инициализация статистики
+        updateStats();
+    });
+</script>
 
 {% endblock content %}
