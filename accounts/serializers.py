@@ -3,7 +3,9 @@ from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from course.models import Program
 from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,7 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'first_name', 'last_name', 'email', 
             'phone', 'address', 'gender', 'picture', 'is_student', 
-            'is_lecturer', 'is_parent'
+            'is_lecturer', 'is_parent', 
         ]
         read_only_fields = ['id']
 
