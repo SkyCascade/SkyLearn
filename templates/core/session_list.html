@@ -3,6 +3,7 @@
 {% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
 
 {% block content %}
+<div class="page-container">
 
 <!-- Breadcrumb -->
 <nav class="flex mb-6" aria-label="Breadcrumb">
@@ -126,5 +127,25 @@
     <p class="text-blue-800 font-semibold text-lg">Salymbekov University</p>
     <p class="text-gray-600 text-sm mt-1">{% trans 'Quality Education for Future Leaders' %}</p>
 </div>
+</div>
+
+<style>
+    .page-container {
+        margin-top: 40px; /* Дополнительный отступ сверху для хедера */
+        margin-bottom: 20px; /* Отступ снизу */
+        margin-left: 20px; /* Отступ слева */
+        margin-right: 20px; /* Отступ справа */
+        min-height: calc(100vh - 140px); /* Минимальная высота с учетом хедера и отступов */
+    }
+
+    /* Для мобильных устройств */
+    @media (max-width: 768px) {
+        .page-container {
+            margin-top: 30px; /* Больше отступа сверху на мобильных */
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+    }
+</style>
 
 {% endblock content %}

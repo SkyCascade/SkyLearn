@@ -7,6 +7,7 @@
 
 {% block content %}
 
+<div class="page-container">
 <div class="min-h-screen bg-gray-50">
     <!-- Breadcrumb -->
     <nav class="flex px-6 py-4 bg-white shadow-sm" aria-label="Breadcrumb">
@@ -93,6 +94,7 @@
         </div>
     </div>
 </div>
+</div>
 
 <style>
     /* Custom styling for crispy forms to match Tailwind */
@@ -110,6 +112,22 @@
     
     .is-invalid {
         @apply border-red-500 focus:ring-red-500 focus:border-red-500;
+    }
+    .page-container {
+        margin-top: 20px; /* Дополнительный отступ сверху для хедера */
+        margin-bottom: 20px; /* Отступ снизу */
+        margin-left: 20px; /* Отступ слева */
+        margin-right: 20px; /* Отступ справа */
+        min-height: calc(100vh - 140px); /* Минимальная высота с учетом хедера и отступов */
+    }
+
+    /* Для мобильных устройств */
+    @media (max-width: 768px) {
+        .page-container {
+            margin-top: 30px; /* Больше отступа сверху на мобильных */
+            margin-left: 10px;
+            margin-right: 10px;
+        }
     }
 </style>
 

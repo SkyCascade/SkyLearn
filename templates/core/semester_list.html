@@ -136,8 +136,25 @@
         background-color: #dc2626;
         color: white;
     }
-</style>
+    .page-container {
+        margin-top: 50px; /* Дополнительный отступ сверху для хедера */
+        margin-bottom: 20px; /* Отступ снизу */
+        margin-left: 20px; /* Отступ слева */
+        margin-right: 20px; /* Отступ справа */
+        min-height: calc(100vh - 140px); /* Минимальная высота с учетом хедера и отступов */
+    }
 
+    /* Для мобильных устройств */
+    @media (max-width: 768px) {
+        .page-container {
+            margin-top: 30px; /* Больше отступа сверху на мобильных */
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+        
+    }
+</style>
+<div class="page-container">
 <!-- Навигационная цепочка -->
 <nav class="flex mb-6 slide-in-left" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -318,6 +335,7 @@
 <!-- Футер -->
 <div class="mt-8 text-center text-sm text-gray-500 border-t border-gray-200 pt-4">
     <p>{% trans 'Salymbekov University Academic System' %} • {% trans 'Academic Year' %} 2023-2024</p>
+</div>
 </div>
 
 <script>
