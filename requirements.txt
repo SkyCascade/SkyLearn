@@ -16,6 +16,7 @@ cssselect2==0.8.0
 Deprecated==1.2.18
 Django==5.2.7
 django-browser-reload==1.21.0
+django-cors-headers==4.9.0
 django-crispy-forms==1.14.0
 django-extensions==3.2.3
 django-filter==23.5
@@ -24,6 +25,7 @@ django-model-utils==4.3.1
 django-modeltranslation==0.18.11
 django-tailwind==4.2.0
 djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
 factory_boy==3.3.1
 Faker==37.11.0
 gopay==2.0.1
@@ -45,6 +47,7 @@ pydantic==1.10.24
 Pygments==2.19.2
 pyHanko==0.31.0
 pyhanko-certvalidator==0.29.0
+PyJWT==2.10.1
 pypdf==6.1.1
 python-bidi==0.6.6
 python-dateutil==2.9.0.post0
