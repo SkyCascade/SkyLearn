@@ -9,6 +9,8 @@ from django.urls import path, include
 #     LogoutView,
 # )
 from .views import (
+    StaffCreateView,
+    StudentCreateView,
     profile,
     profile_single,
     admin_panel,
@@ -40,7 +42,9 @@ urlpatterns = [
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('profile/', UserProfileView.as_view(), name='user_profile'),
-    path("", include("django.contrib.auth.urls")),
+    path('create-staff/', StaffCreateView.as_view(), name='create-staff'),
+    path('create-student/', StudentCreateView.as_view(), name='create-student'),
+    path("", include("django.contrib.auth.urls") ),
     path("admin_panel/", admin_panel, name="admin_panel"),
     path("profile/", profile, name="profile"),
     path("profile/<int:user_id>/detail/", profile_single, name="profile_single"),

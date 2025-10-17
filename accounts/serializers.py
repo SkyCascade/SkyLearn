@@ -19,40 +19,22 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class StaffAddSerializer(serializers.ModelSerializer):
-    password1 = serializers.CharField(
-        max_length=30,
-        write_only=True,
-        required=False,
-        style={'input_type': 'password'}
-    )
-    password2 = serializers.CharField(
-        max_length=30,
-        write_only=True,
-        required=False,
-        style={'input_type': 'password'}
-    )
-
+    
     class Meta:
         model = User
         fields = [
             'username', 'first_name', 'last_name', 'gender', 'address',
-            'phone', 'email', 'password1', 'password2'
+            'phone', 'email'
         ]
 
-    def validate(self, attrs):
-        if attrs.get('password1') != attrs.get('password2'):
-            raise serializers.ValidationError({"password2": "Passwords do not match."})
-        return attrs
+    
 
     @transaction.atomic
     def create(self, validated_data):
-        password1 = validated_data.pop('password1', None)
-        password2 = validated_data.pop('password2', None)
-        
+
         user = User.objects.create_user(
             username=validated_data.get('username'),
             email=validated_data.get('email'),
-            password=password1,
             first_name=validated_data.get('first_name'),
             last_name=validated_data.get('last_name'),
             gender=validated_data.get('gender'),
@@ -64,18 +46,7 @@ class StaffAddSerializer(serializers.ModelSerializer):
 
 
 class StudentAddSerializer(serializers.ModelSerializer):
-    password1 = serializers.CharField(
-        max_length=30,
-        write_only=True,
-        required=False,
-        style={'input_type': 'password'}
-    )
-    password2 = serializers.CharField(
-        max_length=30,
-        write_only=True,
-        required=False,
-        style={'input_type': 'password'}
-    )
+    
     level = serializers.ChoiceField(choices=LEVEL)
     program = serializers.PrimaryKeyRelatedField(queryset=Program.objects.all())
 
@@ -83,7 +54,7 @@ class StudentAddSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'username', 'first_name', 'last_name', 'gender', 'address',
-            'phone', 'email', 'level', 'program', 'password1', 'password2'
+            'phone', 'email', 'level', 'program'
         ]
 
     def validate_email(self, value):
@@ -91,22 +62,15 @@ class StudentAddSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Email has been taken, try another email address.")
         return value
 
-    def validate(self, attrs):
-        if attrs.get('password1') != attrs.get('password2'):
-            raise serializers.ValidationError({"password2": "Passwords do not match."})
-        return attrs
-
     @transaction.atomic
     def create(self, validated_data):
-        password1 = validated_data.pop('password1', None)
-        password2 = validated_data.pop('password2', None)
+       
         level = validated_data.pop('level')
         program = validated_data.pop('program')
         
         user = User.objects.create_user(
             username=validated_data.get('username'),
             email=validated_data.get('email'),
-            password=password1,
             first_name=validated_data.get('first_name'),
             last_name=validated_data.get('last_name'),
             gender=validated_data.get('gender'),

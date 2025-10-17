@@ -5,7 +5,8 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 from PIL import Image
-
+import random
+import string
 from course.models import Program
 from .validators import ASCIIUsernameValidator
 
@@ -62,6 +63,11 @@ class CustomUserManager(UserManager):
 
     def get_superuser_count(self):
         return self.model.objects.filter(is_superuser=True).count()
+    
+    def make_random_password(self, length=10):
+        """Генерирует случайный пароль"""
+        characters = string.ascii_letters + string.digits + "!@#$%^&*"
+        return ''.join(random.choice(characters) for i in range(length))
 
 
 GENDERS = ((_("M"), _("Male")), (_("F"), _("Female")))

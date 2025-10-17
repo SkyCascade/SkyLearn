@@ -9,7 +9,11 @@ from django.utils.decorators import method_decorator
 from django.views.generic import CreateView
 from django_filters.views import FilterView
 from xhtml2pdf import pisa
-
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from django.db import transaction
 from accounts.decorators import admin_required
 from accounts.filters import LecturerFilter, StudentFilter
 from accounts.forms import (
@@ -35,7 +39,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
-from .serializers import UserSerializer
+
+from .serializers import UserSerializer, StaffAddSerializer, StudentAddSerializer
 
 User = get_user_model()
 
@@ -63,6 +68,88 @@ class UserProfileView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+
+
+class StaffCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def post(self, request):
+        serializer = StaffAddSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                staff_user = serializer.save()
+                return Response({
+                    'message': 'Staff member created successfully',
+                    'user_id': staff_user.id,
+                    'username': staff_user.username
+                }, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({
+                    'error': str(e)
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from .models import Program
+from .serializers import StudentAddSerializer
+
+class StudentCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def get(self, request):
+        """Получить список программ для фронтенда (опционально)"""
+        programs = Program.objects.all()
+        program_choices = [{'id': program.id, 'name': program.name} for program in programs]
+        return Response({
+            'programs': program_choices,
+            'levels': [
+                {'value': value, 'label': label} for value, label in StudentAddSerializer.LEVEL
+            ]
+        })
+    
+    def post(self, request):
+        """Создать нового студента"""
+        serializer = StudentAddSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            try:
+                student_user = serializer.save()
+                
+                # Дополнительные действия после создания
+                # Например, отправка приветственного email, логирование и т.д.
+                
+                return Response({
+                    'message': 'Student created successfully',
+                    'data': {
+                        'user_id': student_user.id,
+                        'username': student_user.username,
+                        'email': student_user.email,
+                        'full_name': f"{student_user.first_name} {student_user.last_name}",
+                        'student_id': student_user.student.id,
+                        'level': student_user.student.level,
+                        'program': student_user.student.program.name
+                    }
+                }, status=status.HTTP_201_CREATED)
+                
+            except Exception as e:
+                # Логирование ошибки
+                print(f"Error creating student: {str(e)}")
+                return Response({
+                    'error': 'Failed to create student. Please try again.',
+                    'details': str(e)
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Возвращаем ошибки валидации
+        return Response({
+            'error': 'Validation failed',
+            'details': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
 
 # Если у вас уже есть другие views в accounts, просто добавьте эти классы
 
