@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.db import transaction
+from django.db.models import Q
 from accounts.decorators import admin_required
 from accounts.filters import LecturerFilter, StudentFilter
 from accounts.forms import (
@@ -39,8 +40,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
+from rest_framework import generics, permissions
+from rest_framework.decorators import action
 
-from .serializers import UserSerializer, StaffAddSerializer, StudentAddSerializer
+
+
+
+from .serializers import UserSerializer, StaffAddSerializer, StudentAddSerializer, StaffListSerializer, UserSerializer, UserUpdateSerializer
 
 User = get_user_model()
 
@@ -69,7 +75,54 @@ class UserProfileView(APIView):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+User = get_user_model()
 
+
+class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
+    """
+    View для получения и обновления данных пользователя
+    Поддерживает GET (просмотр) и PUT/PATCH (обновление)
+    """
+    queryset = User.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_class(self):
+        """
+        Возвращает разные сериализаторы для разных действий
+        """
+        if self.request.method == 'GET':
+            return UserSerializer
+        return UserUpdateSerializer
+    
+    def get_queryset(self):
+        """
+        Можно добавить дополнительную фильтрацию если нужно
+        Например, только учителя или определенные роли
+        """
+        return User.objects.all()
+    
+    def update(self, request, *args, **kwargs):
+        """
+        Переопределяем для кастомного ответа или логики
+        """
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response(serializer.data)
+
+    
+
+class UserDetailAPIView(APIView):
+    """
+    Retrieve user by ID
+    """
+    def get(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class StaffCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]

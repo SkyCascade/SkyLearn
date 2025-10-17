@@ -33,9 +33,12 @@ from .views import (
 )
 
 # from .forms import EmailValidationOnForgotPassword
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import CustomTokenObtainPairView, UserProfileView
+from .views import CustomTokenObtainPairView, UserProfileView, UserDetailUpdateView
 
+router = DefaultRouter()
 
 
 urlpatterns = [
@@ -44,6 +47,9 @@ urlpatterns = [
     path('profile/', UserProfileView.as_view(), name='user_profile'),
     path('create-staff/', StaffCreateView.as_view(), name='create-staff'),
     path('create-student/', StudentCreateView.as_view(), name='create-student'),
+    path('users/<int:pk>/', UserDetailUpdateView.as_view(), name='user-detail-update'),
+
+
     path("", include("django.contrib.auth.urls") ),
     path("admin_panel/", admin_panel, name="admin_panel"),
     path("profile/", profile, name="profile"),

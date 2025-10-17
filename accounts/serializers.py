@@ -4,18 +4,83 @@ from django.db import transaction
 from course.models import Program
 from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
+    picture_url = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'first_name', 'last_name', 'email', 
-            'phone', 'address', 'gender', 'picture', 'is_student', 
-            'is_lecturer', 'is_parent', 
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'full_name',
+            'role',
+            'is_student',
+            'is_lecturer',
+            'is_parent',
+            'is_dep_head',
+            'is_superuser',
+            'is_active',
+            'gender',
+            'phone',
+            'address',
+            'picture_url',
+            'date_joined',
+            'last_login'
+        ]
+        read_only_fields = ['id', 'date_joined', 'last_login']
+    
+    def get_full_name(self, obj):
+        return obj.get_full_name
+    
+    def get_role(self, obj):
+        return obj.get_user_role
+    
+    def get_picture_url(self, obj):
+        return obj.get_picture()
+
+
+
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'first_name', 
+            'last_name',
+            'gender',
+            'address', 
+            'phone',
+            'email'
         ]
         read_only_fields = ['id']
+
+    def validate_email(self, value):
+        """
+        Проверяем, что email уникален, исключая текущего пользователя
+        """
+        if User.objects.filter(email=value).exclude(id=self.instance.id).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def update(self, instance, validated_data):
+        """
+        Обновление данных пользователя
+        """
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class StaffAddSerializer(serializers.ModelSerializer):
@@ -103,6 +168,9 @@ class StudentAddSerializer(serializers.ModelSerializer):
         )
         
         return user
+
+
+
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
