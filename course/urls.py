@@ -1,9 +1,14 @@
 from django.urls import path
 from . import views
+from .views import ProgramListAPIView, ProgramDetailAPIView
 
 
 urlpatterns = [
     # Program urls
+    path('', ProgramListAPIView.as_view(), name='program-list'),
+    path('<int:pk>/', ProgramDetailAPIView.as_view(), name='program-detail'),
+
+    
     path("", views.ProgramFilterView.as_view(), name="programs"),
     path("<int:pk>/detail/", views.program_detail, name="program_detail"),
     path("add/", views.program_add, name="add_program"),

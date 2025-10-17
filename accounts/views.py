@@ -74,6 +74,26 @@ class UserProfileView(APIView):
 class StaffCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     
+    def get(self, request):
+        # Получаем всех пользователей с is_lecturer=True
+        lecturers = User.objects.filter(is_lecturer=True)
+        
+        # Поддержка поиска (опционально)
+        search_query = request.query_params.get('search', None)
+        if search_query:
+            lecturers = lecturers.filter(
+                Q(username__icontains=search_query) |
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(email__icontains=search_query)
+            )
+        
+        serializer = StaffListSerializer(lecturers, many=True)
+        return Response({
+            'count': lecturers.count(),
+            'lecturers': serializer.data
+        }, status=status.HTTP_200_OK)
+    
     def post(self, request):
         serializer = StaffAddSerializer(data=request.data)
         if serializer.is_valid():
@@ -102,9 +122,9 @@ class StudentCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get(self, request):
-        """Получить список программ для фронтенда (опционально)"""
+        """Получить список программ для фронтенда"""
         programs = Program.objects.all()
-        program_choices = [{'id': program.id, 'name': program.name} for program in programs]
+        program_choices = [{'id': program.id, 'title': program.title} for program in programs]  # Исправлено: name -> title
         return Response({
             'programs': program_choices,
             'levels': [
@@ -120,9 +140,6 @@ class StudentCreateView(APIView):
             try:
                 student_user = serializer.save()
                 
-                # Дополнительные действия после создания
-                # Например, отправка приветственного email, логирование и т.д.
-                
                 return Response({
                     'message': 'Student created successfully',
                     'data': {
@@ -132,24 +149,21 @@ class StudentCreateView(APIView):
                         'full_name': f"{student_user.first_name} {student_user.last_name}",
                         'student_id': student_user.student.id,
                         'level': student_user.student.level,
-                        'program': student_user.student.program.name
+                        'program': student_user.student.program.title  # Исправлено: name -> title
                     }
                 }, status=status.HTTP_201_CREATED)
                 
             except Exception as e:
-                # Логирование ошибки
                 print(f"Error creating student: {str(e)}")
                 return Response({
                     'error': 'Failed to create student. Please try again.',
                     'details': str(e)
                 }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Возвращаем ошибки валидации
         return Response({
             'error': 'Validation failed',
             'details': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
-
 
 # Если у вас уже есть другие views в accounts, просто добавьте эти классы
 

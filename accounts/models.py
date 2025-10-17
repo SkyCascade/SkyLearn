@@ -21,6 +21,13 @@ LEVEL = (
     (MASTER_DEGREE, _("Master Degree")),
 )
 
+
+
+LEVEL = (
+    # (LEVEL_COURSE, "Level course"),
+    (BACHELOR_DEGREE, _("Bachelor Degree")),
+    (MASTER_DEGREE, _("Master Degree")),
+)
 FATHER = _("Father")
 MOTHER = _("Mother")
 BROTHER = _("Brother")

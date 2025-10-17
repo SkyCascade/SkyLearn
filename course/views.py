@@ -34,6 +34,37 @@ from result.models import TakenCourse
 # Program Views
 # ########################################################
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.db.models import Q
+from .models import Program
+from .serializers import ProgramSerializer
+
+class ProgramListAPIView(APIView):
+    def get(self, request):
+        query = request.GET.get('q', None)
+        
+        if query:
+            programs = Program.objects.search(query)
+        else:
+            programs = Program.objects.all()
+            
+        serializer = ProgramSerializer(programs, many=True)
+        return Response(serializer.data)
+
+class ProgramDetailAPIView(APIView):
+    def get(self, request, pk):
+        try:
+            program = Program.objects.get(pk=pk)
+            serializer = ProgramSerializer(program)
+            return Response(serializer.data)
+        except Program.DoesNotExist:
+            return Response(
+                {"error": "Program not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 
 @method_decorator([login_required, lecturer_required], name="dispatch")
 class ProgramFilterView(FilterView):
