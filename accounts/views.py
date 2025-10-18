@@ -166,13 +166,25 @@ class StaffCreateView(APIView):
     
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import Program
-from .serializers import StudentAddSerializer
+from .serializers import StudentAddSerializer, StudentListSerializer
+
+
+class StudentListViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet для просмотра списка студентов
+    """
+    queryset = User.objects.filter(is_student=True)
+    serializer_class = StudentListSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
 
 class StudentCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
+
     
     def get(self, request):
         """Получить список программ для фронтенда"""
@@ -527,7 +539,6 @@ def edit_student(request, pk):
     )
 
 
-@method_decorator([login_required, admin_required], name="dispatch")
 class StudentListView(FilterView):
     queryset = Student.objects.all()
     filterset_class = StudentFilter

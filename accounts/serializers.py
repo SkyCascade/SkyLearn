@@ -126,6 +126,25 @@ class StaffListSerializer(serializers.ModelSerializer):
     
     def get_user_role(self, obj):
         return obj.get_user_role
+    
+
+class StudentListSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    user_role = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'first_name', 'last_name', 'full_name',
+            'gender', 'address', 'phone', 'email', 'user_role',
+            'date_joined', 'last_login'
+        ]
+    
+    def get_full_name(self, obj):
+        return obj.get_full_name
+    
+    def get_user_role(self, obj):
+        return obj.get_user_role
 
 class StudentAddSerializer(serializers.ModelSerializer):
     

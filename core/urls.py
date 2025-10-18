@@ -16,8 +16,24 @@ from .views import (
     dashboard_view,
 )
 
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
+
+router = DefaultRouter()
+router.register(r'news', views.NewsAndEventsViewSet, basename='news')
+router.register(r'sessions', views.SessionViewSet, basename='session')
+router.register(r'semesters', views.SemesterViewSet, basename='semester')
+
 
 urlpatterns = [
+
+      
+    path('api/', include(router.urls)),
+    path('api/home/', views.home_viewSet, name='home'),
+    path('api/dashboard/', views.dashboard_viewSet, name='dashboard'),
+
+
     # Accounts url
     path("", home_view, name="home"),
     path("add_item/", post_add, name="add_item"),

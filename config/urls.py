@@ -6,6 +6,11 @@ from django.views import defaults as default_views
 from django.conf.urls.i18n import i18n_patterns
 from django.views.i18n import JavaScriptCatalog
 
+
+from django.urls import path, re_path
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+
+
 admin.site.site_header = "SkyLearn Admin"
 
 urlpatterns = [
@@ -20,6 +25,13 @@ urlpatterns += i18n_patterns(
     path(
         "jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")
     ),  # Django JET dashboard URLS
+
+
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+        # Optional: Swagger UI for interactive API documentation
+    path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+        # Optional: Redoc UI for alternative API documentation
+    path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 
 
     path("accounts/", include("accounts.urls")),
