@@ -9,6 +9,8 @@ from django.utils.translation import gettext_lazy as _
 
 from core.models import ActivityLog, Semester
 from core.utils import unique_slug_generator
+from django.db.models.signals import pre_save
+from django.utils.text import slugify
 
 
 class ProgramManager(models.Manager):
@@ -83,6 +85,20 @@ class Course(models.Model):
 
         current_semester = Semester.objects.filter(is_current_semester=True).first()
         return self.semester == current_semester.semester if current_semester else False
+    
+@receiver(pre_save, sender=Course)
+def update_slug(sender, instance, **kwargs):
+        if not instance.slug:
+            # Создание нового объекта
+            instance.slug = slugify(instance.title)
+        else:
+            # Обновление существующего объекта
+            try:
+                old_instance = Course.objects.get(pk=instance.pk)
+                if old_instance.title != instance.title:
+                    instance.slug = slugify(instance.title)
+            except Course.DoesNotExist:
+                pass
 
 
 @receiver(pre_save, sender=Course)

@@ -42,6 +42,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions
 from rest_framework.decorators import action
+from rest_framework import status, viewsets
 
 
 
@@ -77,6 +78,15 @@ class UserProfileView(APIView):
 
 User = get_user_model()
 
+
+
+class LecturerListViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet для просмотра списка преподавателей
+    """
+    queryset = User.objects.filter(is_lecturer=True)
+    serializer_class = StaffListSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
 class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
     """

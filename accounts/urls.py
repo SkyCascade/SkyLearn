@@ -36,7 +36,7 @@ from .views import (
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import CustomTokenObtainPairView, UserProfileView, UserDetailUpdateView, StudentListViewSet
+from .views import CustomTokenObtainPairView, UserProfileView, UserDetailUpdateView, StudentListViewSet, LecturerListViewSet
 
 router = DefaultRouter()
 router.register(r'api/students', StudentListViewSet, basename='student')
@@ -47,7 +47,8 @@ urlpatterns = [
     path('profile/', UserProfileView.as_view(), name='user_profile'),
     path('create-staff/', StaffCreateView.as_view(), name='create-staff'),
     path('create-student/', StudentCreateView.as_view(), name='create-student'),
-    path('users/<int:pk>/', UserDetailUpdateView.as_view(), name='user-detail-update'), 
+    path('users/<int:pk>/', UserDetailUpdateView.as_view(), name='user-detail-update'),
+    path('api/lecturers/', LecturerListViewSet.as_view({'get': 'list'}), name='lecturer-list'),
     path("", include(router.urls)),
 
 
