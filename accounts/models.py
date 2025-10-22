@@ -160,6 +160,18 @@ class StudentManager(models.Manager):
             ).distinct()  # distinct() is often necessary with Q lookups
         return qs
 
+class Group(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+    
+    def get_absolute_url(self):
+        return reverse("group_detail", kwargs={"pk": self.pk})
+    
+    def get_students(self):
+        return self.students.all() 
+    
 
 
 class Student(models.Model):
@@ -167,7 +179,13 @@ class Student(models.Model):
     # id_number = models.CharField(max_length=20, unique=True, blank=True)
     level = models.CharField(max_length=25, choices=LEVEL, null=True)
     program = models.ForeignKey(Program, on_delete=models.CASCADE, null=True)
-
+    group = models.ForeignKey(
+        Group, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='students'  # Добавляем related_name для удобства
+    )    
     objects = StudentManager()
 
     class Meta:
@@ -224,3 +242,4 @@ class DepartmentHead(models.Model):
 
     def __str__(self):
         return "{}".format(self.user)
+    

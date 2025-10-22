@@ -2,11 +2,14 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from course.models import Program
-from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS
+from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS, Group
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
+
+
+
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
@@ -91,7 +94,6 @@ class StaffAddSerializer(serializers.ModelSerializer):
             'username', 'first_name', 'last_name', 'gender', 'address',
             'phone', 'email'
         ]
-
     
 
     @transaction.atomic
@@ -129,33 +131,60 @@ class StaffListSerializer(serializers.ModelSerializer):
     
 
 class StudentListSerializer(serializers.ModelSerializer):
+    # Поля из User модели
+    username = serializers.CharField(source='student.username')
+    first_name = serializers.CharField(source='student.first_name')
+    last_name = serializers.CharField(source='student.last_name')
     full_name = serializers.SerializerMethodField()
+    gender = serializers.CharField(source='student.gender')
+    address = serializers.CharField(source='student.address')
+    phone = serializers.CharField(source='student.phone')
+    email = serializers.EmailField(source='student.email')
     user_role = serializers.SerializerMethodField()
+    date_joined = serializers.DateTimeField(source='student.date_joined')
+    last_login = serializers.DateTimeField(source='student.last_login')
+    
+    # Поля из Student модели
+    group = serializers.StringRelatedField()
     
     class Meta:
-        model = User
+        model = Student
         fields = [
             'id', 'username', 'first_name', 'last_name', 'full_name',
             'gender', 'address', 'phone', 'email', 'user_role',
-            'date_joined', 'last_login'
+            'date_joined', 'last_login', 'group', 'level', 'program'
         ]
     
     def get_full_name(self, obj):
-        return obj.get_full_name
+        return obj.student.get_full_name
     
     def get_user_role(self, obj):
-        return obj.get_user_role
+        return obj.student.get_user_role
 
 class StudentAddSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='student.username')
+    first_name = serializers.CharField(source='student.first_name')
+    last_name = serializers.CharField(source='student.last_name')
+    full_name = serializers.SerializerMethodField()
+    gender = serializers.CharField(source='student.gender')
+    address = serializers.CharField(source='student.address')
+    phone = serializers.CharField(source='student.phone')
+    email = serializers.EmailField(source='student.email')
+    user_role = serializers.SerializerMethodField()
+    date_joined = serializers.DateTimeField(source='student.date_joined')
+    last_login = serializers.DateTimeField(source='student.last_login')
+    
     
     level = serializers.ChoiceField(choices=LEVEL)
     program = serializers.PrimaryKeyRelatedField(queryset=Program.objects.all())
+    group = serializers.StringRelatedField()
+
 
     class Meta:
-        model = User
+        model = Student
         fields = [
             'username', 'first_name', 'last_name', 'gender', 'address',
-            'phone', 'email', 'level', 'program'
+            'phone', 'email', 'level', 'program', 'group'
         ]
 
     def validate_email(self, value):
@@ -177,6 +206,7 @@ class StudentAddSerializer(serializers.ModelSerializer):
             gender=validated_data.get('gender'),
             address=validated_data.get('address'),
             phone=validated_data.get('phone'),
+            group=validated_data.get('group'),
             is_student=True
         )
         
@@ -299,3 +329,9 @@ class ParentDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parent
         fields = ['id', 'user', 'student', 'student_info', 'relation_ship']
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ['id', 'name']

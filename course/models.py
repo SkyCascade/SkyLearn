@@ -124,6 +124,8 @@ class CourseAllocation(models.Model):
         on_delete=models.CASCADE,
         related_name="allocated_lecturer",
     )
+    group = models.ForeignKey('accounts.Group', on_delete=models.CASCADE, null=True, blank=True)  # String reference
+
     courses = models.ManyToManyField(Course, related_name="allocated_course")
     session = models.ForeignKey(
         "core.Session", on_delete=models.CASCADE, blank=True, null=True
@@ -134,6 +136,22 @@ class CourseAllocation(models.Model):
 
     def get_absolute_url(self):
         return reverse("edit_allocated_course", kwargs={"pk": self.pk})
+    
+
+    def get_group_info(self):
+        # Local import для методов, которые работают с Group
+        from accounts.models import Group
+        return f"Group: {self.group.name}" if self.group else "No group assigned"
+
+    @classmethod
+    def get_courses_by_group(cls, group_name):
+        # Local import для class methods
+        from accounts.models import Group
+        try:
+            group = Group.objects.get(name=group_name)
+            return cls.objects.filter(group=group)
+        except Group.DoesNotExist:
+            return cls.objects.none()
 
 
 class Upload(models.Model):
