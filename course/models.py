@@ -32,7 +32,7 @@ class Program(models.Model):
         return f"{self.title}"
 
     def get_absolute_url(self):
-        return reverse("program_detail", kwargs={"pk": self.pk})
+        return reverse("program-detail", kwargs={"pk": self.pk})
 
 
 @receiver(post_save, sender=Program)
@@ -124,7 +124,7 @@ class CourseAllocation(models.Model):
         on_delete=models.CASCADE,
         related_name="allocated_lecturer",
     )
-    group = models.ForeignKey('accounts.Group', on_delete=models.CASCADE, null=True, blank=True)  # String reference
+    group = models.ForeignKey('accounts.Group', on_delete=models.CASCADE, null=True, blank=True)  
 
     courses = models.ManyToManyField(Course, related_name="allocated_course")
     session = models.ForeignKey(
@@ -135,7 +135,8 @@ class CourseAllocation(models.Model):
         return self.lecturer.get_full_name
 
     def get_absolute_url(self):
-        return reverse("edit_allocated_course", kwargs={"pk": self.pk})
+        # Use the API detail URL instead
+        return reverse("api-course-detail", kwargs={"slug": self.slug})
     
 
     def get_group_info(self):

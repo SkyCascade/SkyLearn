@@ -57,9 +57,13 @@ class CourseSerializer(serializers.ModelSerializer):
         }
 
     def get_absolute_url(self, obj):
-        request = self.context.get('request')
-        if request and hasattr(obj, 'get_absolute_url'):
-            return request.build_absolute_uri(obj.get_absolute_url())
+        try:
+            request = self.context.get('request')
+            if request and hasattr(obj, 'get_absolute_url'):
+                return request.build_absolute_uri(obj.get_absolute_url())
+        except Exception:
+            # Return None if URL reversal fails
+            return None
         return None
 
     def validate_code(self, value):
@@ -103,17 +107,20 @@ class CourseAllocationSerializer(serializers.ModelSerializer):
     lecturer_email = serializers.CharField(source='lecturer.email', read_only=True)
     courses_details = serializers.SerializerMethodField(read_only=True)
     session_name = serializers.CharField(source='session.name', read_only=True)
+    group_name = serializers.CharField(source='group.name', read_only=True)
 
     class Meta:
         model = CourseAllocation
         fields = [
             'id', 'lecturer', 'lecturer_name', 'lecturer_email', 
-            'courses', 'courses_details', 'session', 'session_name'
+            'courses', 'courses_details', 'session', 'session_name',
+            'group', 'group_name'
         ]
         extra_kwargs = {
             'lecturer': {'write_only': True},
             'courses': {'write_only': True},
             'session': {'write_only': True},
+            'group': {'write_only': True},
         }
 
     def get_courses_details(self, obj):

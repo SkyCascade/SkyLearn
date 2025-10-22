@@ -58,21 +58,6 @@ GRADE_BOUNDARIES = [
     (0, F),
 ]
 
-GRADE_POINT_MAPPING = {
-    A_PLUS: 4.0,
-    A: 4.0,
-    A_MINUS: 3.75,
-    B_PLUS: 3.5,
-    B: 3.0,
-    B_MINUS: 2.75,
-    C_PLUS: 2.5,
-    C: 2.0,
-    C_MINUS: 1.75,
-    D: 1.0,
-    F: 0.0,
-    NG: 0.0,
-}
-
 
 class TakenCourse(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
@@ -85,7 +70,6 @@ class TakenCourse(models.Model):
     mid_exam = models.DecimalField(
         max_digits=5, decimal_places=2, default=Decimal("0.00")
     )
-    quiz = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     attendance = models.DecimalField(
         max_digits=5, decimal_places=2, default=Decimal("0.00")
     )
@@ -97,9 +81,6 @@ class TakenCourse(models.Model):
     )
     grade = models.CharField(
         choices=GRADE_CHOICES, max_length=2, blank=True, editable=False
-    )
-    point = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal("0.00"), editable=False
     )
     comment = models.CharField(
         choices=COMMENT_CHOICES, max_length=200, blank=True, editable=False
@@ -116,7 +97,6 @@ class TakenCourse(models.Model):
             [
                 Decimal(self.assignment),
                 Decimal(self.mid_exam),
-                Decimal(self.quiz),
                 Decimal(self.attendance),
                 Decimal(self.final_exam),
             ]
@@ -134,10 +114,6 @@ class TakenCourse(models.Model):
             return FAIL
         return PASS
 
-    def get_point(self):
-        credit = self.course.credit
-        grade_point = GRADE_POINT_MAPPING.get(self.grade, 0.0)
-        return Decimal(credit) * Decimal(grade_point)
 
     def save(self, *args, **kwargs):
         self.total = self.get_total()

@@ -1,750 +1,258 @@
-from django.shortcuts import render, get_object_or_404
-from django.contrib import messages
-from django.http import HttpResponseRedirect
-from django.urls import reverse_lazy
-from django.conf import settings
-from django.contrib.auth.decorators import login_required
-from django.core.files.storage import FileSystemStorage
-from django.http import HttpResponse
+# views.py
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer,
-    Table,
-    TableStyle,
-    Image,
-)
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
-
-# from reportlab.platypus.tables import Table
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-
-from core.models import Session, Semester
-from course.models import Course
-from accounts.models import Student
-from accounts.decorators import lecturer_required, student_required
 from .models import TakenCourse, Result
+from .serializers import (
+    TakenCourseSerializer, 
+    ResultSerializer,
+    StudentResultSerializer,
+    GradeCalculationSerializer
+)
+from accounts.models import Student
+from course.models import Course
 
-
-CM = 2.54
-
-
-# ########################################################
-# Score Add & Add for
-# ########################################################
-@login_required
-@lecturer_required
-def add_score(request):
-    """
-    Shows a page where a lecturer will select a course allocated
-    to him for score entry. in a specific semester and session
-    """
-    current_session = Session.objects.filter(is_current_session=True).first()
-    current_semester = Semester.objects.filter(
-        is_current_semester=True, session=current_session
-    ).first()
-
-    if not current_session or not current_semester:
-        messages.error(request, "No active semester found.")
-        return render(request, "result/add_score.html")
-
-    # semester = Course.objects.filter(
-    # allocated_course__lecturer__pk=request.user.id,
-    # semester=current_semester)
-    courses = Course.objects.filter(
-        allocated_course__lecturer__pk=request.user.id
-    ).filter(semester=current_semester)
-    context = {
-        "current_session": current_session,
-        "current_semester": current_semester,
-        "courses": courses,
-    }
-    return render(request, "result/add_score.html", context)
-
-
-@login_required
-@lecturer_required
-def add_score_for(request, id):
-    """
-    Shows a page where a lecturer will add score for students that
-    are taking courses allocated to him in a specific semester and session
-    """
-    current_session = Session.objects.get(is_current_session=True)
-    current_semester = get_object_or_404(
-        Semester, is_current_semester=True, session=current_session
-    )
-    if request.method == "GET":
-        courses = Course.objects.filter(
-            allocated_course__lecturer__pk=request.user.id
-        ).filter(semester=current_semester)
-        course = Course.objects.get(pk=id)
-        # myclass = Class.objects.get(lecturer__pk=request.user.id)
-        # myclass = get_object_or_404(Class, lecturer__pk=request.user.id)
-
-        # students = TakenCourse.objects.filter(
-        # course__allocated_course__lecturer__pk=request.user.id).filter(
-        #  course__id=id).filter(
-        #  student__allocated_student__lecturer__pk=request.user.id).filter(
-        #  course__semester=current_semester)
-        students = (
-            TakenCourse.objects.filter(
-                course__allocated_course__lecturer__pk=request.user.id
+class TakenCourseViewSet(viewsets.ModelViewSet):
+    queryset = TakenCourse.objects.all()
+    serializer_class = TakenCourseSerializer 
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Фильтрация для студентов - только свои курсы
+        if hasattr(self.request.user, 'student'):
+            return queryset.filter(student=self.request.user.student)
+        
+        # Фильтрация для преподавателей/администраторов
+        student_id = self.request.query_params.get('student_id')
+        course_id = self.request.query_params.get('course_id')
+        semester = self.request.query_params.get('semester')
+        level = self.request.query_params.get('level')
+        
+        if student_id:
+            queryset = queryset.filter(student_id=student_id)
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+        if semester:
+            queryset = queryset.filter(course__semester=semester)
+        if level:
+            queryset = queryset.filter(course__level=level)
+            
+        return queryset
+    
+    def perform_create(self, serializer):
+        # Автоматически рассчитываем итоговые значения при создании
+        instance = serializer.save()
+        instance.save()  # Это вызовет метод save() модели с пересчетом total, grade и comment
+    
+    def perform_update(self, serializer):
+        # Автоматически пересчитываем итоговые значения при обновлении
+        instance = serializer.save()
+        instance.save()  # Это вызовет метод save() модели с пересчетом total, grade и comment
+    
+    @action(detail=False, methods=['post'])
+    def bulk_create(self, request):
+        """Создание нескольких записей TakenCourse одновременно"""
+        data = request.data
+        if not isinstance(data, list):
+            return Response(
+                {"error": "Expected a list of items"}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
-            .filter(course__id=id)
-            .filter(course__semester=current_semester)
-        )
-        context = {
-            "title": "Submit Score",
-            "courses": courses,
-            "course": course,
-            # "myclass": myclass,
-            "students": students,
-            "current_session": current_session,
-            "current_semester": current_semester,
-        }
-        return render(request, "result/add_score_for.html", context)
+        
+        created_items = []
+        errors = []
+        
+        for item_data in data:
+            serializer = self.get_serializer(data=item_data)
+            if serializer.is_valid():
+                instance = serializer.save()
+                instance.save()  # Пересчет итоговых значений
+                created_items.append(serializer.data)
+            else:
+                errors.append({
+                    'data': item_data,
+                    'errors': serializer.errors
+                })
+        
+        if errors:
+            return Response(
+                {
+                    'created': created_items,
+                    'errors': errors
+                },
+                status=status.HTTP_207_MULTI_STATUS
+            )
+        
+        return Response(created_items, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['get'])
+    def student_courses(self, request):
+        """Получить курсы конкретного студента"""
+        student_id = request.query_params.get('student_id')
+        semester = request.query_params.get('semester')
+        level = request.query_params.get('level')
+        
+        if not student_id:
+            return Response(
+                {"error": "student_id parameter is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        queryset = self.get_queryset().filter(student_id=student_id)
+        
+        if semester:
+            queryset = queryset.filter(course__semester=semester)
+        if level:
+            queryset = queryset.filter(course__level=level)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'])
+    def calculate_grade(self, request):
+        """Рассчитать оценку на основе входных данных"""
+        serializer = GradeCalculationSerializer(data=request.data)
+        if serializer.is_valid():
+            # Создаем временный объект для расчета
+            temp_course = TakenCourse(
+                assignment=serializer.validated_data['assignment'],
+                mid_exam=serializer.validated_data['mid_exam'],
+                attendance=serializer.validated_data['attendance'],
+                final_exam=serializer.validated_data['final_exam']
+            )
+            
+            response_data = {
+                'assignment': temp_course.assignment,
+                'mid_exam': temp_course.mid_exam,
+                'attendance': temp_course.attendance,
+                'final_exam': temp_course.final_exam,
+                'total': temp_course.get_total(),
+                'grade': temp_course.get_grade(),
+                'comment': temp_course.get_comment(),
+                'point': temp_course.get_point()
+            }
+            
+            return Response(response_data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    if request.method == "POST":
-        ids = ()
-        data = request.POST.copy()
-        data.pop("csrfmiddlewaretoken", None)  # remove csrf_token
-        for key in data.keys():
-            ids = ids + (
-                str(key),
-            )  # gather all the all students id (i.e the keys) in a tuple
-        for s in range(
-            0, len(ids)
-        ):  # iterate over the list of student ids gathered above
-            student = TakenCourse.objects.get(id=ids[s])
-            # print(student)
-            # print(student.student)
-            # print(student.student.program.id)
-            courses = (
-                Course.objects.filter(level=student.student.level)
-                .filter(program__pk=student.student.program.id)
-                .filter(semester=current_semester)
-            )  # all courses of a specific level in current semester
-            total_credit_in_semester = 0
-            for i in courses:
-                if i == courses.count():
-                    break
-                total_credit_in_semester += int(i.credit)
-            score = data.getlist(
-                ids[s]
-            )  # get list of score for current student in the loop
-            assignment = score[
-                0
-            ]  # subscript the list to get the fisrt value > ca score
-            mid_exam = score[1]  # do the same for exam score
-            quiz = score[2]
-            attendance = score[3]
-            final_exam = score[4]
-            obj = TakenCourse.objects.get(pk=ids[s])  # get the current student data
-            obj.assignment = assignment  # set current student assignment score
-            obj.mid_exam = mid_exam  # set current student mid_exam score
-            obj.quiz = quiz  # set current student quiz score
-            obj.attendance = attendance  # set current student attendance score
-            obj.final_exam = final_exam  # set current student final_exam score
-
-            obj.total = obj.get_total()
-            obj.grade = obj.get_grade()
-
-            # obj.total = obj.get_total(assignment, mid_exam, quiz, attendance, final_exam)
-            # obj.grade = obj.get_grade(assignment, mid_exam, quiz, attendance, final_exam)
-
-            obj.point = obj.get_point()
-            obj.comment = obj.get_comment()
-            # obj.carry_over(obj.grade)
-            # obj.is_repeating()
-            obj.save()
-            gpa = obj.calculate_gpa()
-            cgpa = obj.calculate_cgpa()
-
-            try:
-                a = Result.objects.get(
-                    student=student.student,
-                    semester=current_semester,
-                    session=current_session,
-                    level=student.student.level,
+class ResultViewSet(viewsets.ModelViewSet):
+    queryset = Result.objects.all()
+    serializer_class = ResultSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Фильтрация для студентов - только свои результаты
+        if hasattr(self.request.user, 'student'):
+            return queryset.filter(student=self.request.user.student)
+        
+        # Фильтрация для преподавателей/администраторов
+        student_id = self.request.query_params.get('student_id')
+        semester = self.request.query_params.get('semester')
+        level = self.request.query_params.get('level')
+        
+        if student_id:
+            queryset = queryset.filter(student_id=student_id)
+        if semester:
+            queryset = queryset.filter(semester=semester)
+        if level:
+            queryset = queryset.filter(level=level)
+            
+        return queryset
+    
+    @action(detail=False, methods=['post'])
+    def generate_result(self, request):
+        """Сгенерировать результат для студента за семестр"""
+        serializer = StudentResultSerializer(data=request.data)
+        if serializer.is_valid():
+            student = serializer.validated_data['student']
+            semester = serializer.validated_data['semester']
+            level = serializer.validated_data['level']
+            
+            # Получаем все курсы студента за указанный семестр и уровень
+            taken_courses = TakenCourse.objects.filter(
+                student=student,
+                course__semester=semester,
+                course__level=level
+            )
+            
+            if not taken_courses.exists():
+                return Response(
+                    {"error": "No courses found for this student in the specified semester and level"},
+                    status=status.HTTP_404_NOT_FOUND
                 )
-                a.gpa = gpa
-                a.cgpa = cgpa
-                a.save()
-            except:
-                Result.objects.get_or_create(
-                    student=student.student,
-                    gpa=gpa,
-                    semester=current_semester,
-                    session=current_session,
-                    level=student.student.level,
-                )
-
-            # try:
-            #     a = Result.objects.get(student=student.student,
-            # semester=current_semester, level=student.student.level)
-            #     a.gpa = gpa
-            #     a.cgpa = cgpa
-            #     a.save()
-            # except:
-            #     Result.objects.get_or_create(student=student.student, gpa=gpa,
-            # semester=current_semester, level=student.student.level)
-
-        messages.success(request, "Successfully Recorded! ")
-        return HttpResponseRedirect(reverse_lazy("add_score_for", kwargs={"id": id}))
-    return HttpResponseRedirect(reverse_lazy("add_score_for", kwargs={"id": id}))
-
-
-# ########################################################
-
-
-@login_required
-@student_required
-def grade_result(request):
-    student = Student.objects.get(student__pk=request.user.id)
-    courses = TakenCourse.objects.filter(student__student__pk=request.user.id).filter(
-        course__level=student.level
-    )
-    # total_credit_in_semester = 0
-    results = Result.objects.filter(student__student__pk=request.user.id)
-
-    result_set = set()
-
-    for result in results:
-        result_set.add(result.session)
-
-    sorted_result = sorted(result_set)
-
-    total_first_semester_credit = 0
-    total_sec_semester_credit = 0
-    for i in courses:
-        if i.course.semester == "First":
-            total_first_semester_credit += int(i.course.credit)
-        if i.course.semester == "Second":
-            total_sec_semester_credit += int(i.course.credit)
-
-    previousCGPA = 0
-    # previousLEVEL = 0
-    # calculate_cgpa
-    for i in results:
-        previousLEVEL = i.level
-        try:
-            a = Result.objects.get(
-                student__student__pk=request.user.id,
-                level=previousLEVEL,
-                semester="Second",
+            
+            # Рассчитываем GPA и CGPA
+            total_points = sum(tc.point for tc in taken_courses)
+            total_credits = sum(tc.course.credit for tc in taken_courses)
+            
+            if total_credits > 0:
+                gpa = round(total_points / total_credits, 2)
+            else:
+                gpa = 0.0
+            
+            # Рассчитываем CGPA (все курсы студента)
+            all_taken_courses = TakenCourse.objects.filter(student=student)
+            all_total_points = sum(tc.point for tc in all_taken_courses)
+            all_total_credits = sum(tc.course.credit for tc in all_taken_courses)
+            
+            if all_total_credits > 0:
+                cgpa = round(all_total_points / all_total_credits, 2)
+            else:
+                cgpa = 0.0
+            
+            # Создаем или обновляем запись Result
+            result, created = Result.objects.update_or_create(
+                student=student,
+                semester=semester,
+                level=level,
+                defaults={
+                    'gpa': gpa,
+                    'cgpa': cgpa,
+                    'session': f"{semester} Session"  # Можно настроить под вашу логику
+                }
             )
-            previousCGPA = a.cgpa
-            break
-        except:
-            previousCGPA = 0
-
-    context = {
-        "courses": courses,
-        "results": results,
-        "sorted_result": sorted_result,
-        "student": student,
-        "total_first_semester_credit": total_first_semester_credit,
-        "total_sec_semester_credit": total_sec_semester_credit,
-        "total_first_and_second_semester_credit": total_first_semester_credit
-        + total_sec_semester_credit,
-        "previousCGPA": previousCGPA,
-    }
-
-    return render(request, "result/grade_results.html", context)
-
-
-@login_required
-@student_required
-def assessment_result(request):
-    student = Student.objects.get(student__pk=request.user.id)
-    courses = TakenCourse.objects.filter(
-        student__student__pk=request.user.id, course__level=student.level
-    )
-    result = Result.objects.filter(student__student__pk=request.user.id)
-
-    context = {
-        "courses": courses,
-        "result": result,
-        "student": student,
-    }
-
-    return render(request, "result/assessment_results.html", context)
-
-
-@login_required
-@lecturer_required
-def result_sheet_pdf_view(request, id):
-    current_semester = Semester.objects.get(is_current_semester=True)
-    current_session = Session.objects.get(is_current_session=True)
-    result = TakenCourse.objects.filter(course__pk=id)
-    course = get_object_or_404(Course, id=id)
-    no_of_pass = TakenCourse.objects.filter(course__pk=id, comment="PASS").count()
-    no_of_fail = TakenCourse.objects.filter(course__pk=id, comment="FAIL").count()
-    fname = (
-        str(current_semester)
-        + "_semester_"
-        + str(current_session)
-        + "_"
-        + str(course)
-        + "_resultSheet.pdf"
-    )
-    fname = fname.replace("/", "-")
-    flocation = settings.MEDIA_ROOT + "/result_sheet/" + fname
-
-    doc = SimpleDocTemplate(
-        flocation,
-        rightMargin=0,
-        leftMargin=6.5 * CM,
-        topMargin=0.3 * CM,
-        bottomMargin=0,
-    )
-    styles = getSampleStyleSheet()
-    styles.add(
-        ParagraphStyle(name="ParagraphTitle", fontSize=11, fontName="FreeSansBold")
-    )
-    Story = [Spacer(1, 0.2)]
-    style = styles["Normal"]
-
-    # picture = request.user.picture
-    # l_pic = Image(picture, 1*inch, 1*inch)
-    # l_pic.__setattr__("_offs_x", 200)
-    # l_pic.__setattr__("_offs_y", -130)
-    # Story.append(l_pic)
-
-    # logo = settings.MEDIA_ROOT + "/logo/logo-mini.png"
-    # im_logo = Image(logo, 1*inch, 1*inch)
-    # im_logo.__setattr__("_offs_x", -218)
-    # im_logo.__setattr__("_offs_y", -60)
-    # Story.append(im_logo)
-
-    print("\nsettings.MEDIA_ROOT", settings.MEDIA_ROOT)
-    print("\nsettings.STATICFILES_DIRS[0]", settings.STATICFILES_DIRS[0])
-    logo = settings.STATICFILES_DIRS[0] + "/img/brand.png"
-    im = Image(logo, 1 * inch, 1 * inch)
-    im.__setattr__("_offs_x", -200)
-    im.__setattr__("_offs_y", -45)
-    Story.append(im)
-
-    style = getSampleStyleSheet()
-    normal = style["Normal"]
-    normal.alignment = TA_CENTER
-    normal.fontName = "Helvetica"
-    normal.fontSize = 12
-    normal.leading = 15
-    title = (
-        "<b> "
-        + str(current_semester)
-        + " Semester "
-        + str(current_session)
-        + " Result Sheet</b>"
-    )
-    title = Paragraph(title.upper(), normal)
-    Story.append(title)
-    Story.append(Spacer(1, 0.1 * inch))
-
-    style = getSampleStyleSheet()
-    normal = style["Normal"]
-    normal.alignment = TA_CENTER
-    normal.fontName = "Helvetica"
-    normal.fontSize = 10
-    normal.leading = 15
-    title = "<b>Course lecturer: " + request.user.get_full_name + "</b>"
-    title = Paragraph(title.upper(), normal)
-    Story.append(title)
-    Story.append(Spacer(1, 0.1 * inch))
-
-    normal = style["Normal"]
-    normal.alignment = TA_CENTER
-    normal.fontName = "Helvetica"
-    normal.fontSize = 10
-    normal.leading = 15
-    level = result.filter(course_id=id).first()
-    title = "<b>Level: </b>" + str(level.course.level)
-    title = Paragraph(title.upper(), normal)
-    Story.append(title)
-    Story.append(Spacer(1, 0.6 * inch))
-
-    elements = []
-    count = 0
-    header = [("S/N", "ID NO.", "FULL NAME", "TOTAL", "GRADE", "POINT", "COMMENT")]
-
-    table_header = Table(header, [inch], [0.5 * inch])
-    table_header.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.black),
-                ("TEXTCOLOR", (1, 0), (-1, -1), colors.white),
-                ("TEXTCOLOR", (0, 0), (0, 0), colors.cyan),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("BOX", (0, 0), (-1, -1), 1, colors.black),
-            ]
-        )
-    )
-    Story.append(table_header)
-
-    for student in result:
-        data = [
-            (
-                count + 1,
-                student.student.student.username.upper(),
-                Paragraph(
-                    student.student.student.get_full_name.capitalize(), styles["Normal"]
-                ),
-                student.total,
-                student.grade,
-                student.point,
-                student.comment,
+            
+            result_serializer = ResultSerializer(result)
+            return Response(result_serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'])
+    def student_results(self, request):
+        """Получить все результаты конкретного студента"""
+        student_id = request.query_params.get('student_id')
+        
+        if not student_id:
+            return Response(
+                {"error": "student_id parameter is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
-        ]
-        color = colors.black
-        if student.grade == "F":
-            color = colors.red
-        count += 1
-
-        t_body = Table(data, colWidths=[inch])
-        t_body.setStyle(
-            TableStyle(
-                [
-                    ("INNERGRID", (0, 0), (-1, -1), 0.05, colors.black),
-                    ("BOX", (0, 0), (-1, -1), 0.1, colors.black),
-                ]
+        
+        queryset = self.get_queryset().filter(student_id=student_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def semester_results(self, request):
+        """Получить результаты всех студентов за определенный семестр и уровень"""
+        semester = request.query_params.get('semester')
+        level = request.query_params.get('level')
+        
+        if not semester or not level:
+            return Response(
+                {"error": "semester and level parameters are required"}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
-        )
-        Story.append(t_body)
-
-    Story.append(Spacer(1, 1 * inch))
-    style_right = ParagraphStyle(
-        name="right", parent=styles["Normal"], alignment=TA_RIGHT
-    )
-    tbl_data = [
-        [
-            Paragraph("<b>Date:</b>_____________________________", styles["Normal"]),
-            Paragraph("<b>No. of PASS:</b> " + str(no_of_pass), style_right),
-        ],
-        [
-            Paragraph(
-                "<b>Siganture / Stamp:</b> _____________________________",
-                styles["Normal"],
-            ),
-            Paragraph("<b>No. of FAIL: </b>" + str(no_of_fail), style_right),
-        ],
-    ]
-    tbl = Table(tbl_data)
-    Story.append(tbl)
-
-    doc.build(Story)
-
-    fs = FileSystemStorage(settings.MEDIA_ROOT + "/result_sheet")
-    with fs.open(fname) as pdf:
-        response = HttpResponse(pdf, content_type="application/pdf")
-        response["Content-Disposition"] = "inline; filename=" + fname + ""
-        return response
-    return response
-
-
-@login_required
-@student_required
-def course_registration_form(request):
-    current_session = Session.objects.get(is_current_session=True)
-    courses = TakenCourse.objects.filter(student__student__id=request.user.id)
-    fname = request.user.username + ".pdf"
-    fname = fname.replace("/", "-")
-    # flocation = '/tmp/' + fname
-    # print(MEDIA_ROOT + "\\" + fname)
-    flocation = settings.MEDIA_ROOT + "/registration_form/" + fname
-    doc = SimpleDocTemplate(
-        flocation, rightMargin=15, leftMargin=15, topMargin=0, bottomMargin=0
-    )
-    styles = getSampleStyleSheet()
-
-    Story = [Spacer(1, 0.5)]
-    Story.append(Spacer(1, 0.4 * inch))
-    style = styles["Normal"]
-
-    style = getSampleStyleSheet()
-    normal = style["Normal"]
-    normal.alignment = TA_CENTER
-    normal.fontName = "Helvetica"
-    normal.fontSize = 12
-    normal.leading = 18
-    title = "<b>EZOD UNIVERSITY OF TECHNOLOGY, ADAMA</b>"  # TODO: Make this dynamic
-    title = Paragraph(title.upper(), normal)
-    Story.append(title)
-    style = getSampleStyleSheet()
-
-    school = style["Normal"]
-    school.alignment = TA_CENTER
-    school.fontName = "Helvetica"
-    school.fontSize = 10
-    school.leading = 18
-    school_title = (
-        "<b>SCHOOL OF ELECTRICAL ENGINEERING & COMPUTING</b>"  # TODO: Make this dynamic
-    )
-    school_title = Paragraph(school_title.upper(), school)
-    Story.append(school_title)
-
-    style = getSampleStyleSheet()
-    Story.append(Spacer(1, 0.1 * inch))
-    department = style["Normal"]
-    department.alignment = TA_CENTER
-    department.fontName = "Helvetica"
-    department.fontSize = 9
-    department.leading = 18
-    department_title = (
-        "<b>DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING</b>"  # TODO: Make this dynamic
-    )
-    department_title = Paragraph(department_title, department)
-    Story.append(department_title)
-    Story.append(Spacer(1, 0.3 * inch))
-
-    title = "<b><u>STUDENT COURSE REGISTRATION FORM</u></b>"
-    title = Paragraph(title.upper(), normal)
-    Story.append(title)
-    student = Student.objects.get(student__pk=request.user.id)
-
-    tbl_data = [
-        [
-            Paragraph(
-                "<b>Registration Number : " + request.user.username.upper() + "</b>",
-                styles["Normal"],
-            )
-        ],
-        [
-            Paragraph(
-                "<b>Name : " + request.user.get_full_name.upper() + "</b>",
-                styles["Normal"],
-            )
-        ],
-        [
-            Paragraph(
-                "<b>Session : " + current_session.session.upper() + "</b>",
-                styles["Normal"],
-            ),
-            Paragraph("<b>Level: " + student.level + "</b>", styles["Normal"]),
-        ],
-    ]
-    tbl = Table(tbl_data)
-    Story.append(tbl)
-    Story.append(Spacer(1, 0.6 * inch))
-
-    style = getSampleStyleSheet()
-    semester = style["Normal"]
-    semester.alignment = TA_LEFT
-    semester.fontName = "Helvetica"
-    semester.fontSize = 9
-    semester.leading = 18
-    semester_title = "<b>FIRST SEMESTER</b>"
-    semester_title = Paragraph(semester_title, semester)
-    Story.append(semester_title)
-
-    # FIRST SEMESTER
-    count = 0
-    header = [
-        (
-            "S/No",
-            "Course Code",
-            "Course Title",
-            "Unit",
-            Paragraph("Name, Siganture of course lecturer & Date", style["Normal"]),
-        )
-    ]
-    table_header = Table(header, 1 * [1.4 * inch], 1 * [0.5 * inch])
-    table_header.setStyle(
-        TableStyle(
-            [
-                ("ALIGN", (-2, -2), (-2, -2), "CENTER"),
-                ("VALIGN", (-2, -2), (-2, -2), "MIDDLE"),
-                ("ALIGN", (1, 0), (1, 0), "CENTER"),
-                ("VALIGN", (1, 0), (1, 0), "MIDDLE"),
-                ("ALIGN", (0, 0), (0, 0), "CENTER"),
-                ("VALIGN", (0, 0), (0, 0), "MIDDLE"),
-                ("ALIGN", (-4, 0), (-4, 0), "LEFT"),
-                ("VALIGN", (-4, 0), (-4, 0), "MIDDLE"),
-                ("ALIGN", (-3, 0), (-3, 0), "LEFT"),
-                ("VALIGN", (-3, 0), (-3, 0), "MIDDLE"),
-                ("TEXTCOLOR", (0, -1), (-1, -1), colors.black),
-                ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
-                ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
-            ]
-        )
-    )
-    Story.append(table_header)
-
-    first_semester_unit = 0
-    for course in courses:
-        if course.course.semester == settings.FIRST:
-            first_semester_unit += int(course.course.credit)
-            data = [
-                (
-                    count + 1,
-                    course.course.code.upper(),
-                    Paragraph(course.course.title, style["Normal"]),
-                    course.course.credit,
-                    "",
-                )
-            ]
-            count += 1
-            table_body = Table(data, 1 * [1.4 * inch], 1 * [0.3 * inch])
-            table_body.setStyle(
-                TableStyle(
-                    [
-                        ("ALIGN", (-2, -2), (-2, -2), "CENTER"),
-                        ("ALIGN", (1, 0), (1, 0), "CENTER"),
-                        ("ALIGN", (0, 0), (0, 0), "CENTER"),
-                        ("ALIGN", (-4, 0), (-4, 0), "LEFT"),
-                        ("TEXTCOLOR", (0, -1), (-1, -1), colors.black),
-                        ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
-                        ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
-                    ]
-                )
-            )
-            Story.append(table_body)
-
-    style = getSampleStyleSheet()
-    semester = style["Normal"]
-    semester.alignment = TA_LEFT
-    semester.fontName = "Helvetica"
-    semester.fontSize = 8
-    semester.leading = 18
-    semester_title = (
-        "<b>Total Second First Credit : " + str(first_semester_unit) + "</b>"
-    )
-    semester_title = Paragraph(semester_title, semester)
-    Story.append(semester_title)
-
-    # FIRST SEMESTER ENDS HERE
-    Story.append(Spacer(1, 0.6 * inch))
-
-    style = getSampleStyleSheet()
-    semester = style["Normal"]
-    semester.alignment = TA_LEFT
-    semester.fontName = "Helvetica"
-    semester.fontSize = 9
-    semester.leading = 18
-    semester_title = "<b>SECOND SEMESTER</b>"
-    semester_title = Paragraph(semester_title, semester)
-    Story.append(semester_title)
-    # SECOND SEMESTER
-    count = 0
-    header = [
-        (
-            "S/No",
-            "Course Code",
-            "Course Title",
-            "Unit",
-            Paragraph(
-                "<b>Name, Signature of course lecturer & Date</b>", style["Normal"]
-            ),
-        )
-    ]
-    table_header = Table(header, 1 * [1.4 * inch], 1 * [0.5 * inch])
-    table_header.setStyle(
-        TableStyle(
-            [
-                ("ALIGN", (-2, -2), (-2, -2), "CENTER"),
-                ("VALIGN", (-2, -2), (-2, -2), "MIDDLE"),
-                ("ALIGN", (1, 0), (1, 0), "CENTER"),
-                ("VALIGN", (1, 0), (1, 0), "MIDDLE"),
-                ("ALIGN", (0, 0), (0, 0), "CENTER"),
-                ("VALIGN", (0, 0), (0, 0), "MIDDLE"),
-                ("ALIGN", (-4, 0), (-4, 0), "LEFT"),
-                ("VALIGN", (-4, 0), (-4, 0), "MIDDLE"),
-                ("ALIGN", (-3, 0), (-3, 0), "LEFT"),
-                ("VALIGN", (-3, 0), (-3, 0), "MIDDLE"),
-                ("TEXTCOLOR", (0, -1), (-1, -1), colors.black),
-                ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
-                ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
-            ]
-        )
-    )
-    Story.append(table_header)
-
-    second_semester_unit = 0
-    for course in courses:
-        if course.course.semester == settings.SECOND:
-            second_semester_unit += int(course.course.credit)
-            data = [
-                (
-                    count + 1,
-                    course.course.code.upper(),
-                    Paragraph(course.course.title, style["Normal"]),
-                    course.course.credit,
-                    "",
-                )
-            ]
-            # color = colors.black
-            count += 1
-            table_body = Table(data, 1 * [1.4 * inch], 1 * [0.3 * inch])
-            table_body.setStyle(
-                TableStyle(
-                    [
-                        ("ALIGN", (-2, -2), (-2, -2), "CENTER"),
-                        ("ALIGN", (1, 0), (1, 0), "CENTER"),
-                        ("ALIGN", (0, 0), (0, 0), "CENTER"),
-                        ("ALIGN", (-4, 0), (-4, 0), "LEFT"),
-                        ("TEXTCOLOR", (0, -1), (-1, -1), colors.black),
-                        ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
-                        ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
-                    ]
-                )
-            )
-            Story.append(table_body)
-
-    style = getSampleStyleSheet()
-    semester = style["Normal"]
-    semester.alignment = TA_LEFT
-    semester.fontName = "Helvetica"
-    semester.fontSize = 8
-    semester.leading = 18
-    semester_title = (
-        "<b>Total Second Semester Credit : " + str(second_semester_unit) + "</b>"
-    )
-    semester_title = Paragraph(semester_title, semester)
-    Story.append(semester_title)
-
-    Story.append(Spacer(1, 2))
-    style = getSampleStyleSheet()
-    certification = style["Normal"]
-    certification.alignment = TA_JUSTIFY
-    certification.fontName = "Helvetica"
-    certification.fontSize = 8
-    certification.leading = 18
-    student = Student.objects.get(student__pk=request.user.id)
-    certification_text = (
-        "CERTIFICATION OF REGISTRATION: I certify that <b>"
-        + str(request.user.get_full_name.upper())
-        + "</b>\
-    has been duly registered for the <b>"
-        + student.level
-        + " level </b> of study in the department\
-    of COMPUTER SICENCE & ENGINEERING and that the courses and credits \
-    registered are as approved by the senate of the University"
-    )
-    certification_text = Paragraph(certification_text, certification)
-    Story.append(certification_text)
-
-    # FIRST SEMESTER ENDS HERE
-
-    logo = settings.STATICFILES_DIRS[0] + "/img/brand.png"
-    im_logo = Image(logo, 1 * inch, 1 * inch)
-    setattr(im_logo, "_offs_x", -218)
-    setattr(im_logo, "_offs_y", 480)
-    Story.append(im_logo)
-
-    picture = settings.BASE_DIR + request.user.get_picture()
-    im = Image(picture, 1.0 * inch, 1.0 * inch)
-    setattr(im, "_offs_x", 218)
-    setattr(im, "_offs_y", 550)
-    Story.append(im)
-
-    doc.build(Story)
-    fs = FileSystemStorage(settings.MEDIA_ROOT + "/registration_form")
-    with fs.open(fname) as pdf:
-        response = HttpResponse(pdf, content_type="application/pdf")
-        response["Content-Disposition"] = "inline; filename=" + fname + ""
-        return response
-    return response
+        
+        queryset = self.get_queryset().filter(semester=semester, level=level)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

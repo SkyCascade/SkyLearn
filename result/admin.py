@@ -10,7 +10,6 @@ class ScoreAdmin(admin.ModelAdmin):
         "course",
         "assignment",
         "mid_exam",
-        "quiz",
         "attendance",
         "final_exam",
         "total",

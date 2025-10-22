@@ -179,7 +179,7 @@ class StudentListView(generics.ListAPIView):
     """
     ViewSet для просмотра списка студентов
     """
-    queryset = User.objects.filter(is_student=True)
+    queryset = Student.objects.all()
     serializer_class = StudentListSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     
@@ -187,11 +187,10 @@ class StudentListView(generics.ListAPIView):
 class StudentCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
-    
     def get(self, request):
         """Получить список программ для фронтенда"""
         programs = Program.objects.all()
-        program_choices = [{'id': program.id, 'title': program.title} for program in programs]  # Исправлено: name -> title
+        program_choices = [{'id': program.id, 'title': program.title} for program in programs]
         return Response({
             'programs': program_choices,
             'levels': [
@@ -200,23 +199,30 @@ class StudentCreateView(APIView):
         })
     
     def post(self, request):
-        """Создать нового студента"""
         serializer = StudentAddSerializer(data=request.data)
         
         if serializer.is_valid():
             try:
-                student_user = serializer.save()
+                with transaction.atomic():
+                    student_instance = serializer.save()  # Это Student объект
+                    
+                    # Проверяем, что Student запись действительно создана
+                    if not hasattr(student_instance, 'student'):
+                        raise Exception("Student record was not created properly")
+                
+                # Получаем связанного пользователя
+                user = student_instance.student
                 
                 return Response({
                     'message': 'Student created successfully',
                     'data': {
-                        'user_id': student_user.id,
-                        'username': student_user.username,
-                        'email': student_user.email,
-                        'full_name': f"{student_user.first_name} {student_user.last_name}",
-                        'student_id': student_user.student.id,
-                        'level': student_user.student.level,
-                        'program': student_user.student.program.title  # Исправлено: name -> title
+                        'user_id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                        'full_name': f"{user.first_name} {user.last_name}",
+                        'student_id': student_instance.id,
+                        'level': student_instance.level,
+                        'program': student_instance.program.title
                     }
                 }, status=status.HTTP_201_CREATED)
                 
@@ -231,7 +237,6 @@ class StudentCreateView(APIView):
             'error': 'Validation failed',
             'details': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 
