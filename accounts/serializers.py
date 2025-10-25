@@ -164,6 +164,39 @@ class StudentListSerializer(serializers.ModelSerializer):
         # Теперь obj - это Student объект, поэтому обращаемся к student
         return obj.student.get_user_role if obj.student else _("Student")
     
+class StudentDetailSerializer(serializers.ModelSerializer):
+    # Поля из User модели
+    username = serializers.CharField(source='student.username')
+    first_name = serializers.CharField(source='student.first_name')
+    last_name = serializers.CharField(source='student.last_name')
+    full_name = serializers.SerializerMethodField()
+    gender = serializers.CharField(source='student.gender')
+    address = serializers.CharField(source='student.address')
+    phone = serializers.CharField(source='student.phone')
+    email = serializers.EmailField(source='student.email')
+    user_role = serializers.SerializerMethodField()
+    date_joined = serializers.DateTimeField(source='student.date_joined')
+    last_login = serializers.DateTimeField(source='student.last_login')
+    
+    # Поля из Student модели
+    group = serializers.StringRelatedField()
+    program_name = serializers.CharField(source='program.title', read_only=True)
+    
+    class Meta:
+        model = Student
+        fields = [
+            'id', 'username', 'first_name', 'last_name', 'full_name',
+            'gender', 'address', 'phone', 'email', 'user_role',
+            'date_joined', 'last_login', 'group', 'level', 'program', 'program_name'
+        ]
+    
+    def get_full_name(self, obj):
+         return obj.student.get_full_name if obj.student else ""
+
+    def get_user_role(self, obj):
+        return obj.student.get_user_role if obj.student else _("Student")
+    
+# serializers.py - обновите StudentAddSerializer
 class StudentAddSerializer(serializers.ModelSerializer):
     username = serializers.CharField(write_only=True)
     first_name = serializers.CharField(write_only=True)
@@ -179,7 +212,12 @@ class StudentAddSerializer(serializers.ModelSerializer):
     
     level = serializers.ChoiceField(choices=LEVEL)
     program = serializers.PrimaryKeyRelatedField(queryset=Program.objects.all())
-    group = serializers.StringRelatedField(read_only=True)
+    group = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all(), 
+        required=False, 
+        allow_null=True,
+        write_only=True
+    )
 
     class Meta:
         model = Student
@@ -188,7 +226,7 @@ class StudentAddSerializer(serializers.ModelSerializer):
             'phone', 'email', 'user_role', 'level', 'program', 'group', 
             'date_joined', 'last_login'
         ]
-        read_only_fields = ['date_joined', 'last_login', 'full_name', 'user_role', 'group']
+        read_only_fields = ['date_joined', 'last_login', 'full_name', 'user_role']
 
     def get_full_name(self, obj):
         return f"{obj.student.first_name} {obj.student.last_name}"
@@ -219,6 +257,7 @@ class StudentAddSerializer(serializers.ModelSerializer):
         
         level = validated_data.pop('level')
         program = validated_data.pop('program')
+        group = validated_data.pop('group', None)  # Получаем группу, если есть
         
         # Создаем пользователя
         user = User.objects.create_user(
@@ -232,11 +271,12 @@ class StudentAddSerializer(serializers.ModelSerializer):
             is_student=True
         )
         
-        # Создаем студента
+        # Создаем студента с группой
         student = Student.objects.create(
             student=user,
             level=level,
-            program=program
+            program=program,
+            group=group  # Добавляем группу
         )
         
         return student
@@ -252,10 +292,67 @@ class StudentAddSerializer(serializers.ModelSerializer):
         representation['gender'] = instance.student.gender
         representation['address'] = instance.student.address
         representation['phone'] = instance.student.phone
+        # Добавляем информацию о группе
+        representation['group'] = instance.group.name if instance.group else None
+        representation['group_id'] = instance.group.id if instance.group else None
         return representation
 
 
 
+class StudentUpdateSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='student.username', required=False)
+    first_name = serializers.CharField(source='student.first_name', required=False)
+    last_name = serializers.CharField(source='student.last_name', required=False)
+    full_name = serializers.SerializerMethodField(read_only=True)
+    gender = serializers.ChoiceField(choices=GENDERS, source='student.gender', required=False)
+    address = serializers.CharField(source='student.address', required=False)
+    phone = serializers.CharField(source='student.phone', required=False)
+    email = serializers.EmailField(source='student.email', required=False)
+    user_role = serializers.SerializerMethodField(read_only=True)
+    date_joined = serializers.DateTimeField(source='student.date_joined', read_only=True)
+    last_login = serializers.DateTimeField(source='student.last_login', read_only=True)
+    
+    level = serializers.ChoiceField(choices=LEVEL, required=False)
+    program = serializers.PrimaryKeyRelatedField(queryset=Program.objects.all(), required=False)
+    group = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all(), 
+        required=False, 
+        allow_null=True
+    )
+
+    class Meta:
+        model = Student
+        fields = [
+            'username', 'first_name', 'last_name', 'full_name', 'gender', 'address',
+            'phone', 'email', 'user_role', 'level', 'program', 'group', 
+            'date_joined', 'last_login'
+        ]
+        read_only_fields = ['date_joined', 'last_login', 'full_name', 'user_role']
+
+    def get_full_name(self, obj):
+        return f"{obj.student.first_name} {obj.student.last_name}"
+
+    def get_user_role(self, obj):
+        return "student"
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        # Извлекаем данные пользователя, если они есть
+        user_data = validated_data.pop('student', {})
+        
+        # Обновляем данные студента
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Обновляем данные связанного пользователя
+        if user_data:
+            user = instance.student
+            for attr, value in user_data.items():
+                setattr(user, attr, value)
+            user.save()
+        
+        return instance
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
@@ -349,13 +446,7 @@ class PasswordResetSerializer(serializers.Serializer):
         return value
 
 
-class StudentDetailSerializer(serializers.ModelSerializer):
-    student = UserSerializer(read_only=True)
-    program_name = serializers.CharField(source='program.title', read_only=True)
 
-    class Meta:
-        model = Student
-        fields = ['id', 'student', 'level', 'program', 'program_name']
 
 
 class ParentDetailSerializer(serializers.ModelSerializer):

@@ -1,5 +1,9 @@
+# result/apps.py
 from django.apps import AppConfig
 
-
 class ResultConfig(AppConfig):
-    name = "result"
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'result'
+
+    def ready(self):
+        import result.signals  # Импортируем сигналы

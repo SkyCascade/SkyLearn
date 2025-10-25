@@ -18,7 +18,7 @@ from .views import (
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import CustomTokenObtainPairView, UserProfileView, UserDetailUpdateView, StudentListView, LecturerListViewSet, GroupViewSet
+from .views import CustomTokenObtainPairView, UserProfileView, UserDetailUpdateView, StudentListView, LecturerListViewSet, GroupViewSet, StudentUpdateView, StudentDetailView, StudentsByGroupView
 
 router = DefaultRouter()
 router.register(r'groups', GroupViewSet, basename='group')
@@ -32,5 +32,8 @@ urlpatterns = [
     path('users/<int:pk>/', UserDetailUpdateView.as_view(), name='user-detail-update'),
     path('api/lecturers/', LecturerListViewSet.as_view({'get': 'list'}), name='lecturer-list'),
     path('api/students/', StudentListView.as_view(), name='student-list'),
+    path('api/student/<int:pk>/', StudentDetailView.as_view(), name='student-detail'),
+    path('api/student-update/<int:pk>/', StudentUpdateView.as_view(), name='student-update'),
+    path('api/groups/<slug:group_name>/students', StudentsByGroupView.as_view(), name='students-by-group'),
     path("api/", include(router.urls)),
 ]

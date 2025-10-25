@@ -127,8 +127,8 @@ class CourseAllocation(models.Model):
     group = models.ForeignKey('accounts.Group', on_delete=models.CASCADE, null=True, blank=True)  
 
     courses = models.ManyToManyField(Course, related_name="allocated_course")
-    session = models.ForeignKey(
-        "core.Session", on_delete=models.CASCADE, blank=True, null=True
+    semester = models.ForeignKey(
+        "core.Semester", on_delete=models.CASCADE, blank=True, null=True
     )
 
     def __str__(self):

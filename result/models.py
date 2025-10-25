@@ -1,12 +1,9 @@
 from decimal import Decimal
 from django.conf import settings
-
 from django.db import models
-from django.urls import reverse
-
-from accounts.models import Student
-from core.models import Semester
-from course.models import Course
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.apps import apps
 
 A_PLUS = "A+"
 A = "A"
@@ -59,107 +56,68 @@ GRADE_BOUNDARIES = [
 ]
 
 
-class TakenCourse(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    course = models.ForeignKey(
-        Course, on_delete=models.CASCADE, related_name="taken_courses"
-    )
-    assignment = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal("0.00")
-    )
-    mid_exam = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal("0.00")
-    )
-    attendance = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal("0.00")
-    )
-    final_exam = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal("0.00")
-    )
-    total = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal("0.00"), editable=False
-    )
-    grade = models.CharField(
-        choices=GRADE_CHOICES, max_length=2, blank=True, editable=False
-    )
-    comment = models.CharField(
-        choices=COMMENT_CHOICES, max_length=200, blank=True, editable=False
-    )
 
-    def get_absolute_url(self):
-        return reverse("course_detail", kwargs={"slug": self.course.slug})
+
+
+class Grade_1st_module(models.Model):
+    lecturer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="grade_1st_lecturer",
+    )
+    student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
+    course = models.ForeignKey('course.Course', on_delete=models.CASCADE, related_name="grade_1st_courses")
+    attendance = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    activities = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    exam = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    total = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    grade = models.CharField(max_length=2, choices=GRADE_CHOICES, blank=True, null=True)
+
+    class Meta:
+        unique_together = ['student', 'course']
 
     def __str__(self):
-        return f"{self.course.title} ({self.course.code})"
+        return f"{self.student} - {self.course} (1st Module)"
 
-    def get_total(self):
-        return sum(
-            [
-                Decimal(self.assignment),
-                Decimal(self.mid_exam),
-                Decimal(self.attendance),
-                Decimal(self.final_exam),
-            ]
-        )
+class Grade_2nd_module(models.Model):
+    lecturer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="grade_2nd_lecturer",
+    )
+    student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
+    course = models.ForeignKey('course.Course', on_delete=models.CASCADE, related_name="grade_2nd_courses")
+    attendance = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    activities = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    exam = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    total = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    grade = models.CharField(max_length=2, choices=GRADE_CHOICES, blank=True, null=True)
 
-    def get_grade(self):
-        total = self.total
-        for boundary, grade in GRADE_BOUNDARIES:
-            if total >= boundary:
-                return grade
-        return NG
-
-    def get_comment(self):
-        if self.grade in [F, NG]:
-            return FAIL
-        return PASS
-
-
-    def save(self, *args, **kwargs):
-        self.total = self.get_total()
-        self.grade = self.get_grade()
-        self.point = self.get_point()
-        self.comment = self.get_comment()
-        super().save(*args, **kwargs)
-
-    def calculate_gpa(self):
-        current_semester = Semester.objects.filter(is_current_semester=True).first()
-        if not current_semester:
-            return Decimal("0.00")
-
-        taken_courses = TakenCourse.objects.filter(
-            student=self.student,
-            course__level=self.student.level,
-            course__semester=current_semester.semester,
-        )
-
-        total_points = sum(tc.point for tc in taken_courses)
-        total_credits = sum(tc.course.credit for tc in taken_courses)
-
-        if total_credits > 0:
-            gpa = total_points / Decimal(total_credits)
-            return round(gpa, 2)
-        return Decimal("0.00")
-
-    def calculate_cgpa(self):
-        taken_courses = TakenCourse.objects.filter(student=self.student)
-
-        total_points = sum(tc.point for tc in taken_courses)
-        total_credits = sum(tc.course.credit for tc in taken_courses)
-
-        if total_credits > 0:
-            cgpa = total_points / Decimal(total_credits)
-            return round(cgpa, 2)
-        return Decimal("0.00")
-
-
-class Result(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    gpa = models.FloatField(null=True)
-    cgpa = models.FloatField(null=True)
-    semester = models.CharField(max_length=100, choices=settings.SEMESTER_CHOICES)
-    session = models.CharField(max_length=100, blank=True, null=True)
-    level = models.CharField(max_length=25, choices=settings.LEVEL_CHOICES, null=True)
+    class Meta:
+        unique_together = ['student', 'course']
 
     def __str__(self):
-        return f"Result for {self.student} - Semester: {self.semester}, Level: {self.level}"
+        return f"{self.student} - {self.course} (2nd Module)"
+
+class Grade_semester(models.Model):
+    lecturer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="grade_semester_lecturer",
+    )
+    semester = models.ForeignKey(
+        "core.Semester", on_delete=models.CASCADE, blank=True, null=True
+    )
+    student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
+    course = models.ForeignKey('course.Course', on_delete=models.CASCADE, related_name="grade_semester_courses")
+    attendance = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    activities = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    exam = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    total = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    grade = models.CharField(max_length=2, choices=GRADE_CHOICES, blank=True, null=True)
+
+    class Meta:
+        unique_together = ['student', 'course', 'semester']
+
+    def __str__(self):
+        return f"{self.student} - {self.course} (Semester)"

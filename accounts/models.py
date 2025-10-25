@@ -203,6 +203,9 @@ class Student(models.Model):
 
     def get_absolute_url(self):
         return reverse("profile_single", kwargs={"user_id": self.id})
+    
+    def get_full_name(self):
+        return self.student.get_full_name
 
     def delete(self, *args, **kwargs):
         self.student.delete()

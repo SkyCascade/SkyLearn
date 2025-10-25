@@ -187,57 +187,12 @@ class SessionViewSet(viewsets.ModelViewSet):
 
 
 
-# ... существующие ViewSets ...
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def home_viewSet(request):
-    """Home page with news and events"""
-    items = NewsAndEvents.objects.all().order_by("-updated_date")
-    
-    # Сериализуем данные для home
-    items_data = []
-    for item in items:
-        items_data.append({
-            'id': item.id,
-            'title': item.title,
-            'summary': item.summary,
-            'posted_as': item.posted_as,
-            'updated_date': item.updated_date,
-            'created_date': item.created_date,
-        })
-    
-    home_data = {
-        "title": "News & Events",
-        "items": items_data
-    }
-    
-    serializer = HomeSerializer(home_data)
-    return Response(serializer.data)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated, IsAdminUser])
-def dashboard_viewSet(request):
-    """Dashboard with statistics"""
-    logs = ActivityLog.objects.all().order_by("-created_at")[:10]
-    
-    # Получаем статистику
-    dashboard_data = {
-        "student_count": User.objects.get_student_count(),
-        "lecturer_count": User.objects.get_lecturer_count(),
-        "superuser_count": User.objects.get_superuser_count(),
-        "males_count": Student.get_gender_count().get("M", 0),
-        "females_count": Student.get_gender_count().get("F", 0),
-        "logs": logs,
-    }
-    
-    serializer = DashboardSerializer(dashboard_data)
-    return Response(serializer.data)
 
 # Semester Views
 # Semester Views
 # Semester Views
 class SemesterViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = Semester.objects.all().order_by("-is_current_semester", "-semester")
     
     def get_serializer_class(self):

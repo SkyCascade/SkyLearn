@@ -15,7 +15,6 @@ from django.db.models import Q
 from accounts.filters import LecturerFilter, StudentFilter
 from core.models import Semester, Session
 from course.models import Course
-from result.models import TakenCourse
 from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -27,11 +26,12 @@ from rest_framework import generics, permissions
 from rest_framework.decorators import action
 from rest_framework import status, viewsets
 from rest_framework.viewsets import ModelViewSet
+from core.permissions import IsAdminOrLecturer
 
 
 
 from .models import Group ,Parent, Student, User ,Program
-from .serializers import UserSerializer, StaffAddSerializer, StudentAddSerializer, StaffListSerializer, UserSerializer, UserUpdateSerializer ,GroupSerializer, StudentAddSerializer, StudentListSerializer
+from .serializers import UserSerializer, StaffAddSerializer, StudentAddSerializer, StaffListSerializer, UserSerializer, UserUpdateSerializer ,GroupSerializer, StudentListSerializer, StudentDetailSerializer, StudentUpdateSerializer
 
 
 User = get_user_model()
@@ -173,26 +173,34 @@ class StudentDeleteView(generics.DestroyAPIView):
 class StudentUpdateView(generics.UpdateAPIView):
     queryset = Student.objects.all()
     permission_classes = [IsAuthenticated, IsAdminUser]
-    serializer_class = StudentAddSerializer
+    serializer_class = StudentUpdateSerializer
 
 class StudentListView(generics.ListAPIView):
-    """
-    ViewSet для просмотра списка студентов
-    """
     queryset = Student.objects.all()
-    serializer_class = StudentListSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = StudentListSerializer
     
 
+class StudentDetailView(generics.RetrieveAPIView):
+    queryset = Student.objects.all()
+    permission_classes = [IsAdminOrLecturer]
+    serializer_class = StudentDetailSerializer
+
+# views.py - обновите StudentCreateView
 class StudentCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request):
-        """Получить список программ для фронтенда"""
+        """Получить список программ и групп для фронтенда"""
         programs = Program.objects.all()
+        groups = Group.objects.all()
+        
         program_choices = [{'id': program.id, 'title': program.title} for program in programs]
+        group_choices = [{'id': group.id, 'name': group.name} for group in groups]
+        
         return Response({
             'programs': program_choices,
+            'groups': group_choices,
             'levels': [
                 {'value': value, 'label': label} for value, label in StudentAddSerializer.LEVEL
             ]
@@ -204,16 +212,15 @@ class StudentCreateView(APIView):
         if serializer.is_valid():
             try:
                 with transaction.atomic():
-                    student_instance = serializer.save()  # Это Student объект
+                    student_instance = serializer.save()
                     
-                    # Проверяем, что Student запись действительно создана
                     if not hasattr(student_instance, 'student'):
                         raise Exception("Student record was not created properly")
                 
                 # Получаем связанного пользователя
                 user = student_instance.student
                 
-                return Response({
+                response_data = {
                     'message': 'Student created successfully',
                     'data': {
                         'user_id': user.id,
@@ -222,9 +229,16 @@ class StudentCreateView(APIView):
                         'full_name': f"{user.first_name} {user.last_name}",
                         'student_id': student_instance.id,
                         'level': student_instance.level,
-                        'program': student_instance.program.title
+                        'program': student_instance.program.title,
                     }
-                }, status=status.HTTP_201_CREATED)
+                }
+                
+                # Добавляем информацию о группе в ответ
+                if student_instance.group:
+                    response_data['data']['group'] = student_instance.group.name
+                    response_data['data']['group_id'] = student_instance.group.id
+                
+                return Response(response_data, status=status.HTTP_201_CREATED)
                 
             except Exception as e:
                 print(f"Error creating student: {str(e)}")
@@ -243,3 +257,17 @@ class StudentCreateView(APIView):
 class GroupViewSet(ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+
+
+# views.py в accounts app
+class StudentsByGroupView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminOrLecturer]
+
+    def get(self, request, group_name):
+        group = get_object_or_404(Group, name=group_name)
+        students = Student.objects.filter(group=group)
+        serializer = StudentListSerializer(students, many=True)
+        return Response({
+            'group': group.name,
+            'students': serializer.data
+        }, status=status.HTTP_200_OK)

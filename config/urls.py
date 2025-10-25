@@ -3,44 +3,32 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views import defaults as default_views
-from django.conf.urls.i18n import i18n_patterns
-from django.views.i18n import JavaScriptCatalog
 
-
-from django.urls import path, re_path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
-
 
 admin.site.site_header = "SkyLearn Admin"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("i18n/", include("django.conf.urls.i18n")),
-]
-
-urlpatterns += i18n_patterns(
-    path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
-    path("", include("core.urls")),
-    path("jet/", include("jet.urls", "jet")),  # Django JET URLS
-    path(
-        "jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")
-    ),  # Django JET dashboard URLS
-
-
+    
+    # API Schema
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-        # Optional: Swagger UI for interactive API documentation
     path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
-        # Optional: Redoc UI for alternative API documentation
     path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
-
-
+    
+    # Apps URLs
+    path("", include("core.urls")),
     path("accounts/", include("accounts.urls")),
     path("programs/", include("course.urls")),
-    path("result/", include("result.urls")),
+    path("result/", include("result.urls")),  # Ваши API оценок
     path("search/", include("search.urls")),
     path("quiz/", include("quiz.urls")),
     path("payments/", include("payments.urls")),
-)
+    
+    # Jet Admin
+    path("jet/", include("jet.urls", "jet")),
+    path("jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")),
+]
 
 if settings.DEBUG:
     # Include django_browser_reload URLs only in DEBUG mode

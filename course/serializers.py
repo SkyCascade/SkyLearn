@@ -106,21 +106,18 @@ class CourseAllocationSerializer(serializers.ModelSerializer):
     lecturer_name = serializers.CharField(source='lecturer.get_full_name', read_only=True)
     lecturer_email = serializers.CharField(source='lecturer.email', read_only=True)
     courses_details = serializers.SerializerMethodField(read_only=True)
-    session_name = serializers.CharField(source='session.name', read_only=True)
+    semester_name = serializers.CharField(source='semester.name', read_only=True)
     group_name = serializers.CharField(source='group.name', read_only=True)
 
     class Meta:
         model = CourseAllocation
         fields = [
             'id', 'lecturer', 'lecturer_name', 'lecturer_email', 
-            'courses', 'courses_details', 'session', 'session_name',
+            'courses', 'courses_details', 'semester', 'semester_name',
             'group', 'group_name'
         ]
         extra_kwargs = {
-            'lecturer': {'write_only': True},
             'courses': {'write_only': True},
-            'session': {'write_only': True},
-            'group': {'write_only': True},
         }
 
     def get_courses_details(self, obj):
@@ -156,6 +153,9 @@ class CourseAllocationSerializer(serializers.ModelSerializer):
         courses = validated_data.pop('courses', [])
         allocation = CourseAllocation.objects.create(**validated_data)
         allocation.courses.set(courses)
+        
+        # После сохранения сработает сигнал в приложении result,
+        # который автоматически создаст записи оценок для всех студентов в группе
         return allocation
 
     def update(self, instance, validated_data):
@@ -169,3 +169,10 @@ class CourseAllocationSerializer(serializers.ModelSerializer):
             instance.courses.set(courses)
         
         return instance
+
+    
+
+class StudentCoursesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseAllocation
+        fields = ['id', 'lecturer', 'courses', 'semester', 'group']

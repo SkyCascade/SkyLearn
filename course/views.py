@@ -12,26 +12,15 @@ from accounts.decorators import lecturer_required, student_required
 from accounts.models import Student
 from core.models import Semester
 from course.filters import CourseAllocationFilter, ProgramFilter
-from course.forms import (
-    CourseAddForm,
-    CourseAllocationForm,
-    EditCourseAllocationForm,
-    ProgramForm,
-    UploadFormFile,
-    UploadFormVideo,
-)
 from course.models import (
     Course,
     CourseAllocation,
     Program,
-    Upload,
-    UploadVideo,
 )
-from result.models import TakenCourse
+
 
 from django.utils.translation import gettext_lazy as _
 from .models import Course
-from .serializers import CourseSerializer
 
 
 # ########################################################
@@ -49,7 +38,6 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
-from .serializers import CourseAllocationSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
@@ -61,6 +49,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 from django.contrib.auth import get_user_model
+
+
+from .serializers import CourseAllocationSerializer,  CourseSerializer, StudentCoursesSerializer
+from rest_framework import generics
 
 
 User = get_user_model()
@@ -232,20 +224,20 @@ class CourseDetailAPIView(APIView):
             self.permission_classes = [IsAuthenticated, IsAdminUser]
         return super().get_permissions()
 
-    def get_object(self, slug):
+    def get_object(self, pk):
         """
-        Получить курс по slug или вернуть 404
+        Получить курс по id или вернуть 404
         """
         try:
-            return Course.objects.get(slug=slug)
+            return Course.objects.get(pk=pk)
         except Course.DoesNotExist:
             return None
 
-    def get(self, request, slug):
+    def get(self, request, pk):
         """
         Получить детальную информацию о курсе
         """
-        course = self.get_object(slug)
+        course = self.get_object(pk)
         if not course:
             return Response(
                 {'detail': _('Course not found.')},
@@ -254,15 +246,16 @@ class CourseDetailAPIView(APIView):
 
         serializer = CourseSerializer(course, context={'request': request})
         return Response(serializer.data)
+
     @extend_schema(
         request=CourseSerializer,
         responses={201: CourseSerializer}
     )
-    def put(self, request, slug):
+    def put(self, request, pk):
         """
         Полное обновление курса
         """
-        course = self.get_object(slug)
+        course = self.get_object(pk)
         if not course:
             return Response(
                 {'detail': _('Course not found.')},
@@ -279,9 +272,9 @@ class CourseDetailAPIView(APIView):
         request=CourseSerializer,
         responses={201: CourseSerializer}
     )  
-    def patch(self, request, slug):
+    def patch(self, request, pk):
         """Частичное обновление курса """
-        course = self.get_object(slug)
+        course = self.get_object(pk)
         if not course:
             return Response(
                 {'detail': _('Course not found.')},
@@ -298,11 +291,11 @@ class CourseDetailAPIView(APIView):
         request=CourseSerializer,
         responses={201: CourseSerializer}
     )
-    def delete(self, request, slug):
+    def delete(self, request, pk):
         """
         Удалить курс
         """
-        course = self.get_object(slug)
+        course = self.get_object(pk)
         if not course:
             return Response(
                 {'detail': _('Course not found.')},
@@ -322,7 +315,7 @@ class CourseAllocationViewSet(viewsets.ModelViewSet):
     queryset = CourseAllocation.objects.all()
     serializer_class = CourseAllocationSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['lecturer', 'session']
+    filterset_fields = ['lecturer', 'semester']
     search_fields = ['lecturer__first_name', 'lecturer__last_name', 'lecturer__email', 'courses__title', 'courses__code']
     ordering_fields = ['lecturer__first_name', 'lecturer__last_name']
     ordering = ['lecturer__first_name']
@@ -335,7 +328,7 @@ class CourseAllocationViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(lecturer=self.request.user)
         
         # Предзагрузка связанных данных для оптимизации
-        queryset = queryset.select_related('lecturer', 'session').prefetch_related('courses')
+        queryset = queryset.select_related('lecturer').prefetch_related('courses')
         
         return queryset
 
@@ -401,3 +394,13 @@ class CourseAllocationViewSet(viewsets.ModelViewSet):
                 {"detail": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+
+class StudentCoursesListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = StudentCoursesSerializer
+
+    def get_queryset(self):
+        if hasattr(self.request.user, 'student'):
+            return CourseAllocation.objects.filter(group=self.request.user.student.group)
+        return CourseAllocation.objects.none()
