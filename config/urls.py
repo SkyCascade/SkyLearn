@@ -20,14 +20,10 @@ urlpatterns = [
     path("", include("core.urls")),
     path("accounts/", include("accounts.urls")),
     path("programs/", include("course.urls")),
-    path("result/", include("result.urls")),  # Ваши API оценок
+    path("result/", include("result.urls")), 
     path("search/", include("search.urls")),
-    path("quiz/", include("quiz.urls")),
     path("payments/", include("payments.urls")),
     
-    # Jet Admin
-    path("jet/", include("jet.urls", "jet")),
-    path("jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")),
 ]
 
 if settings.DEBUG:

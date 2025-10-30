@@ -2,7 +2,6 @@ from itertools import chain
 from django.views.generic import ListView
 from core.models import NewsAndEvents
 from course.models import Program, Course
-from quiz.models import Quiz
 
 
 class SearchView(ListView):
@@ -24,11 +23,10 @@ class SearchView(ListView):
             news_events_results = NewsAndEvents.objects.search(query)
             program_results = Program.objects.search(query)
             course_results = Course.objects.search(query)
-            quiz_results = Quiz.objects.search(query)
 
             # combine querysets
             queryset_chain = chain(
-                news_events_results, program_results, course_results, quiz_results
+                news_events_results, program_results, course_results
             )
             queryset = sorted(
                 queryset_chain, key=lambda instance: instance.pk, reverse=True

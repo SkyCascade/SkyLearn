@@ -5,7 +5,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
-
+from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiResponse
+from drf_spectacular.types import OpenApiTypes
 from .models import Grade_1st_module, Grade_2nd_module, Grade_semester
 from .serializers import (
     StudentGrade1stModuleSerializer, 
@@ -16,6 +17,7 @@ from .serializers import (
     LecturerGradeSemesterSerializer,
     BulkGradesUpdateSerializer
 )
+from rest_framework import serializers
 
 class Grade1stModuleViewSet(viewsets.ModelViewSet):
     queryset = Grade_1st_module.objects.all()
@@ -174,12 +176,102 @@ from .serializers import (
     BulkGradesUpdateSerializer
 )
 
-# ... остальные ViewSets остаются без изменений ...
-
-class LecturerBulkGradesViewSet(viewsets.ViewSet):
+class LecturerBulkGradesViewSet(viewsets.GenericViewSet):
     """ViewSet для массового обновления оценок преподавателями"""
     permission_classes = [IsAuthenticated]
 
+    def validate_grade_value(self, value, field_name):
+        """Валидация значения оценки"""
+        if value is not None and (value < 0 or value > 100):
+            raise serializers.ValidationError(
+                f"{field_name} must be between 0 and 100"
+            )
+
+    def calculate_grade(self, total):
+        """Расчет буквенной оценки на основе total"""
+        if total >= 90: return 'A'
+        elif total >= 80: return 'B'
+        elif total >= 70: return 'C'
+        elif total >= 60: return 'D'
+        else: return 'F'
+
+    @extend_schema(
+        request=BulkGradesUpdateSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="Успешное обновление оценок",
+                response=OpenApiTypes.OBJECT,
+                examples=[
+                    OpenApiExample(
+                        "Пример успешного ответа",
+                        value={
+                            "detail": "Successfully updated 3 grades",
+                            "updated_grades": [
+                                {
+                                    "student_id": 101,
+                                    "student_name": "Иван Петров",
+                                    "attendance": 25.0,
+                                    "activities": 30.0,
+                                    "exam": 35.0,
+                                    "total": 90.0,
+                                    "grade": "A"
+                                }
+                            ]
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="Ошибка валидации",
+                response=OpenApiTypes.OBJECT,
+                examples=[
+                    OpenApiExample(
+                        "Ошибка валидации",
+                        value={
+                            "course_id": ["This field is required."],
+                            "grade_type": ["This field is required."]
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Доступ запрещен",
+                response=OpenApiTypes.OBJECT,
+                examples=[
+                    OpenApiExample(
+                        "Только для преподавателей",
+                        value={
+                            "detail": "Only lecturers can update grades"
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description="Запись не найдена", 
+                response=OpenApiTypes.OBJECT,
+                examples=[
+                    OpenApiExample(
+                        "Оценка не найдена",
+                        value={
+                            "detail": "Grade record not found for one of the students"
+                        }
+                    )
+                ]
+            )
+        },
+        description="""
+        Массовое обновление оценок для нескольких студентов по одному курсу.
+        
+        **Требования:**
+        - Только для преподавателей
+        - Преподаватель должен быть привязан к курсу
+        
+        **Типы оценок:**
+        - 1st_module - первый модуль
+        - 2nd_module - второй модуль
+        - semester - семестр
+        """
+    )
     @action(detail=False, methods=['post'], url_path='bulk-update')
     def bulk_update(self, request):
         """Массовое обновление оценок для нескольких студентов"""
@@ -212,11 +304,29 @@ class LecturerBulkGradesViewSet(viewsets.ViewSet):
                 for grade_data in grades_data:
                     student_id = grade_data['student_id']
                     
-                    # Получаем объект оценки
-                    grade_obj = model.objects.get(
-                        lecturer=request.user,
-                        course_id=course_id,
-                        student_id=student_id
+                    # Базовые параметры для поиска/создания
+                    lookup_params = {
+                        'lecturer': request.user,
+                        'course_id': course_id,
+                        'student_id': student_id,
+                    }
+                    
+                    # Для Grade_semester добавляем текущий семестр
+                    if grade_type == 'semester':
+                        from core.models import Semester
+                        current_semester = Semester.objects.filter(is_current_semester=True).first()
+                        if current_semester:
+                            lookup_params['semester'] = current_semester
+                    
+                    # Получаем или создаем объект оценки
+                    grade_obj, created = model.objects.get_or_create(
+                        **lookup_params,
+                        defaults={
+                            'attendance': 0,
+                            'activities': 0,
+                            'exam': 0,
+                            'total': 0,
+                        }
                     )
                     
                     # Обновляем поля

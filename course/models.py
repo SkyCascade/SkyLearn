@@ -24,7 +24,7 @@ class ProgramManager(models.Manager):
 
 class Program(models.Model):
     title = models.CharField(max_length=150, unique=True)
-    summary = models.TextField(blank=True)
+    summary = models.TextField(blank=True, )
 
     objects = ProgramManager()
 
@@ -66,7 +66,7 @@ class Course(models.Model):
     code = models.CharField(max_length=200, unique=True)
     credit = models.IntegerField(default=0)
     summary = models.TextField(max_length=200, blank=True)
-    program = models.ForeignKey(Program, on_delete=models.CASCADE)
+    program = models.ForeignKey(Program, on_delete=models.CASCADE, blank=True, null=True)
     level = models.CharField(max_length=25, choices=settings.LEVEL_CHOICES)
     year = models.IntegerField(choices=settings.YEARS, default=1)
     semester = models.CharField(choices=settings.SEMESTER_CHOICES, max_length=200)

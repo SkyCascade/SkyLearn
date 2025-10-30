@@ -36,7 +36,6 @@ AUTH_USER_MODEL = "accounts.User"
 # Application definition
 
 DJANGO_APPS = [
-    "modeltranslation",  # Translation
     "jet.dashboard",
     "jet",
     "django.contrib.admin",
@@ -58,7 +57,6 @@ TAILWIND_APP_NAME = 'theme'
 # Third party apps
 THIRD_PARTY_APPS = [
     "crispy_forms",
-    "crispy_bootstrap5",
     "django_filters",
     "rest_framework.authtoken",  
     'rest_framework',
@@ -75,7 +73,6 @@ PROJECT_APPS = [
     "course.apps.CourseConfig",
     "result.apps.ResultConfig",
     "search.apps.SearchConfig",
-    "quiz.apps.QuizConfig",
     "payments.apps.PaymentsConfig",
 ]
 
@@ -90,9 +87,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django.middleware.locale.LocaleMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware", 
-    'corsheaders.middleware.CorsMiddleware',  # Должен быть как можно выше
+    'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.common.CommonMiddleware', 
 ]
 if DEBUG:
