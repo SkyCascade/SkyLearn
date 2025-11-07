@@ -45,7 +45,6 @@ DJANGO_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "tailwind",
-    "theme",
 ]
 if DEBUG:
     # Add django_browser_reload only in DEBUG mode
@@ -72,8 +71,7 @@ PROJECT_APPS = [
     "accounts.apps.AccountsConfig",
     "course.apps.CourseConfig",
     "result.apps.ResultConfig",
-    "search.apps.SearchConfig",
-    "payments.apps.PaymentsConfig",
+    "attendance.apps.AttendanceConfig",
 ]
 
 # Combine all apps
@@ -99,8 +97,15 @@ if DEBUG:
 
 from datetime import timedelta
 
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+# CORS Settings - Important for cookie-based auth
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "https://yourdomain.com",  # Add your production frontend URL
+        "https://www.yourdomain.com",
+    ]
+
+CORS_ALLOW_CREDENTIALS = True  # Required for cookies
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -113,23 +118,36 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+# JWT Settings with Cookie support
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Shorter for better security
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # 7 days
+    'ROTATE_REFRESH_TOKENS': True,  # Enable token rotation for better security
     'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    
+    # Cookie settings
+    'AUTH_COOKIE': 'access_token',  # Cookie name for access token
+    'AUTH_COOKIE_REFRESH': 'refresh_token',  # Cookie name for refresh token
+    'AUTH_COOKIE_DOMAIN': None,  # None = current domain, or set specific domain
+    'AUTH_COOKIE_SECURE': not DEBUG,  # True in production (requires HTTPS)
+    'AUTH_COOKIE_HTTP_ONLY': True,  # httpOnly flag
+    'AUTH_COOKIE_PATH': '/',
+    'AUTH_COOKIE_SAMESITE': 'Lax',  # Lax or Strict for CSRF protection
 }
 
+# Cookie name for JWT in requests
+SIMPLE_JWT_COOKIE_NAME = 'access_token'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'accounts.authentication.JWTCookieAuthentication',  # Our custom auth
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Fallback
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-
 }
 
 SPECTACULAR_SETTINGS = {

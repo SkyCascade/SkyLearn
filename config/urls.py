@@ -21,9 +21,7 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("programs/", include("course.urls")),
     path("result/", include("result.urls")), 
-    path("search/", include("search.urls")),
-    path("payments/", include("payments.urls")),
-    
+    path("attendance/", include("attendance.urls")),
 ]
 
 if settings.DEBUG:

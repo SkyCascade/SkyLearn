@@ -31,6 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
             'is_parent',
             'is_dep_head',
             'is_superuser',
+            'is_staff',  # Добавлено для определения админа
             'is_active',
             'gender',
             'phone',
@@ -444,6 +445,47 @@ class PasswordResetSerializer(serializers.Serializer):
                 "There is no user registered with the specified E-mail address."
             )
         return value
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """
+    Serializer for changing user password
+    Works for all user types: students, lecturers, admins
+    """
+    old_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True)
+    confirm_password = serializers.CharField(required=True, write_only=True)
+
+    def validate_old_password(self, value):
+        """Validate that the old password is correct"""
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError(_("Old password is incorrect."))
+        return value
+
+    def validate(self, attrs):
+        """Validate that new passwords match and meet requirements"""
+        if attrs['new_password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({
+                "confirm_password": _("New passwords do not match.")
+            })
+        
+        # Validate password strength using Django's validators
+        try:
+            validate_password(attrs['new_password'], self.context['request'].user)
+        except Exception as e:
+            raise serializers.ValidationError({
+                "new_password": list(e.messages)
+            })
+        
+        return attrs
+
+    def save(self, **kwargs):
+        """Save the new password"""
+        user = self.context['request'].user
+        user.set_password(self.validated_data['new_password'])
+        user.save()
+        return user
 
 
 

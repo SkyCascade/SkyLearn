@@ -9,14 +9,14 @@ from xhtml2pdf import pisa
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.db import transaction
 from django.db.models import Q
 from accounts.filters import LecturerFilter, StudentFilter
 from core.models import Semester, Session
 from course.models import Course
 from drf_spectacular.utils import extend_schema
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -27,11 +27,14 @@ from rest_framework.decorators import action
 from rest_framework import status, viewsets
 from rest_framework.viewsets import ModelViewSet
 from core.permissions import IsAdminOrLecturer
+from django.conf import settings
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
 
 
 from .models import Group ,Parent, Student, User ,Program
-from .serializers import UserSerializer, StaffAddSerializer, StudentAddSerializer, StaffListSerializer, UserSerializer, UserUpdateSerializer ,GroupSerializer, StudentListSerializer, StudentDetailSerializer, StudentUpdateSerializer
+from .serializers import UserSerializer, StaffAddSerializer, StudentAddSerializer, StaffListSerializer, UserSerializer, UserUpdateSerializer ,GroupSerializer, StudentListSerializer, StudentDetailSerializer, StudentUpdateSerializer, ChangePasswordSerializer
 
 
 User = get_user_model()
@@ -53,6 +56,148 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Secure login that sets tokens in httpOnly cookies
+        """
+        serializer = self.get_serializer(data=request.data)
+        
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Get tokens
+        access_token = serializer.validated_data.get('access')
+        refresh_token = serializer.validated_data.get('refresh')
+        user_data = serializer.validated_data.get('user')
+        
+        # Create response
+        response = Response({
+            'user': user_data,
+            'message': 'Login successful'
+        }, status=status.HTTP_200_OK)
+        
+        # Set httpOnly cookies
+        # Access token (short-lived)
+        response.set_cookie(
+            key=settings.SIMPLE_JWT.get('AUTH_COOKIE', 'access_token'),
+            value=access_token,
+            max_age=settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(),
+            httponly=True,
+            secure=not settings.DEBUG,  # True in production (HTTPS)
+            samesite='Lax',  # Protection against CSRF
+            domain=settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN'),
+            path='/'
+        )
+        
+        # Refresh token (long-lived)
+        response.set_cookie(
+            key=settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
+            value=refresh_token,
+            max_age=settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME').total_seconds(),
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite='Lax',
+            domain=settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN'),
+            path='/'
+        )
+        
+        return response
+
+
+class SecureTokenRefreshView(TokenRefreshView):
+    """
+    Secure token refresh that uses httpOnly cookies
+    """
+    def post(self, request, *args, **kwargs):
+        # Get refresh token from cookie
+        refresh_token = request.COOKIES.get(
+            settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token')
+        )
+        
+        if not refresh_token:
+            return Response(
+                {'error': 'Refresh token not found'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        try:
+            # Validate and refresh
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+            
+            # If rotation is enabled, get new refresh token
+            if settings.SIMPLE_JWT.get('ROTATE_REFRESH_TOKENS', False):
+                refresh.set_jti()
+                refresh.set_exp()
+                new_refresh_token = str(refresh)
+            else:
+                new_refresh_token = refresh_token
+            
+            response = Response({
+                'message': 'Token refreshed successfully'
+            }, status=status.HTTP_200_OK)
+            
+            # Set new access token cookie
+            response.set_cookie(
+                key=settings.SIMPLE_JWT.get('AUTH_COOKIE', 'access_token'),
+                value=access_token,
+                max_age=settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(),
+                httponly=True,
+                secure=not settings.DEBUG,
+                samesite='Lax',
+                domain=settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN'),
+                path='/'
+            )
+            
+            # Set new refresh token cookie if rotation is enabled
+            if settings.SIMPLE_JWT.get('ROTATE_REFRESH_TOKENS', False):
+                response.set_cookie(
+                    key=settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
+                    value=new_refresh_token,
+                    max_age=settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME').total_seconds(),
+                    httponly=True,
+                    secure=not settings.DEBUG,
+                    samesite='Lax',
+                    domain=settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN'),
+                    path='/'
+                )
+            
+            return response
+            
+        except (TokenError, InvalidToken) as e:
+            return Response(
+                {'error': 'Invalid or expired refresh token'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class LogoutView(APIView):
+    """
+    Secure logout that clears httpOnly cookies
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        response = Response({
+            'message': 'Logout successful'
+        }, status=status.HTTP_200_OK)
+        
+        # Clear cookies
+        response.delete_cookie(
+            key=settings.SIMPLE_JWT.get('AUTH_COOKIE', 'access_token'),
+            path='/',
+            domain=settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN')
+        )
+        response.delete_cookie(
+            key=settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
+            path='/',
+            domain=settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN')
+        )
+        
+        return response
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -63,7 +208,23 @@ class UserProfileView(APIView):
 
 User = get_user_model()
 
+class StudentProfileView(APIView):
+    """
+    Возвращает детальную информацию о текущем студенте
+    (включая level, program, group)
+    """
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        try:
+            # Получаем объект Student, связанный с текущим пользователем
+            student = Student.objects.get(student=request.user)
+            serializer = StudentDetailSerializer(student)
+            return Response(serializer.data)
+        except Student.DoesNotExist:
+            return Response({
+                'error': 'Student profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
 
 class LecturerListViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -271,3 +432,62 @@ class StudentsByGroupView(APIView):
             'group': group.name,
             'students': serializer.data
         }, status=status.HTTP_200_OK)
+
+
+class ChangePasswordView(APIView):
+    """
+    API endpoint for changing user password
+    Available for all authenticated users (students, lecturers, admins)
+    """
+    permission_classes = [IsAuthenticated]
+    
+    @extend_schema(
+        request=ChangePasswordSerializer,
+        responses={
+            200: {
+                'type': 'object',
+                'properties': {
+                    'message': {'type': 'string'},
+                    'detail': {'type': 'string'}
+                }
+            },
+            400: {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string'}
+                }
+            }
+        }
+    )
+    def post(self, request):
+        """
+        Change password for the authenticated user
+        
+        Required fields:
+        - old_password: Current password
+        - new_password: New password
+        - confirm_password: Confirmation of new password
+        """
+        serializer = ChangePasswordSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            try:
+                serializer.save()
+                
+                # Update session hash to keep user logged in
+                update_session_auth_hash(request, request.user)
+                
+                return Response({
+                    'message': 'Password changed successfully',
+                    'detail': 'Your password has been updated. You remain logged in.'
+                }, status=status.HTTP_200_OK)
+                
+            except Exception as e:
+                return Response({
+                    'error': f'Failed to change password: {str(e)}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
