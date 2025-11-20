@@ -8,8 +8,9 @@ from django.db import transaction
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
-from .models import ScheduleItem, Attendance
+from .models import ScheduleItem, Attendance, LessonTime
 from .serializers import (
+    LessonTimeSerializer,
     ScheduleItemSerializer,
     StudentScheduleItemSerializer,
     LecturerScheduleItemSerializer,
@@ -21,6 +22,36 @@ from .serializers import (
     BulkAttendancesUpdateSerializer
 )
 from core.permissions import IsAdminOrLecturer, IsLecturer
+
+
+class LessonTimeViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для управления временами уроков.
+    Только администраторы могут создавать и изменять времена уроков.
+    """
+    serializer_class = LessonTimeSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    filter_backends = [OrderingFilter]
+    ordering_fields = ['order']
+    ordering = ['order']
+    
+    def get_queryset(self):
+        """
+        Фильтруем времена уроков по админу
+        """
+        user = self.request.user
+        if user.is_superuser:
+            return LessonTime.objects.filter(admin=user)
+        elif hasattr(user, 'admin') and user.admin:
+            # Преподаватели и студенты могут видеть времена уроков своего админа
+            return LessonTime.objects.filter(admin=user.admin)
+        return LessonTime.objects.none()
+    
+    def get_serializer_context(self):
+        """Передаем admin в контекст сериализатора"""
+        context = super().get_serializer_context()
+        context['admin'] = self.request.user if self.request.user.is_superuser else getattr(self.request.user, 'admin', None)
+        return context
 
 
 class ScheduleItemViewSet(viewsets.ModelViewSet):

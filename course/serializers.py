@@ -27,6 +27,14 @@ class ProgramSerializer(serializers.ModelSerializer):
      def get_absolute_url(self, obj):
         return obj.get_absolute_url()
      
+     def create(self, validated_data):
+        """
+        Автоматически устанавливаем admin из контекста
+        """
+        admin = self.context.get('admin') or self.context.get('request').user
+        validated_data['admin'] = admin
+        return super().create(validated_data)
+     
 
 class ProgramDetailSerializer(serializers.ModelSerializer):
     class Meta:
@@ -96,6 +104,14 @@ class CourseSerializer(serializers.ModelSerializer):
         if value not in valid_semesters:
             raise serializers.ValidationError(_("Invalid semester value."))
         return value
+    
+    def create(self, validated_data):
+        """
+        Автоматически устанавливаем admin из контекста
+        """
+        admin = self.context.get('admin') or self.context.get('request').user
+        validated_data['admin'] = admin
+        return super().create(validated_data)
 
 
 
@@ -151,6 +167,10 @@ class CourseAllocationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         courses = validated_data.pop('courses', [])
+        # Автоматически устанавливаем admin из контекста
+        admin = self.context.get('admin') or self.context.get('request').user
+        validated_data['admin'] = admin
+        
         allocation = CourseAllocation.objects.create(**validated_data)
         allocation.courses.set(courses)
         

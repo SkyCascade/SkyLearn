@@ -72,6 +72,14 @@ class Grade_1st_module(models.Model):
     exam = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     total = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     grade = models.CharField(max_length=2, choices=GRADE_CHOICES, blank=True, null=True)
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_grade_1st',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
 
     class Meta:
         unique_together = ['student', 'course']
@@ -92,6 +100,14 @@ class Grade_2nd_module(models.Model):
     exam = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     total = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     grade = models.CharField(max_length=2, choices=GRADE_CHOICES, blank=True, null=True)
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_grade_2nd',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
 
     class Meta:
         unique_together = ['student', 'course']
@@ -115,6 +131,14 @@ class Grade_semester(models.Model):
     exam = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     total = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     grade = models.CharField(max_length=2, choices=GRADE_CHOICES, blank=True, null=True)
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_grade_semester',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
 
     class Meta:
         unique_together = ['student', 'course', 'semester']

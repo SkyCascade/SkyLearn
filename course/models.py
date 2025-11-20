@@ -25,6 +25,14 @@ class ProgramManager(models.Manager):
 class Program(models.Model):
     title = models.CharField(max_length=150, unique=True)
     summary = models.TextField(blank=True, )
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_programs',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
 
     objects = ProgramManager()
 
@@ -71,6 +79,14 @@ class Course(models.Model):
     year = models.IntegerField(choices=settings.YEARS, default=1)
     semester = models.CharField(choices=settings.SEMESTER_CHOICES, max_length=200)
     is_elective = models.BooleanField(default=False)
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_courses',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
 
     objects = CourseManager()
 
@@ -130,6 +146,14 @@ class CourseAllocation(models.Model):
     semester = models.ForeignKey(
         "core.Semester", on_delete=models.CASCADE, blank=True, null=True
     )
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_course_allocations',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return self.lecturer.get_full_name
@@ -182,6 +206,14 @@ class Upload(models.Model):
     )
     updated_date = models.DateTimeField(auto_now=True)
     upload_time = models.DateTimeField(auto_now_add=True)
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_uploads',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return f"{self.title}"
@@ -240,6 +272,14 @@ class UploadVideo(models.Model):
     )
     summary = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_upload_videos',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return f"{self.title}"

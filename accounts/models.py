@@ -162,6 +162,14 @@ class StudentManager(models.Manager):
 
 class Group(models.Model):
     name = models.CharField(max_length=100)
+    admin = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='created_groups',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return self.name
@@ -185,7 +193,16 @@ class Student(models.Model):
         null=True, 
         blank=True,
         related_name='students'  # Добавляем related_name для удобства
-    )    
+    )
+    admin = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='created_students',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
+    
     objects = StudentManager()
 
     class Meta:
@@ -239,6 +256,14 @@ class Parent(models.Model):
 class DepartmentHead(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     department = models.ForeignKey(Program, on_delete=models.CASCADE, null=True)
+    admin = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='created_department_heads',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
 
     class Meta:
         ordering = ("-user__date_joined",)

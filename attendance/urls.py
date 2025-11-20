@@ -1,8 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ScheduleItemViewSet, AttendanceViewSet
+from .views import LessonTimeViewSet, ScheduleItemViewSet, AttendanceViewSet
 
 router = DefaultRouter()
+router.register(r'lesson-times', LessonTimeViewSet, basename='lesson-time')
 router.register(r'schedules', ScheduleItemViewSet, basename='schedule')
 router.register(r'attendances', AttendanceViewSet, basename='attendance')
 

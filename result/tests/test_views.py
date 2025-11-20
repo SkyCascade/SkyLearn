@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 
 from accounts.models import Student
 from course.models import Course, Program, CourseAllocation
-from core.models import Session, Semester
+from core.models import Semester
 from result.models import Grade_1st_module, Grade_2nd_module, Grade_semester
 
 User = get_user_model()
@@ -18,17 +18,10 @@ class ResultViewsTestCase(APITestCase):
 
     def setUp(self):
         """Настройка тестовых данных"""
-        # Создаем сессию
-        self.session = Session.objects.create(
-            session="2023/2024",
-            is_current_session=True
-        )
-
         # Создаем семестр
         self.semester = Semester.objects.create(
             semester="First",
-            is_current_semester=True,
-            session=self.session
+            is_current_semester=True
         )
 
         # Создаем программу

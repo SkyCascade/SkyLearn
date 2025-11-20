@@ -100,6 +100,9 @@ class StaffAddSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
 
+        # Автоматически устанавливаем admin из контекста
+        admin = self.context.get('admin') or self.context.get('request').user
+        
         user = User.objects.create_user(
             username=validated_data.get('username'),
             email=validated_data.get('email'),
@@ -108,7 +111,8 @@ class StaffAddSerializer(serializers.ModelSerializer):
             gender=validated_data.get('gender'),
             address=validated_data.get('address'),
             phone=validated_data.get('phone'),
-            is_lecturer=True
+            is_lecturer=True,
+            admin=admin
         )
         return user
 
@@ -260,6 +264,9 @@ class StudentAddSerializer(serializers.ModelSerializer):
         program = validated_data.pop('program')
         group = validated_data.pop('group', None)  # Получаем группу, если есть
         
+        # Автоматически устанавливаем admin из контекста
+        admin = self.context.get('admin') or self.context.get('request').user
+        
         # Создаем пользователя
         user = User.objects.create_user(
             username=username,
@@ -269,7 +276,8 @@ class StudentAddSerializer(serializers.ModelSerializer):
             gender=gender,
             address=address,
             phone=phone,
-            is_student=True
+            is_student=True,
+            admin=admin
         )
         
         # Создаем студента с группой
@@ -277,7 +285,8 @@ class StudentAddSerializer(serializers.ModelSerializer):
             student=user,
             level=level,
             program=program,
-            group=group  # Добавляем группу
+            group=group,
+            admin=admin
         )
         
         return student
@@ -416,6 +425,9 @@ class ParentAddSerializer(serializers.ModelSerializer):
         student = validated_data.pop('student')
         relation_ship = validated_data.pop('relation_ship')
         
+        # Автоматически устанавливаем admin из контекста
+        admin = self.context.get('admin') or self.context.get('request').user
+        
         user = User.objects.create_user(
             username=validated_data.get('username'),
             email=validated_data.get('email'),
@@ -424,13 +436,15 @@ class ParentAddSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name'),
             address=validated_data.get('address'),
             phone=validated_data.get('phone'),
-            is_parent=True
+            is_parent=True,
+            admin=admin
         )
         
         Parent.objects.create(
             user=user,
             student=student,
-            relation_ship=relation_ship
+            relation_ship=relation_ship,
+            admin=admin
         )
         
         return user
@@ -504,3 +518,11 @@ class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['id', 'name']
+    
+    def create(self, validated_data):
+        """
+        Автоматически устанавливаем admin из контекста
+        """
+        admin = self.context.get('admin') or self.context.get('request').user
+        validated_data['admin'] = admin
+        return super().create(validated_data)

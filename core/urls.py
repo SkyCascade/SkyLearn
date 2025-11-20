@@ -5,7 +5,6 @@ from . import views
 
 router = DefaultRouter()
 router.register(r'news', views.NewsAndEventsViewSet, basename='news')
-router.register(r'sessions', views.SessionViewSet, basename='session')
 router.register(r'semesters', views.SemesterViewSet, basename='semester')
 
 

@@ -62,11 +62,18 @@ class ProgramListAPIView(APIView):
     permission_classes = [IsAdminUser]
     
     def get(self, request):
+        user = request.user
+        if user.is_superuser:
+            programs = Program.objects.filter(admin=user)
+        else:
+            programs = Program.objects.none()
+        
         query = request.GET.get('q', None)
         if query:
-            programs = Program.objects.search(query)
-        else:
-            programs = Program.objects.all()
+            programs = programs.filter(
+                Q(title__icontains=query) | Q(summary__icontains=query)
+            )
+        
         serializer = ProgramSerializer(programs, many=True)
         return Response(serializer.data)
     
@@ -75,7 +82,7 @@ class ProgramListAPIView(APIView):
         responses={201: ProgramSerializer}
     )
     def post(self, request):
-        serializer = ProgramSerializer(data=request.data)
+        serializer = ProgramSerializer(data=request.data, context={'request': request, 'admin': request.user})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -85,14 +92,16 @@ class ProgramListAPIView(APIView):
 class ProgramDetailAPIView(APIView):
     permission_classes = [IsAdminUser]
     
-    def get_object(self, pk):
+    def get_object(self, pk, user):
         try:
-            return Program.objects.get(pk=pk)
+            if user.is_superuser:
+                return Program.objects.get(pk=pk, admin=user)
+            return None
         except Program.DoesNotExist:
             return None
     
     def get(self, request, pk):
-        program = self.get_object(pk)
+        program = self.get_object(pk, request.user)
         if not program:
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = ProgramSerializer(program)
@@ -103,7 +112,7 @@ class ProgramDetailAPIView(APIView):
         responses={201: ProgramSerializer}
     )
     def put(self, request, pk):
-        program = self.get_object(pk)
+        program = self.get_object(pk, request.user)
         if not program:
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         
@@ -118,7 +127,7 @@ class ProgramDetailAPIView(APIView):
         responses={201: ProgramSerializer}
     )
     def patch(self, request, pk):
-        program = self.get_object(pk)
+        program = self.get_object(pk, request.user)
         if not program:
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         
@@ -133,7 +142,7 @@ class ProgramDetailAPIView(APIView):
         responses={201: ProgramSerializer}
     )
     def delete(self, request, pk):
-        program = self.get_object(pk)
+        program = self.get_object(pk, request.user)
         if not program:
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         
@@ -160,8 +169,17 @@ class CourseListCreateAPIView(APIView):
 
     def get(self, request):
         """
-        Получить список всех курсов с поддержкой поиска
+        Получить список курсов с фильтрацией по admin
         """
+        user = request.user
+        # Фильтруем курсы по админу
+        if user.is_superuser:
+            courses = Course.objects.filter(admin=user)
+        elif hasattr(user, 'admin') and user.admin:
+            courses = Course.objects.filter(admin=user.admin)
+        else:
+            courses = Course.objects.none()
+        
         query = request.GET.get('q', None)
         program = request.GET.get('program', None)
         level = request.GET.get('level', None)
@@ -169,11 +187,13 @@ class CourseListCreateAPIView(APIView):
         semester = request.GET.get('semester', None)
         is_elective = request.GET.get('is_elective', None)
 
-        courses = Course.objects.all()
-
         # Поиск
         if query:
-            courses = courses.search(query)
+            courses = courses.filter(
+                Q(title__icontains=query) | 
+                Q(code__icontains=query) | 
+                Q(summary__icontains=query)
+            )
 
         # Фильтрация
         if program:
@@ -199,7 +219,7 @@ class CourseListCreateAPIView(APIView):
         """
         Создать новый курс
         """
-        serializer = CourseSerializer(data=request.data, context={'request': request})
+        serializer = CourseSerializer(data=request.data, context={'request': request, 'admin': request.user})
         
         if serializer.is_valid():
             course = serializer.save()
@@ -224,12 +244,16 @@ class CourseDetailAPIView(APIView):
             self.permission_classes = [IsAuthenticated, IsAdminUser]
         return super().get_permissions()
 
-    def get_object(self, pk):
+    def get_object(self, pk, user):
         """
-        Получить курс по id или вернуть 404
+        Получить курс по id с учетом admin или вернуть None
         """
         try:
-            return Course.objects.get(pk=pk)
+            if user.is_superuser:
+                return Course.objects.get(pk=pk, admin=user)
+            elif hasattr(user, 'admin') and user.admin:
+                return Course.objects.get(pk=pk, admin=user.admin)
+            return None
         except Course.DoesNotExist:
             return None
 
@@ -237,7 +261,7 @@ class CourseDetailAPIView(APIView):
         """
         Получить детальную информацию о курсе
         """
-        course = self.get_object(pk)
+        course = self.get_object(pk, request.user)
         if not course:
             return Response(
                 {'detail': _('Course not found.')},
@@ -255,7 +279,7 @@ class CourseDetailAPIView(APIView):
         """
         Полное обновление курса
         """
-        course = self.get_object(pk)
+        course = self.get_object(pk, request.user)
         if not course:
             return Response(
                 {'detail': _('Course not found.')},
@@ -274,7 +298,7 @@ class CourseDetailAPIView(APIView):
     )  
     def patch(self, request, pk):
         """Частичное обновление курса """
-        course = self.get_object(pk)
+        course = self.get_object(pk, request.user)
         if not course:
             return Response(
                 {'detail': _('Course not found.')},
@@ -295,7 +319,7 @@ class CourseDetailAPIView(APIView):
         """
         Удалить курс
         """
-        course = self.get_object(pk)
+        course = self.get_object(pk, request.user)
         if not course:
             return Response(
                 {'detail': _('Course not found.')},
@@ -312,7 +336,6 @@ class CourseDetailAPIView(APIView):
 
 
 class CourseAllocationViewSet(viewsets.ModelViewSet):
-    queryset = CourseAllocation.objects.all()
     serializer_class = CourseAllocationSerializer
     permission_classes = [IsAuthenticated]
     filterset_fields = ['lecturer', 'semester']
@@ -321,16 +344,29 @@ class CourseAllocationViewSet(viewsets.ModelViewSet):
     ordering = ['lecturer__first_name']
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        user = self.request.user
         
-        # Фильтрация для преподавателей - только свои назначения
-        if self.request.user.is_lecturer:
-            queryset = queryset.filter(lecturer=self.request.user)
+        # Фильтруем по admin
+        if user.is_superuser:
+            queryset = CourseAllocation.objects.filter(admin=user)
+        elif user.is_lecturer:
+            # Для преподавателей - только свои назначения
+            queryset = CourseAllocation.objects.filter(lecturer=user)
+        elif hasattr(user, 'admin') and user.admin:
+            queryset = CourseAllocation.objects.filter(admin=user.admin)
+        else:
+            queryset = CourseAllocation.objects.none()
         
         # Предзагрузка связанных данных для оптимизации
         queryset = queryset.select_related('lecturer').prefetch_related('courses')
         
         return queryset
+    
+    def get_serializer_context(self):
+        """Передаем admin в контекст сериализатора"""
+        context = super().get_serializer_context()
+        context['admin'] = self.request.user if self.request.user.is_superuser else getattr(self.request.user, 'admin', None)
+        return context
 
     def perform_create(self, serializer):
         serializer.save()

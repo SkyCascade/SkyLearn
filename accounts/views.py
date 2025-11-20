@@ -13,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.db import transaction
 from django.db.models import Q
 from accounts.filters import LecturerFilter, StudentFilter
-from core.models import Semester, Session
+from core.models import Semester
 from course.models import Course
 from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -230,9 +230,17 @@ class LecturerListViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet для просмотра списка преподавателей
     """
-    queryset = User.objects.filter(is_lecturer=True)
     serializer_class = StaffListSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def get_queryset(self):
+        """
+        Фильтруем преподавателей по админу
+        """
+        user = self.request.user
+        if user.is_superuser:
+            return User.objects.filter(is_lecturer=True, admin=user)
+        return User.objects.none()
 
 class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
     """
@@ -284,8 +292,12 @@ class StaffCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get(self, request):
-        # Получаем всех пользователей с is_lecturer=True
-        lecturers = User.objects.filter(is_lecturer=True)
+        # Получаем преподавателей текущего админа
+        user = request.user
+        if user.is_superuser:
+            lecturers = User.objects.filter(is_lecturer=True, admin=user)
+        else:
+            lecturers = User.objects.none()
         
         # Поддержка поиска (опционально)
         search_query = request.query_params.get('search', None)
@@ -308,7 +320,7 @@ class StaffCreateView(APIView):
         responses={201: StaffAddSerializer}
     )
     def post(self, request):
-        serializer = StaffAddSerializer(data=request.data)
+        serializer = StaffAddSerializer(data=request.data, context={'request': request, 'admin': request.user})
         if serializer.is_valid():
             try:
                 staff_user = serializer.save()
@@ -326,35 +338,75 @@ class StaffCreateView(APIView):
     
 
 class StudentDeleteView(generics.DestroyAPIView):
-    queryset = Student.objects.all()
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = StudentAddSerializer
+    
+    def get_queryset(self):
+        """
+        Фильтруем студентов по админу
+        """
+        user = self.request.user
+        if user.is_superuser:
+            return Student.objects.filter(admin=user)
+        return Student.objects.none()
 
 
 class StudentUpdateView(generics.UpdateAPIView):
-    queryset = Student.objects.all()
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = StudentUpdateSerializer
+    
+    def get_queryset(self):
+        """
+        Фильтруем студентов по админу
+        """
+        user = self.request.user
+        if user.is_superuser:
+            return Student.objects.filter(admin=user)
+        return Student.objects.none()
 
 class StudentListView(generics.ListAPIView):
-    queryset = Student.objects.all()
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = StudentListSerializer
     
+    def get_queryset(self):
+        """
+        Фильтруем студентов по админу
+        """
+        user = self.request.user
+        if user.is_superuser:
+            return Student.objects.filter(admin=user)
+        return Student.objects.none()
+
 
 class StudentDetailView(generics.RetrieveAPIView):
-    queryset = Student.objects.all()
     permission_classes = [IsAdminOrLecturer]
     serializer_class = StudentDetailSerializer
+    
+    def get_queryset(self):
+        """
+        Фильтруем студентов по админу
+        """
+        user = self.request.user
+        if user.is_superuser:
+            return Student.objects.filter(admin=user)
+        # Для преподавателей показываем студентов их админа
+        if hasattr(user, 'admin') and user.admin:
+            return Student.objects.filter(admin=user.admin)
+        return Student.objects.none()
 
 # views.py - обновите StudentCreateView
 class StudentCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request):
-        """Получить список программ и групп для фронтенда"""
-        programs = Program.objects.all()
-        groups = Group.objects.all()
+        """Получить список программ и групп для фронтенда (только для текущего админа)"""
+        user = request.user
+        if user.is_superuser:
+            programs = Program.objects.filter(admin=user)
+            groups = Group.objects.filter(admin=user)
+        else:
+            programs = Program.objects.none()
+            groups = Group.objects.none()
         
         program_choices = [{'id': program.id, 'title': program.title} for program in programs]
         group_choices = [{'id': group.id, 'name': group.name} for group in groups]
@@ -368,7 +420,7 @@ class StudentCreateView(APIView):
         })
     
     def post(self, request):
-        serializer = StudentAddSerializer(data=request.data)
+        serializer = StudentAddSerializer(data=request.data, context={'request': request, 'admin': request.user})
         
         if serializer.is_valid():
             try:
@@ -416,8 +468,25 @@ class StudentCreateView(APIView):
 
 
 class GroupViewSet(ModelViewSet):
-    queryset = Group.objects.all()
     serializer_class = GroupSerializer
+    
+    def get_queryset(self):
+        """
+        Фильтруем группы по админу
+        """
+        user = self.request.user
+        if user.is_superuser:
+            return Group.objects.filter(admin=user)
+        # Для преподавателей показываем группы их админа
+        if hasattr(user, 'admin') and user.admin:
+            return Group.objects.filter(admin=user.admin)
+        return Group.objects.none()
+    
+    def get_serializer_context(self):
+        """Передаем admin в контекст сериализатора"""
+        context = super().get_serializer_context()
+        context['admin'] = self.request.user if self.request.user.is_superuser else getattr(self.request.user, 'admin', None)
+        return context
 
 
 # views.py в accounts app
@@ -425,7 +494,15 @@ class StudentsByGroupView(APIView):
     permission_classes = [IsAuthenticated, IsAdminOrLecturer]
 
     def get(self, request, group_name):
-        group = get_object_or_404(Group, name=group_name)
+        user = request.user
+        # Фильтруем группы по админу
+        if user.is_superuser:
+            group = get_object_or_404(Group, name=group_name, admin=user)
+        elif hasattr(user, 'admin') and user.admin:
+            group = get_object_or_404(Group, name=group_name, admin=user.admin)
+        else:
+            return Response({'error': 'Access denied'}, status=status.HTTP_403_FORBIDDEN)
+        
         students = Student.objects.filter(group=group)
         serializer = StudentListSerializer(students, many=True)
         return Response({
