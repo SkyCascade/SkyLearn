@@ -91,3 +91,14 @@ class ActivityLog(models.Model):
 
     def __str__(self):
         return f"[{self.created_at}]{self.message}"
+
+class AcademicCalendar(models.Model):
+    add_drop_start = models.DateField()
+    add_drop_end = models.DateField()
+
+    def is_add_drop_open(self):
+        today = timezone.now().date()
+        return self.add_drop_start <= today <= self.add_drop_end
+
+    def __str__(self):
+        return "Academic Calendar"

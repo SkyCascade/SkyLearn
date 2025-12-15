@@ -11,6 +11,7 @@ admin.site.site_header = "SkyLearn Admin"
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
+    path('courses/', include('course.urls')), 
 ]
 
 urlpatterns += i18n_patterns(

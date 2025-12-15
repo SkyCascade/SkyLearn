@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+from .views import add_drop_view
 
 urlpatterns = [
     # Program urls
@@ -74,4 +74,8 @@ urlpatterns = [
     path("course/registration/", views.course_registration, name="course_registration"),
     path("course/drop/", views.course_drop, name="course_drop"),
     path("my_courses/", views.user_course_list, name="user_course_list"),
+    path("add-drop/", add_drop_view, name="add_drop"),
+    path("manage-courses/", views.manage_courses, name="manage_courses"),
+    path("en/programs/course/registration/", views.manage_courses, name="manage_courses"),
+
 ]

@@ -28,7 +28,9 @@ from course.models import (
     UploadVideo,
 )
 from result.models import TakenCourse
-
+from accounts.decorators import department_head_required
+from core.models import AcademicCalendar
+from .models import Course, Enrollment
 
 # ########################################################
 # Program Views
@@ -502,3 +504,90 @@ def user_course_list(request):
 
     # For other users
     return render(request, "course/user_course_list.html")
+
+@department_head_required
+def add_drop_view(request):
+
+    # Calendar restriction 
+    calendar = AcademicCalendar.objects.first()
+    if not calendar or not calendar.is_add_drop_open():
+        messages.error(request, "Add/Drop period is closed")
+        return redirect("dashboard")
+
+    # Get courses allocated to this department head
+    allocation = CourseAllocation.objects.filter(lecturer=request.user).first()
+
+    if not allocation:
+        messages.error(request, "No courses assigned to your department.")
+        courses = []
+    else:
+        courses = allocation.courses.all()
+
+    # Render page
+    return render(
+        request,
+        "course/add_drop.html",
+        {"courses": courses}
+    )
+
+
+@login_required
+def manage_courses(request):
+    all_courses = Course.objects.all()
+
+    enrolled_courses = Enrollment.objects.filter(
+        student=request.user
+    ).values_list('course_id', flat=True)
+
+    if request.method == "POST":
+        selected_courses = request.POST.getlist("course_ids")
+
+        # Drop unchecked courses
+        Enrollment.objects.filter(
+            student=request.user
+        ).exclude(course_id__in=selected_courses).delete()
+
+        # Add newly selected courses
+        for course_id in selected_courses:
+            Enrollment.objects.get_or_create(
+                student=request.user,
+                course_id=course_id
+            )
+
+        return redirect("manage_courses")
+
+    return render(
+        request,
+        "course/manage_courses.html",
+        {
+            "courses": all_courses,
+            "enrolled_courses": enrolled_courses
+        }
+    )
+
+@login_required
+def course_registration_view(request):
+    all_courses = Course.objects.all()
+    enrolled_courses = Enrollment.objects.filter(
+        student=request.user
+    ).values_list('course_id', flat=True)
+
+    if request.method == "POST":
+        selected_courses = request.POST.getlist("course_ids")
+
+        # Drop unchecked courses
+        Enrollment.objects.filter(student=request.user)\
+            .exclude(course_id__in=selected_courses).delete()
+
+        # Add newly selected courses
+        for course_id in selected_courses:
+            Enrollment.objects.get_or_create(student=request.user, course_id=course_id)
+
+        return redirect("manage_courses")
+
+    context = {
+        "courses": all_courses,
+        "enrolled_courses": enrolled_courses,
+        # include other existing context variables like total_registered_credit
+    }
+    return render(request, "course/course_registration.html", context)

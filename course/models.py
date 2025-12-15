@@ -254,3 +254,20 @@ class CourseOffer(models.Model):
 
     def __str__(self):
         return str(self.dep_head)
+
+class Enrollment(models.Model):
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE
+    )
+    enrolled_on = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'course')
+
+    def __str__(self):
+        return f"{self.student} -> {self.course}"

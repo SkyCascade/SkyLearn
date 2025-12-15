@@ -209,46 +209,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for course in registered_courses %}
-                            <tr>
-                                <th scope="row">
-                                    <input name="course_ids" value="{{ course.id }}" type="checkbox">
-                                </th>
-                                <td>{{ course.code }}</td>
-                                <td>{{ course.title }}</td>
-                                <td>{{ course.credit }}</td>
-                                <td>{{ course.year }}</td>
-                                {% if course.is_elective %}
-                                <td>{% trans 'Elective' %}</td>
-                                {% else %}
-                                <td>{% trans 'Core' %}</td>
-                                {% endif %}
-                                <th>-</th>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>
-                                    <span class="text-danger">
-                                        {% trans 'No Course.' %}
-                                    </span>
-                                </td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                            {% endfor %}
-                            <tr>
-                                <th></th>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td><b>{% trans 'Total credit(s):' %}</b> {{ total_registered_credit }} </td>
-                                <td></td>
-                            </tr>
+                            {% include "course/manage_courses.html" %}
+
                         </tbody>
                     </table>
                 </div>

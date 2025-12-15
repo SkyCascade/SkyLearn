@@ -1,0 +1,21 @@
+<h2>Add / Drop Courses</h2>
+
+{% for message in messages %}
+  <p>{{ message }}</p>
+{% endfor %}
+
+<table>
+  <tr>
+    <th>Course</th>
+    <th>Code</th>
+    <th>Program</th>
+  </tr>
+  {% for course in courses %}
+  <tr>
+    <td>{{ course.title }}</td>
+    <td>{{ course.code }}</td>
+    <td>{{ course.program }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
