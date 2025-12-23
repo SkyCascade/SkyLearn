@@ -1,46 +1,55 @@
 # Реализация мультитенантности на уровне администраторов
 
 ## Описание
+
 Реализована система мультитенантности на уровне администраторов для SkyLearn. Теперь каждый администратор видит и может управлять только своими данными, что позволяет одной системе обслуживать несколько независимых организаций (например, разные факультеты университета).
 
 ## Выполненные задачи
 
 ### 1. ✅ Удаление всех упоминаний Session из моделей
+
 - Удалена модель `Session` из `core/models.py`
 - Удален импорт `Session` из `accounts/views.py`
 - Удалена ссылка на `SessionViewSet` из `core/urls.py`
 - Обновлены тесты в `result/tests/test_views.py`
 
 ### 2. ✅ Обновление serializers для автоматического добавления admin
+
 Добавлен метод `create()` в следующих сериализаторах для автоматической установки поля `admin`:
 
 **core/serializers.py:**
+
 - `NewsAndEventsSerializer`
 - `SemesterSerializer`
 
 **course/serializers.py:**
+
 - `ProgramSerializer`
 - `CourseSerializer`
 - `CourseAllocationSerializer`
 
 **accounts/serializers.py:**
+
 - `StaffAddSerializer`
 - `StudentAddSerializer`
 - `ParentAddSerializer`
 - `GroupSerializer`
 
 **attendance/serializers.py:**
+
 - `ScheduleItemSerializer`
 - `AdminScheduleItemSerializer`
 
 ### 3. ✅ Обновление views для фильтрации по admin
 
 **core/views.py:**
+
 - `NewsAndEventsViewSet`: добавлен `get_queryset()` для фильтрации по admin
 - `SemesterViewSet`: добавлен `get_queryset()` для фильтрации по admin
 - `unset_current_semester()`: обновлен для работы с текущим админом
 
 **accounts/views.py:**
+
 - `LecturerListViewSet`: добавлен `get_queryset()` для фильтрации по admin
 - `StaffCreateView`: обновлен для фильтрации по admin
 - `StudentDeleteView`: добавлен `get_queryset()` для фильтрации по admin
@@ -52,6 +61,7 @@
 - `StudentsByGroupView`: добавлена проверка доступа к группе по admin
 
 **course/views.py:**
+
 - `ProgramListAPIView`: добавлена фильтрация программ по admin
 - `ProgramDetailAPIView`: обновлен `get_object()` для проверки принадлежности админу
 - `CourseListCreateAPIView`: добавлена фильтрация курсов по admin
@@ -68,6 +78,7 @@
 ### 5. ✅ Тестирование изменений
 
 Создан тестовый скрипт `test_admin_multitenancy.py`, который проверяет:
+
 - Создание двух независимых администраторов
 - Создание данных для каждого администратора
 - Изоляцию данных (каждый админ видит только свои данные)
@@ -78,7 +89,9 @@
 ## Архитектура решения
 
 ### Структура данных
+
 Каждая модель, создаваемая администратором, имеет поле `admin`:
+
 ```python
 admin = models.ForeignKey(
     User,
@@ -91,7 +104,9 @@ admin = models.ForeignKey(
 ```
 
 ### Автоматическое заполнение admin
+
 При создании объекта через API, поле `admin` автоматически заполняется в методе `create()` сериализатора:
+
 ```python
 def create(self, validated_data):
     admin = self.context.get('admin') or self.context.get('request').user
@@ -100,7 +115,9 @@ def create(self, validated_data):
 ```
 
 ### Фильтрация данных
+
 Во views переопределен метод `get_queryset()` для фильтрации по admin:
+
 ```python
 def get_queryset(self):
     user = self.request.user
@@ -112,7 +129,9 @@ def get_queryset(self):
 ```
 
 ### Передача контекста
+
 В views добавлен метод `get_serializer_context()` для передачи admin в сериализаторы:
+
 ```python
 def get_serializer_context(self):
     context = super().get_serializer_context()
@@ -123,24 +142,29 @@ def get_serializer_context(self):
 ## Затронутые модели
 
 ✅ **accounts:**
+
 - User (добавлено поле admin)
 - Student (добавлено поле admin)
 - Parent (добавлено поле admin)
 - Group (добавлено поле admin)
 
 ✅ **course:**
+
 - Program (добавлено поле admin)
 - Course (добавлено поле admin)
 - CourseAllocation (добавлено поле admin)
 
 ✅ **core:**
+
 - NewsAndEvents (добавлено поле admin)
 - Semester (добавлено поле admin)
 
 ✅ **attendance:**
+
 - ScheduleItem (добавлено поле admin)
 
 ✅ **result:**
+
 - Grade_1st_module (добавлено поле admin)
 - Grade_2nd_module (добавлено поле admin)
 - Grade_semester (добавлено поле admin)
@@ -148,6 +172,7 @@ def get_serializer_context(self):
 ## Миграции
 
 Созданы и применены миграции для всех моделей:
+
 - `accounts/migrations/0002_...`
 - `course/migrations/0009_...`
 - `core/migrations/0005_...`
@@ -164,11 +189,13 @@ def get_serializer_context(self):
 ## Использование
 
 ### Для администратора:
+
 1. Администратор создает данные через API
 2. Поле `admin` автоматически заполняется
 3. При запросе данных видит только свои объекты
 
 ### Для преподавателей и студентов:
+
 1. Видят данные своего администратора (через поле `user.admin`)
 2. Не могут создавать новые объекты (только админы)
 3. Могут просматривать доступные им данные
@@ -176,6 +203,7 @@ def get_serializer_context(self):
 ## Примеры запросов API
 
 ### Создание программы (admin1):
+
 ```bash
 POST /api/programs/
 Authorization: Bearer <token_admin1>
@@ -184,20 +212,25 @@ Authorization: Bearer <token_admin1>
   "summary": "CS Program"
 }
 ```
+
 → Автоматически устанавливается `admin=admin1`
 
 ### Получение списка программ (admin1):
+
 ```bash
 GET /api/programs/
 Authorization: Bearer <token_admin1>
 ```
+
 → Возвращает только программы, где `admin=admin1`
 
 ### Получение списка программ (admin2):
+
 ```bash
 GET /api/programs/
 Authorization: Bearer <token_admin2>
 ```
+
 → Возвращает только программы, где `admin=admin2`
 
 ## Заключение

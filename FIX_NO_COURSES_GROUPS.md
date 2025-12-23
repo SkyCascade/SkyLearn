@@ -3,6 +3,7 @@
 ## Проблема
 
 При попытке создать расписание в форме показываются ошибки:
+
 - ⚠️ Курсы не загружены. Проверьте консоль для деталей.
 - ⚠️ Группы не загружены. Проверьте консоль для деталей.
 
@@ -22,6 +23,7 @@ python create_test_schedule_data.py
 ```
 
 **Что создается:**
+
 - ✅ 1 Программа (Computer Science)
 - ✅ 4 Курса (CS101, CS102, MATH101, ENG101)
 - ✅ 3 Группы (CS-101, CS-102, CS-103)
@@ -35,6 +37,7 @@ python create_test_schedule_data.py
    http://localhost:5174/admin/courses
 
 2. **Создайте программу (Program):**
+
    - Нажмите кнопку создания программы
    - Заполните: Title, Summary
    - Сохраните
@@ -63,6 +66,7 @@ python create_test_schedule_data.py
 **ИЛИ**
 
 Через Django Admin:
+
 - http://localhost:8000/admin/accounts/group/
 - Нажмите "Add Group"
 - Введите название группы
@@ -96,6 +100,7 @@ python check_schedule_data.py
 ### После создания данных
 
 1. **Обновите страницу расписания:**
+
    - Нажмите F5 или Ctrl+R (Cmd+R на Mac)
    - ИЛИ нажмите кнопку "🔄 Обновить" на странице
 
@@ -109,6 +114,7 @@ python check_schedule_data.py
 ### Multi-tenancy (изоляция данных)
 
 Каждый администратор видит **только свои** данные:
+
 - ✅ Курсы с полем `admin = текущий_администратор`
 - ✅ Группы с полем `admin = текущий_администратор`
 - ✅ Расписание только для своих курсов и групп
@@ -127,16 +133,19 @@ python check_schedule_data.py
 ## Скрипты для работы
 
 ### Создание данных:
+
 ```bash
 python create_test_schedule_data.py
 ```
 
 ### Проверка данных:
+
 ```bash
 python check_schedule_data.py
 ```
 
 ### Очистка данных (если нужно начать заново):
+
 ```python
 # В Django shell
 python manage.py shell
@@ -148,7 +157,7 @@ from core.models import Semester
 # Удалить все курсы текущего админа
 Course.objects.filter(admin__id=1).delete()
 
-# Удалить все группы текущего админа  
+# Удалить все группы текущего админа
 Group.objects.filter(admin__id=1).delete()
 
 # Удалить все программы текущего админа

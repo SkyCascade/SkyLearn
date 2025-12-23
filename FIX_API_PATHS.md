@@ -19,11 +19,11 @@ Failed to load resource: the server responded with a status of 500 (Internal Ser
 
 ```javascript
 // ❌ Неправильно
-await api.get('/api/attendance/lesson-times/');
-await api.post('/api/attendance/lesson-times/', data);
+await api.get("/api/attendance/lesson-times/");
+await api.post("/api/attendance/lesson-times/", data);
 
 // ❌ Неправильно
-await api.get('/api/attendance/schedules/');
+await api.get("/api/attendance/schedules/");
 ```
 
 ## Решение
@@ -38,7 +38,7 @@ urlpatterns = [
     path("", include("core.urls")),
     path("accounts/", include("accounts.urls")),
     path("programs/", include("course.urls")),
-    path("result/", include("result.urls")), 
+    path("result/", include("result.urls")),
     path("attendance/", include("attendance.urls")),
 ]
 ```
@@ -47,16 +47,16 @@ urlpatterns = [
 
 ```javascript
 // ✅ Правильно
-await api.get('/attendance/lesson-times/');
-await api.post('/attendance/lesson-times/', data);
-await api.put('/attendance/lesson-times/${id}/', data);
-await api.delete('/attendance/lesson-times/${id}/');
+await api.get("/attendance/lesson-times/");
+await api.post("/attendance/lesson-times/", data);
+await api.put("/attendance/lesson-times/${id}/", data);
+await api.delete("/attendance/lesson-times/${id}/");
 
 // ✅ Правильно
-await api.get('/attendance/schedules/');
-await api.post('/attendance/schedules/', data);
-await api.put('/attendance/schedules/${id}/', data);
-await api.delete('/attendance/schedules/${id}/');
+await api.get("/attendance/schedules/");
+await api.post("/attendance/schedules/", data);
+await api.put("/attendance/schedules/${id}/", data);
+await api.delete("/attendance/schedules/${id}/");
 ```
 
 ### Файлы исправлены
@@ -64,6 +64,7 @@ await api.delete('/attendance/schedules/${id}/');
 #### 1. `AdminSchedule.jsx`
 
 **Строки изменены:**
+
 - Строка 30: `api.get("/attendance/schedules/")`
 - Строка 36: `api.get("/programs/api/course/")`
 - Строка 45: `api.get("/accounts/api/groups/")`
@@ -75,6 +76,7 @@ await api.delete('/attendance/schedules/${id}/');
 #### 2. `LessonTimes.jsx`
 
 **Строки изменены:**
+
 - Строка 22: `api.get('/attendance/lesson-times/')`
 - Строка 61: `api.post('/attendance/lesson-times/', formData)`
 - Строка 77: `api.put('/attendance/lesson-times/${editingId}/', formData)`
@@ -83,6 +85,7 @@ await api.delete('/attendance/schedules/${id}/');
 ### Обновлена документация
 
 Исправлены пути API в:
+
 - ✅ `LESSON_TIME_FRONTEND_GUIDE.md`
 - ✅ `TESTING_LESSON_TIME_FRONTEND.md`
 - ✅ `LESSON_TIME_FRONTEND_SUMMARY.md`
@@ -95,7 +98,7 @@ await api.delete('/attendance/schedules/${id}/');
 const apiUrl = "http://localhost:8000";
 
 const api = axios.create({
-  baseURL: apiUrl,  // http://localhost:8000
+  baseURL: apiUrl, // http://localhost:8000
   withCredentials: true,
 });
 ```
@@ -103,6 +106,7 @@ const api = axios.create({
 ### Итоговые URL
 
 При вызове `api.get('/attendance/lesson-times/')` axios формирует:
+
 ```
 http://localhost:8000/attendance/lesson-times/
 ```

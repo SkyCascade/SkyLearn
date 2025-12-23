@@ -9,6 +9,10 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 admin.site.site_header = "SkyLearn Admin"
 
 urlpatterns = [
+    # django-jet admin UI
+    path("jet/", include("jet.urls", "jet")),
+    path("jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")),
+
     path("admin/", admin.site.urls),
     
     # API Schema

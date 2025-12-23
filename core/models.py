@@ -1,99 +1,93 @@
 from django.db import models
-from django.db.models import Q
-from django.utils.translation import gettext_lazy as _
 
+from config import settings
 
-NEWS = _("News")
-EVENTS = _("Event")
-
-POST = (
-    (NEWS, _("News")),
-    (EVENTS, _("Event")),
-)
 
 FIRST = _("First")
 SECOND = _("Second")
-THIRD = _("Third")
 
 SEMESTER = (
     (FIRST, _("First")),
     (SECOND, _("Second")),
-    (THIRD, _("Third")),
 )
 
 
-class NewsAndEventsQuerySet(models.query.QuerySet):
-    def search(self, query):
-        lookups = (
-            Q(title__icontains=query)
-            | Q(summary__icontains=query)
-            | Q(posted_as__icontains=query)
-        )
-        return self.filter(lookups).distinct()
-
-
-class NewsAndEventsManager(models.Manager):
-    def get_queryset(self):
-        return NewsAndEventsQuerySet(self.model, using=self._db)
-
-    def all(self):
-        return self.get_queryset()
-
-    def get_by_id(self, id):
-        qs = self.get_queryset().filter(
-            id=id
-        )  # NewsAndEvents.objects == self.get_queryset()
-        if qs.count() == 1:
-            return qs.first()
-        return None
-
-    def search(self, query):
-        return self.get_queryset().search(query)
-
-
-class NewsAndEvents(models.Model):
-    title = models.CharField(max_length=200, null=True)
-    summary = models.TextField(max_length=200, blank=True, null=True)
-    posted_as = models.CharField(choices=POST, max_length=10)
-    updated_date = models.DateTimeField(auto_now=True, auto_now_add=False, null=True)
-    upload_time = models.DateTimeField(auto_now=False, auto_now_add=True, null=True)
+class Program(models.Model):
     admin = models.ForeignKey(
-        'accounts.User',
-        on_delete=models.CASCADE,
-        related_name='news_events',
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE, 
+        related_name='created_programs',
         limit_choices_to={'is_superuser': True},
         null=True,
         blank=True
     )
+    name_ru = models.CharField(max_length=200)
+    name_en = models.CharField(max_length=200)
+    name_kg = models.CharField(max_length=200)
 
-    objects = NewsAndEventsManager()
+    class Meta:
+        verbose_name = "Program"
+        verbose_name_plural = "Programs"
 
     def __str__(self):
-        return f"{self.title}"
+        return self.name_ru
+    def get_name(self, lang):
+        return getattr(self, f"name_{lang}", self.name_ru)
 
+class AcademicYear(models.Model):
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_academic_years',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
+    year = models.IntegerField(unique=True)
+    program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name="academic_years")
+    is_current = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.year} - {self.program.name_ru}"
 
 
 class Semester(models.Model):
-    semester = models.CharField(max_length=10, choices=SEMESTER, blank=True)
-    is_current_semester = models.BooleanField(default=False, blank=True, null=True)
-    next_semester_begins = models.DateField(null=True, blank=True)
     admin = models.ForeignKey(
-        'accounts.User',
-        on_delete=models.CASCADE,
-        related_name='semesters',
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_semesters',
         limit_choices_to={'is_superuser': True},
         null=True,
         blank=True
     )
+    name = models.TextChoices(SEMESTER)
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='semesters')
+    courses = models.ManyToManyField('course.Course', related_name='semesters')
+    is_current = models.BooleanField(default=False, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.semester}"
+        return f"{self.name} - {self.academic_year}"
+    
+    class Meta:
+        verbose_name = "Semester"
+        verbose_name_plural = "Semesters"
 
-
-class ActivityLog(models.Model):
-    message = models.TextField()
-    created_at = models.DateTimeField(auto_now=True)
+class Module(models.Model):
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='created_modules',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
+    name = models.TextChoices(SEMESTER)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name='modules')
+    is_current = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"[{self.created_at}]{self.message}"
+        return f"{self.name} - {self.semester}"
+
+    class Meta:
+        verbose_name = "Module"
+        verbose_name_plural = "Modules"

@@ -11,6 +11,7 @@
 ### 2. Перейдите на вкладку Network
 
 ### 3. Откройте страницу Lesson Times
+
 http://localhost:5174/admin/lesson-times
 
 ### 4. Проверьте запросы
@@ -22,14 +23,17 @@ http://localhost:5174/admin/lesson-times
 ```
 
 Если видите:
+
 ```
 ❌ GET /api/attendance/lesson-times/  →  404 Not Found
 ```
+
 Значит еще остались старые пути.
 
 ### 5. Попробуйте создать время урока
 
 **Форма:**
+
 - Номер урока: 1
 - Время начала: 09:00
 - Время окончания: 10:30
@@ -37,6 +41,7 @@ http://localhost:5174/admin/lesson-times
 **Нажмите "Добавить"**
 
 **Проверьте в Network:**
+
 ```
 ✅ POST /attendance/lesson-times/  →  201 Created
 ✅ GET /attendance/lesson-times/   →  200 OK (reload)
@@ -47,6 +52,7 @@ http://localhost:5174/admin/lesson-times
 http://localhost:5174/admin/schedule
 
 **Должны загрузиться:**
+
 ```
 ✅ GET /attendance/schedules/       →  200 OK
 ✅ GET /programs/api/course/        →  200 OK

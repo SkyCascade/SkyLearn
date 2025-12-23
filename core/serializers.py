@@ -1,89 +1,105 @@
 from rest_framework import serializers
-from .models import NewsAndEvents, Semester, SEMESTER, ActivityLog
+from .models import  Program, Semester, SEMESTER
+from course.models import Course
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-class NewsAndEventsSerializer(serializers.ModelSerializer):
+
+### program serializers
+
+class ProgramListSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
     class Meta:
-        model = NewsAndEvents
-        fields = ("title", "summary", "posted_as")
+        model = Program
+        fields = ["id", "name"]
 
-    def validate_title(self, value):
-        """
-        Валидация для поля title
-        """
-        if not value.strip():
-            raise serializers.ValidationError("Title cannot be empty")
-        return value
-
-    def validate_summary(self, value):
-        """
-        Валидация для поля summary
-        """
-        if not value.strip():
-            raise serializers.ValidationError("Summary cannot be empty")
-        return value
+    def get_name(self, obj):
+        return obj.get_name(self.context.get('lang', 'ru'))
     
+class ProgramWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Program
+        fields = ["name_ru", "name_en", "name_kg"]
+
     def create(self, validated_data):
         """
         Автоматически устанавливаем admin из контекста
         """
-        admin = self.context.get('admin') or self.context.get('request').user
-        validated_data['admin'] = admin
-        return super().create(validated_data)
+        admin = self.context.get('admin')
+        program = Program.objects.create(admin=admin, **validated_data)
+        return program
+    
+    def update(self, instance, validated_data):
+        """
+        Автоматически устанавливаем не трогая админ
+        """
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+### semester serializers
 
 
-class SemesterSerializer(serializers.ModelSerializer):
-    semester = serializers.ChoiceField(
+class AcademicYearSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Semester
+        fields = ["__all__"]
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ["__all__"]
+
+class SemesterListSerializer(serializers.ModelSerializer):
+    courses = CourseSerializer(many=True, read_only=True)
+    academic_year = AcademicYearSerializer(read_only=True)
+
+    class Meta:
+        model = Semester
+        fields = ["id", "name", "is_current", "academic_year", "courses"]
+
+class SemesterWriteSerializer(serializers.ModelSerializer):
+    name = serializers.ChoiceField(
         choices=SEMESTER,
         label="semester"
     )
     
-    is_current_semester = serializers.BooleanField(
+    is_current = serializers.BooleanField(
         label="is current semester ?",
         required=False,
-        default=False
     )
-    
-    next_semester_begins = serializers.DateField(required=True)
-
+        
     class Meta:
         model = Semester
-        fields = ["semester", "is_current_semester", "next_semester_begins"]
+        fields = ["name", "is_current", "courses", "academic_year"]
 
-    def validate(self, data):
-        """
-        Проверка, что может быть только один текущий семестр для данного администратора
-        """
-        is_current_semester = data.get('is_current_semester', False)
-        
-        if is_current_semester:
-            # Получаем admin из контекста (будет передан из view)
-            admin = self.context.get('admin') or self.context.get('request').user
-            
-            current_semesters = Semester.objects.filter(
-                is_current_semester=True,
-                admin=admin
-            )
-            
-            if self.instance:
-                current_semesters = current_semesters.exclude(pk=self.instance.pk)
-            
-            if current_semesters.exists():
-                raise serializers.ValidationError({
-                    "is_current_semester": "There can only be one current semester"
-                })
-        
-        return data
-    
     def create(self, validated_data):
         """
         Автоматически устанавливаем admin из контекста
         """
-        admin = self.context.get('admin') or self.context.get('request').user
-        validated_data['admin'] = admin
-        return super().create(validated_data)
+        admin = self.context.get('admin')
+        courses = validated_data.pop('courses', [])
+        
+        semester = Semester.objects.create(admin=admin, **validated_data)
+        semester.courses.set(courses)
+        return semester
+
+    def update(self, instance, validated_data):
+        """
+        Автоматически устанавливаем admin из контекста
+        """
+        courses = validated_data.pop('courses', serializers.empty)
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        if courses is not serializers.empty:
+            instance.courses.set(courses)
+        return instance
 
 
 class SemesterDetailSerializer(serializers.ModelSerializer):
@@ -91,35 +107,6 @@ class SemesterDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Semester
-        fields = ["id", "semester", "is_current_semester", "next_semester_begins"]
+        fields = ["id", "name", "is_current", "courses", "academic_year"]
 
 
-class NewsAndEventsDetailSerializer(serializers.ModelSerializer):
-    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
-    updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
-    
-    class Meta:
-        model = NewsAndEvents
-        fields = ("id", "title", "summary", "posted_as", "created_at", "updated_at")
-
-
-class ActivityLogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ActivityLog
-        fields = ['id', 'message', 'created_at']
-
-
-class DashboardSerializer(serializers.Serializer):
-    """Serializer for dashboard statistics"""
-    student_count = serializers.IntegerField()
-    lecturer_count = serializers.IntegerField()
-    superuser_count = serializers.IntegerField()
-    males_count = serializers.IntegerField()
-    females_count = serializers.IntegerField()
-    logs = ActivityLogSerializer(many=True)
-
-
-class HomeSerializer(serializers.Serializer):
-    """Serializer for home page data"""
-    title = serializers.CharField(default="News & Events")
-    items = serializers.ListField(child=serializers.DictField())

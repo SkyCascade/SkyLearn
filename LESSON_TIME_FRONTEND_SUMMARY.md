@@ -5,6 +5,7 @@
 ### 1. Фронтенд компоненты
 
 #### ✅ Создан `LessonTimes.jsx` (`/admin/lesson-times`)
+
 - Полноценная CRUD страница для управления временами уроков
 - Интуитивный интерфейс с формой и списком
 - Валидация и обработка ошибок
@@ -12,12 +13,14 @@
 - Responsive дизайн
 
 **Функции:**
+
 - Создание времени урока (номер, начало, конец)
 - Редактирование существующего времени
 - Удаление времени урока
 - Просмотр всех времен в виде карточек
 
 #### ✅ Обновлен `AdminSchedule.jsx`
+
 - Интеграция с lesson times API
 - Dropdown для выбора времени урока
 - Опциональное поле даты урока
@@ -25,6 +28,7 @@
 - Улучшенное отображение расписания с информацией о времени
 
 **Изменения в форме:**
+
 - ~~`order`~~ → Теперь через `lesson_time`
 - ~~`start`~~ → Теперь через `lesson_time`
 - ~~`end`~~ → Теперь через `lesson_time`
@@ -32,16 +36,19 @@
 - ➕ `date` (опционально)
 
 #### ✅ Обновлен `admin.jsx` (Dashboard)
+
 - Добавлена кнопка "manage lesson times"
 - Новая карточка быстрого доступа
 
 #### ✅ Обновлен `App.jsx`
+
 - Добавлен маршрут `/admin/lesson-times`
 - Импорт компонента LessonTimes
 
 ### 2. API интеграция
 
 **Эндпоинты:**
+
 ```
 GET    /attendance/lesson-times/       - Список времен
 POST   /attendance/lesson-times/       - Создание
@@ -50,6 +57,7 @@ DELETE /attendance/lesson-times/:id/   - Удаление
 ```
 
 **Модель данных:**
+
 ```json
 {
   "id": 1,
@@ -63,12 +71,14 @@ DELETE /attendance/lesson-times/:id/   - Удаление
 ### 3. Документация
 
 #### ✅ Создан `LESSON_TIME_FRONTEND_GUIDE.md`
+
 - Полное руководство по новой функциональности
 - Описание компонентов и API
 - Пользовательские сценарии
 - Структура данных
 
 #### ✅ Создан `TESTING_LESSON_TIME_FRONTEND.md`
+
 - Пошаговая инструкция по тестированию
 - Проверка multi-tenancy
 - Решение возможных проблем
@@ -101,13 +111,14 @@ DELETE /attendance/lesson-times/:id/   - Удаление
 ## Технические детали
 
 ### State управление
+
 ```javascript
 // LessonTimes.jsx
 const [lessonTimes, setLessonTimes] = useState([]);
 const [formData, setFormData] = useState({
-  order: '',
-  start_time: '',
-  end_time: ''
+  order: "",
+  start_time: "",
+  end_time: "",
 });
 
 // AdminSchedule.jsx
@@ -122,12 +133,13 @@ const [formData, setFormData] = useState({
 ```
 
 ### API вызовы
+
 ```javascript
 // Загрузка времен уроков
 const lessonTimesRes = await api.get("attendance/lesson-times/");
 
 // Создание времени урока
-await api.post('/api/attendance/lesson-times/', formData);
+await api.post("/api/attendance/lesson-times/", formData);
 
 // Обновление
 await api.put(`/api/attendance/lesson-times/${editingId}/`, formData);
@@ -137,37 +149,44 @@ await api.delete(`/api/attendance/lesson-times/${id}/`);
 ```
 
 ### Отображение в расписании
+
 ```javascript
-{schedule.start_time && schedule.end_time && (
-  <div className="text-sm text-gray-600">
-    <span className="font-medium">Время:</span>{" "}
-    {schedule.start_time} - {schedule.end_time}
-    {schedule.lesson_order && (
-      <span className="ml-2 bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">
-        Урок {schedule.lesson_order}
-      </span>
-    )}
-  </div>
-)}
+{
+  schedule.start_time && schedule.end_time && (
+    <div className="text-sm text-gray-600">
+      <span className="font-medium">Время:</span> {schedule.start_time} -{" "}
+      {schedule.end_time}
+      {schedule.lesson_order && (
+        <span className="ml-2 bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">
+          Урок {schedule.lesson_order}
+        </span>
+      )}
+    </div>
+  );
+}
 ```
 
 ## Преимущества реализации
 
 ### 1. Удобство использования
+
 - ✅ Централизованное управление временами
 - ✅ Не нужно вводить время каждый раз вручную
 - ✅ Один клик для выбора времени урока
 
 ### 2. Консистентность
+
 - ✅ Все уроки с одинаковым номером имеют одинаковое время
 - ✅ Легко изменить время для всех уроков сразу
 
 ### 3. Гибкость
+
 - ✅ Поле lesson_time опциональное
 - ✅ Можно создать расписание без времени урока
 - ✅ Обратная совместимость
 
 ### 4. Безопасность
+
 - ✅ Multi-tenancy: каждый админ видит только свои данные
 - ✅ JWT аутентификация
 - ✅ Валидация на фронтенде и бэкенде
@@ -175,6 +194,7 @@ await api.delete(`/api/attendance/lesson-times/${id}/`);
 ## Файлы изменены
 
 ### Созданы новые файлы:
+
 ```
 ✅ skyfront/src/pages/crud/LessonTimes.jsx
 ✅ LESSON_TIME_FRONTEND_GUIDE.md
@@ -183,6 +203,7 @@ await api.delete(`/api/attendance/lesson-times/${id}/`);
 ```
 
 ### Изменены существующие:
+
 ```
 ✅ skyfront/src/pages/crud/AdminSchedule.jsx
 ✅ skyfront/src/pages/users/admin.jsx
@@ -192,18 +213,21 @@ await api.delete(`/api/attendance/lesson-times/${id}/`);
 ## Как запустить
 
 ### Backend:
+
 ```bash
 cd /Users/adminbaike/Desktop/projects/SkyLearn
 python manage.py runserver
 ```
 
 ### Frontend:
+
 ```bash
 cd /Users/adminbaike/Desktop/projects/SkyLearn/skyfront
 npm run dev
 ```
 
 **URLs:**
+
 - Frontend: http://localhost:5174
 - Backend API: http://localhost:8000
 - Admin Panel: http://localhost:8000/admin
@@ -213,18 +237,22 @@ npm run dev
 ### Рекомендуемые улучшения:
 
 1. **Валидация конфликтов**
+
    - Проверка пересечений времен
    - Предупреждение при создании конфликтующих уроков
 
 2. **Bulk операции**
+
    - Создание нескольких времен за раз
    - Импорт/экспорт настроек
 
 3. **Визуализация**
+
    - Календарный вид расписания
    - Timeline отображение
 
 4. **Шаблоны**
+
    - Сохранение шаблонов расписания
    - Применение шаблона к разным группам
 
@@ -235,6 +263,7 @@ npm run dev
 ## Тестирование
 
 ### Чек-лист:
+
 - ✅ Создание времени урока
 - ✅ Редактирование времени урока
 - ✅ Удаление времени урока
@@ -246,11 +275,13 @@ npm run dev
 - ✅ Обработка ошибок
 
 ### Для полного тестирования:
+
 См. `TESTING_LESSON_TIME_FRONTEND.md`
 
 ## Контакты и поддержка
 
 Если возникнут вопросы или проблемы:
+
 1. Проверьте документацию
 2. Проверьте консоль браузера (F12)
 3. Проверьте Network tab для API запросов

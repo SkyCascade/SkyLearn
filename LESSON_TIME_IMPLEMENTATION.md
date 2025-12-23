@@ -7,6 +7,7 @@
 ## Проблема
 
 Раньше при создании расписания нужно было каждый раз вручную указывать время начала (`start`) и окончания (`end`) урока. В университетах обычно время уроков стандартизировано:
+
 - 1-й урок: 9:00 - 10:30
 - 2-й урок: 10:40 - 12:10
 - 3-й урок: 12:40 - 14:10
@@ -27,6 +28,7 @@ class LessonTime(models.Model):
 ```
 
 **Особенности:**
+
 - Каждый администратор может настроить свои времена уроков
 - Уникальная комбинация `(order, admin)` - у каждого админа свой набор уроков
 - Автоматическая сортировка по номеру урока
@@ -39,7 +41,7 @@ class LessonTime(models.Model):
 class ScheduleItem(models.Model):
     lesson_time = models.ForeignKey(LessonTime, ...)  # Ссылка на время урока
     date = models.DateField()  # Дата проведения урока
-    
+
     # Устаревшие поля (для обратной совместимости)
     order = models.IntegerField(null=True, blank=True)
     start = models.TimeField(null=True, blank=True)
@@ -47,6 +49,7 @@ class ScheduleItem(models.Model):
 ```
 
 **Свойства для получения времени:**
+
 - `start_time` - автоматически получает время из `lesson_time.start_time`
 - `end_time` - автоматически получает время из `lesson_time.end_time`
 - `lesson_order` - автоматически получает номер урока из `lesson_time.order`
@@ -58,6 +61,7 @@ class ScheduleItem(models.Model):
 #### 1. Управление временами уроков
 
 **GET** `/api/attendance/lesson-times/` - получить список времен уроков
+
 ```json
 [
   {
@@ -76,6 +80,7 @@ class ScheduleItem(models.Model):
 ```
 
 **POST** `/api/attendance/lesson-times/` - создать новое время урока
+
 ```json
 {
   "order": 1,
@@ -87,6 +92,7 @@ class ScheduleItem(models.Model):
 #### 2. Создание расписания
 
 **Старый способ (все еще работает):**
+
 ```json
 {
   "course": 1,
@@ -99,6 +105,7 @@ class ScheduleItem(models.Model):
 ```
 
 **Новый способ (рекомендуется):**
+
 ```json
 {
   "course": 1,
@@ -110,6 +117,7 @@ class ScheduleItem(models.Model):
 ```
 
 При новом способе:
+
 - Не нужно указывать `start` и `end` - они автоматически подтянутся из `lesson_time`
 - Не нужно указывать `order` - номер урока берется из `lesson_time`
 - Обязательно указывается `date` - дата проведения занятия
@@ -136,26 +144,31 @@ class ScheduleItem(models.Model):
 ## Преимущества
 
 ### 1. Централизованное управление
+
 - Администратор настраивает времена уроков один раз
 - Все расписания автоматически используют эти настройки
 - При изменении времени урока - обновляются все связанные расписания
 
 ### 2. Упрощение создания расписания
+
 - Не нужно каждый раз вводить время вручную
 - Достаточно выбрать номер урока из списка
 - Меньше ошибок при вводе времени
 
 ### 3. Консистентность данных
+
 - Все уроки с одним номером имеют одинаковое время
 - Невозможно случайно создать расписание с неправильным временем
 
 ### 4. Мультитенантность
+
 - Каждый администратор может настроить свои времена уроков
 - Разные факультеты могут иметь разное расписание звонков
 
 ## Миграция данных
 
 Старые поля `order`, `start`, `end` в `ScheduleItem` сделаны nullable для обратной совместимости:
+
 - Существующие расписания продолжат работать
 - Новые расписания используют `lesson_time`
 - Постепенно можно мигрировать старые данные
@@ -176,7 +189,7 @@ for schedule in ScheduleItem.objects.filter(lesson_time__isnull=True):
             'end_time': schedule.end
         }
     )
-    
+
     # Связать с расписанием
     schedule.lesson_time = lesson_time
     schedule.save()
@@ -185,16 +198,19 @@ for schedule in ScheduleItem.objects.filter(lesson_time__isnull=True):
 ## Обновленные сериализаторы
 
 ### LessonTimeSerializer
+
 - Создание и управление временами уроков
 - Автоматическое назначение admin
 
 ### ScheduleItemSerializer (обновлен)
+
 - Добавлено поле `lesson_time`
 - Добавлено поле `date`
 - Read-only поля: `lesson_order`, `start_time`, `end_time`
 - Автоматически вычисляются из связанного `lesson_time`
 
 ### AttendanceSerializer (обновлен)
+
 - Добавлено поле `schedule_date`
 - `schedule_time` вычисляется из `lesson_time`
 

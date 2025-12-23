@@ -15,6 +15,7 @@
 **Расположение:** `skyfront/src/pages/crud/LessonTimes.jsx`
 
 **Функциональность:**
+
 - ✅ Просмотр всех времен уроков
 - ✅ Создание нового времени урока
 - ✅ Редактирование существующего времени урока
@@ -23,11 +24,13 @@
 - ✅ Уведомления об успехе/ошибке
 
 **Поля формы:**
+
 - `order` - Номер урока (1, 2, 3...)
 - `start_time` - Время начала (HH:MM)
 - `end_time` - Время окончания (HH:MM)
 
 **API эндпоинты:**
+
 ```javascript
 GET    /attendance/lesson-times/     // Получить все времена
 POST   /attendance/lesson-times/     // Создать новое время
@@ -38,6 +41,7 @@ DELETE /attendance/lesson-times/:id/ // Удалить время
 ### 2. Обновленный AdminSchedule.jsx
 
 **Изменения:**
+
 - ✅ Загрузка времен уроков из API
 - ✅ Dropdown для выбора времени урока
 - ✅ Поле для указания даты урока
@@ -45,10 +49,12 @@ DELETE /attendance/lesson-times/:id/ // Удалить время
 - ✅ Автоматическое определение времени начала/окончания через LessonTime
 
 **Новые поля формы:**
+
 - `lesson_time` - Опциональный выбор времени урока из dropdown
 - `date` - Опциональная дата конкретного урока
 
 **Удалены поля:**
+
 - `order` - Теперь определяется через lesson_time
 - `start` - Теперь определяется через lesson_time
 - `end` - Теперь определяется через lesson_time
@@ -85,6 +91,7 @@ DELETE /attendance/lesson-times/:id/ // Удалить время
 ## Структура данных
 
 ### LessonTime (ответ от API)
+
 ```json
 {
   "id": 1,
@@ -96,6 +103,7 @@ DELETE /attendance/lesson-times/:id/ // Удалить время
 ```
 
 ### ScheduleItem (расширенный ответ от API)
+
 ```json
 {
   "id": 1,
@@ -107,9 +115,9 @@ DELETE /attendance/lesson-times/:id/ // Удалить время
   "day": "Monday",
   "lesson_time": 1,
   "date": "2024-01-15",
-  "start_time": "09:00:00",    // Вычисляется из lesson_time
-  "end_time": "10:30:00",      // Вычисляется из lesson_time
-  "lesson_order": 1,           // Вычисляется из lesson_time
+  "start_time": "09:00:00", // Вычисляется из lesson_time
+  "end_time": "10:30:00", // Вычисляется из lesson_time
+  "lesson_order": 1, // Вычисляется из lesson_time
   "schedule_date": "2024-01-15"
 }
 ```
@@ -119,9 +127,9 @@ DELETE /attendance/lesson-times/:id/ // Удалить время
 Добавлена новая кнопка в Admin Dashboard:
 
 ```javascript
-{ 
-  operation: "manage lesson times", 
-  link: "/admin/lesson-times" 
+{
+  operation: "manage lesson times",
+  link: "/admin/lesson-times"
 }
 ```
 
