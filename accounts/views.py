@@ -76,6 +76,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         # Create response
         response = Response({
             'user': user_data,
+            'access': access_token,
+            'refresh': refresh_token,
             'message': 'Login successful'
         }, status=status.HTTP_200_OK)
         
@@ -137,7 +139,9 @@ class SecureTokenRefreshView(TokenRefreshView):
                 new_refresh_token = refresh_token
             
             response = Response({
-                'message': 'Token refreshed successfully'
+                'message': 'Token refreshed successfully',
+                'access': access_token,
+                'refresh': new_refresh_token if settings.SIMPLE_JWT.get('ROTATE_REFRESH_TOKENS', False) else new_refresh_token
             }, status=status.HTTP_200_OK)
             
             # Set new access token cookie

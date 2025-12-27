@@ -1,51 +1,10 @@
 from rest_framework import serializers
-from .models import Program, Course
+from .models import  Course
 from django.utils.translation import gettext_lazy as _
 from .models import CourseAllocation, Course
 from django.contrib.auth import get_user_model
 
-class ProgramSerializer(serializers.ModelSerializer):
-     class Meta:
-        model = Program
-        fields = ['id', 'title', 'summary', 'absolute_url']
-        read_only_fields = ['id', 'absolute_url']
-    
-     absolute_url = serializers.SerializerMethodField()
-    
-     def validate_title(self, value):
-        """Validate title field"""
-        if len(value.strip()) < 2:
-            raise serializers.ValidationError("Title must be at least 2 characters long.")
-        return value.strip()
-    
-     def validate_summary(self, value):
-        """Validate summary field"""
-        if value and len(value) > 1000:
-            raise serializers.ValidationError("Summary cannot exceed 1000 characters.")
-        return value
-     
-     def get_absolute_url(self, obj):
-        return obj.get_absolute_url()
-     
-     def create(self, validated_data):
-        """
-        Автоматически устанавливаем admin из контекста
-        """
-        admin = self.context.get('admin') or self.context.get('request').user
-        validated_data['admin'] = admin
-        return super().create(validated_data)
-     
 
-class ProgramDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Program
-        fields = ['id', 'title', 'summary', 'absolute_url']
-        read_only_fields = ['id', 'absolute_url']
-    
-    absolute_url = serializers.SerializerMethodField()
-    
-    def get_absolute_url(self, obj):
-        return obj.get_absolute_url()
     
 class CourseSerializer(serializers.ModelSerializer):
     program_name = serializers.CharField(source='program.title', read_only=True)
@@ -54,11 +13,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = [
-            'id', 'slug', 'title', 'code', 'credit', 'summary', 
-            'program', 'program_name', 'level', 'year', 'semester',
-            'is_elective', 'is_current_semester', 'absolute_url'
-        ]
+        fields = "__all__"
         read_only_fields = ['slug', 'is_current_semester']
         extra_kwargs = {
             'program': {'write_only': True}

@@ -1,15 +1,15 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from config import settings
 
 
-FIRST = _("First")
-SECOND = _("Second")
+class SemesterName(models.TextChoices):
+    FIRST = "First", _("First")
+    SECOND = "Second", _("Second")
 
-SEMESTER = (
-    (FIRST, _("First")),
-    (SECOND, _("Second")),
-)
+# preserve old export name for serializers and other modules
+SEMESTER = SemesterName.choices
 
 
 class Program(models.Model):
@@ -60,7 +60,7 @@ class Semester(models.Model):
         null=True,
         blank=True
     )
-    name = models.TextChoices(SEMESTER)
+    name = models.CharField(max_length=10, choices=SemesterName.choices, default=SemesterName.FIRST)
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='semesters')
     courses = models.ManyToManyField('course.Course', related_name='semesters')
     is_current = models.BooleanField(default=False, null=True, blank=True)
@@ -81,7 +81,7 @@ class Module(models.Model):
         null=True,
         blank=True
     )
-    name = models.TextChoices(SEMESTER)
+    name = models.CharField(max_length=10, choices=SemesterName.choices)
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name='modules')
     is_current = models.BooleanField(default=False)
 

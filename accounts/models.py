@@ -7,7 +7,7 @@ from django.db.models import Q
 from PIL import Image
 import random
 import string
-from course.models import Program
+from core.models import Program
 from .validators import ASCIIUsernameValidator
 
 

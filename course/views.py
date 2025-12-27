@@ -11,11 +11,10 @@ from django_filters.views import FilterView
 from accounts.decorators import lecturer_required, student_required
 from accounts.models import Student
 from core.models import Semester
-from course.filters import CourseAllocationFilter, ProgramFilter
+
 from course.models import (
     Course,
     CourseAllocation,
-    Program,
 )
 
 
@@ -32,8 +31,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
-from .models import Program
-from .serializers import ProgramSerializer
+from core.models import Program
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -56,99 +54,6 @@ from rest_framework import generics
 
 
 User = get_user_model()
-
-
-class ProgramListAPIView(APIView):
-    permission_classes = [IsAdminUser]
-    
-    def get(self, request):
-        user = request.user
-        if user.is_superuser:
-            programs = Program.objects.filter(admin=user)
-        else:
-            programs = Program.objects.none()
-        
-        query = request.GET.get('q', None)
-        if query:
-            programs = programs.filter(
-                Q(title__icontains=query) | Q(summary__icontains=query)
-            )
-        
-        serializer = ProgramSerializer(programs, many=True)
-        return Response(serializer.data)
-    
-    @extend_schema(
-        request=ProgramSerializer,
-        responses={201: ProgramSerializer}
-    )
-    def post(self, request):
-        serializer = ProgramSerializer(data=request.data, context={'request': request, 'admin': request.user})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ProgramDetailAPIView(APIView):
-    permission_classes = [IsAdminUser]
-    
-    def get_object(self, pk, user):
-        try:
-            if user.is_superuser:
-                return Program.objects.get(pk=pk, admin=user)
-            return None
-        except Program.DoesNotExist:
-            return None
-    
-    def get(self, request, pk):
-        program = self.get_object(pk, request.user)
-        if not program:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        serializer = ProgramSerializer(program)
-        return Response(serializer.data)
-    
-    @extend_schema(
-        request=ProgramSerializer,
-        responses={201: ProgramSerializer}
-    )
-    def put(self, request, pk):
-        program = self.get_object(pk, request.user)
-        if not program:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = ProgramSerializer(program, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    @extend_schema(
-        request=ProgramSerializer,
-        responses={201: ProgramSerializer}
-    )
-    def patch(self, request, pk):
-        program = self.get_object(pk, request.user)
-        if not program:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = ProgramSerializer(program, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    @extend_schema(
-        request=ProgramSerializer,
-        responses={201: ProgramSerializer}
-    )
-    def delete(self, request, pk):
-        program = self.get_object(pk, request.user)
-        if not program:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        program.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 
 

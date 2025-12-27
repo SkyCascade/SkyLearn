@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
-from course.models import Program
+from core.models import Program
 from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS, Group
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _

@@ -21,14 +21,17 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
-from .models import Semester, Program
+from .models import AcademicYear, Semester, Program, Module
 from .serializers import (
-
+    ModuleWriteSerializer,
+    ModuleListSerializer,
+    AcademicYearWriteSerializer,
+    ProgramListSerializer,
     ProgramWriteSerializer,
     SemesterWriteSerializer,
     SemesterDetailSerializer,
     SemesterListSerializer,
-
+    AcademicYearListSerializer
 )
 from .permissions import IsLecturer, IsAdminOrLecturer
 
@@ -117,3 +120,84 @@ class ProgramRetrieveDestroyAPIView(generics.DestroyAPIView):
         raise PermissionDenied("Only admins can access this view.")
     
 
+class ProgramListAPIView(generics.ListAPIView):
+    serializer_class = ProgramListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Program.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["language"] = self.request.query_params.get("lang", "ru")
+        return context
+
+
+### academic year views
+
+class AcademicYearCreateAPIView(generics.CreateAPIView):
+    serializer_class = AcademicYearWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def perform_create(self, serializer):
+        serializer.save(admin=self.request.user)
+
+
+class AcademicYearUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = AcademicYearWriteSerializer
+    permission_classes = [IsAdminUser]
+    queryset = AcademicYear.objects.all()
+
+class AcademicYearRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = AcademicYearWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return AcademicYear.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
+
+class AcademicYearListAPIView(generics.ListAPIView):
+    serializer_class = AcademicYearListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return AcademicYear.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
+
+### module views
+
+class ModuleCreateAPIView(generics.CreateAPIView):
+    serializer_class = ModuleWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def perform_create(self, serializer):
+        serializer.save(admin=self.request.user)
+
+class ModuleUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = ModuleWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Module.objects.filter(admin=self.request.user)
+
+class ModuleListAPIView(generics.ListAPIView):
+    serializer_class = ModuleListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Module.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
+
+class ModuleRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = ModuleListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Module.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")

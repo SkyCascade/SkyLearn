@@ -1,9 +1,10 @@
 from rest_framework import serializers
-from .models import  Program, Semester, SEMESTER
+from .models import  Program, Semester, SEMESTER, AcademicYear, Module
 from course.models import Course
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
 
 
 ### program serializers
@@ -22,14 +23,6 @@ class ProgramWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Program
         fields = ["name_ru", "name_en", "name_kg"]
-
-    def create(self, validated_data):
-        """
-        Автоматически устанавливаем admin из контекста
-        """
-        admin = self.context.get('admin')
-        program = Program.objects.create(admin=admin, **validated_data)
-        return program
     
     def update(self, instance, validated_data):
         """
@@ -46,12 +39,12 @@ class ProgramWriteSerializer(serializers.ModelSerializer):
 class AcademicYearSerializer(serializers.ModelSerializer):
     class Meta:
         model = Semester
-        fields = ["__all__"]
+        fields = "__all__"
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ["__all__"]
+        fields = "__all__"
 
 class SemesterListSerializer(serializers.ModelSerializer):
     courses = CourseSerializer(many=True, read_only=True)
@@ -88,9 +81,6 @@ class SemesterWriteSerializer(serializers.ModelSerializer):
         return semester
 
     def update(self, instance, validated_data):
-        """
-        Автоматически устанавливаем admin из контекста
-        """
         courses = validated_data.pop('courses', serializers.empty)
         
         for attr, value in validated_data.items():
@@ -103,10 +93,78 @@ class SemesterWriteSerializer(serializers.ModelSerializer):
 
 
 class SemesterDetailSerializer(serializers.ModelSerializer):
-    next_semester_begins = serializers.DateField(format="%Y-%m-%d")
     
     class Meta:
         model = Semester
         fields = ["id", "name", "is_current", "courses", "academic_year"]
 
 
+### academic serializer
+
+class AcademicYearListSerializer(serializers.ModelSerializer):
+    program = ProgramListSerializer()
+
+    class Meta:
+        model = AcademicYear
+        fields = ["id", "year", "is_current", "program"]
+
+
+class AcademicYearWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcademicYear
+        fields = ["id", "year", "is_current", "program"]
+
+    def validate(self, data):
+        """Валидация уникальности года в программе"""
+        program = data.get('program') or self.instance.program
+        year = data.get('year') or self.instance.year
+        
+        if AcademicYear.objects.filter(
+            program=program, 
+            year=year
+        ).exclude(id=self.instance.id if self.instance else None).exists():
+            raise serializers.ValidationError({
+                "year": f"Для программы {program.name_ru} уже существует учебный год {year}"
+            })
+        
+        return data
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+    
+
+### module serializers
+
+class ModuleWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Module
+        fields = ["name", "semester"]
+
+    def create(self, validated_data):
+        """
+        Автоматически устанавливаем admin из контекста
+        """
+        admin = self.context.get('admin')
+        return Module.objects.create(admin=admin, **validated_data)
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+
+class SemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Semester
+        fields = ["id", "name"]
+
+class ModuleListSerializer(serializers.ModelSerializer):
+    semester = SemesterSerializer(read_only=True)
+
+    class Meta:
+        model = Module
+        fields = ["id", "name", "is_current", "semester"]
