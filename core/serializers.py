@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import  Program, Semester, SEMESTER, AcademicYear, Module
-from course.models import Course
+from .models import  Program, Semester, SEMESTER, AcademicYear, Module, CourseAllocation, Course
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -10,19 +9,16 @@ User = get_user_model()
 ### program serializers
 
 class ProgramListSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
 
     class Meta:
         model = Program
         fields = ["id", "name"]
 
-    def get_name(self, obj):
-        return obj.get_name(self.context.get('lang', 'ru'))
-    
+   
 class ProgramWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Program
-        fields = ["name_ru", "name_en", "name_kg"]
+        fields = ["name"]
     
     def update(self, instance, validated_data):
         """
@@ -37,9 +33,11 @@ class ProgramWriteSerializer(serializers.ModelSerializer):
 
 
 class AcademicYearSerializer(serializers.ModelSerializer):
+    program = ProgramListSerializer()
+
     class Meta:
-        model = Semester
-        fields = "__all__"
+        model = AcademicYear
+        fields = ["id", "year", "program", "is_current"] 
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -54,17 +52,9 @@ class SemesterListSerializer(serializers.ModelSerializer):
         model = Semester
         fields = ["id", "name", "is_current", "academic_year", "courses"]
 
+
 class SemesterWriteSerializer(serializers.ModelSerializer):
-    name = serializers.ChoiceField(
-        choices=SEMESTER,
-        label="semester"
-    )
-    
-    is_current = serializers.BooleanField(
-        label="is current semester ?",
-        required=False,
-    )
-        
+
     class Meta:
         model = Semester
         fields = ["name", "is_current", "courses", "academic_year"]
@@ -168,3 +158,75 @@ class ModuleListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Module
         fields = ["id", "name", "is_current", "semester"]
+
+
+### course  serializers
+
+
+    
+class CourseListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Course
+        fields = "__all__"
+    
+    def create(self, validated_data):
+        """
+        Автоматически устанавливаем admin из контекста
+        """
+        admin = self.context.get('admin') or self.context.get('request').user
+        validated_data['admin'] = admin
+        return super().create(validated_data)
+
+
+class CourseWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ["name", "description"]
+    
+    def update(self, instance, validated_data):
+        """
+        Автоматически устанавливаем не трогая админ
+        """
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+
+User = get_user_model()
+
+
+class CourseAllocationListSerializer(serializers.ModelSerializer):
+    lecturer = serializers.StringRelatedField()
+    group = serializers.StringRelatedField()
+    courses = CourseListSerializer(many=True, read_only=True)
+    semester = serializers.StringRelatedField()
+
+    class Meta:
+        model= CourseAllocation
+        fields = [
+            'id', 'lecturer', 'courses', 'semester', 'group'
+        ]
+
+
+class CourseAllocationWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseAllocation
+        fields = [
+            'lecturer', 'courses', 'semester', 'group'
+        ]
+    
+    
+    def update(self, instance, validated_data):
+        """patch, put update"""
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+
+class StudentCoursesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseAllocation
+        fields = ['id', 'lecturer', 'courses', 'semester', 'group']

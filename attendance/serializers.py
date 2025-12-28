@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import ScheduleItem, Attendance, LessonTime
 from accounts.models import Student, Group
-from course.models import Course
+from core.models import Course
 
 
 class LessonTimeSerializer(serializers.ModelSerializer):

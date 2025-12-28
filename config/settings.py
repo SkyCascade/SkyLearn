@@ -44,7 +44,6 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "tailwind",
 ]
 if DEBUG:
     # Add django_browser_reload only in DEBUG mode
@@ -69,7 +68,6 @@ THIRD_PARTY_APPS = [
 PROJECT_APPS = [
     "core.apps.CoreConfig",
     "accounts.apps.AccountsConfig",
-    "course.apps.CourseConfig",
     "result.apps.ResultConfig",
     "attendance.apps.AttendanceConfig",
 ]
@@ -120,7 +118,7 @@ CORS_ALLOW_HEADERS = [
 
 # JWT Settings with Cookie support
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Shorter for better security
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=5),  # Shorter for better security
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # 7 days
     'ROTATE_REFRESH_TOKENS': True,  # Enable token rotation for better security
     'BLACKLIST_AFTER_ROTATION': True,

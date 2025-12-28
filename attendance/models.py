@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from accounts.models import Student
 from accounts.models import Group
-from course.models import Course
+from core.models import Course
 
 
 # Create your models here.
@@ -76,10 +76,6 @@ class ScheduleItem(models.Model):
         blank=True
     )
 
-    # Устаревшие поля (можно удалить после миграции)
-    order = models.IntegerField(null=True, blank=True)
-    start = models.TimeField(null=True, blank=True)
-    end = models.TimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['date', 'lesson_time__order']

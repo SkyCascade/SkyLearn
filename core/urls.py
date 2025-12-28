@@ -1,14 +1,11 @@
 from django.urls import path
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from . import views
-
-router = DefaultRouter()
+from .views import  CourseListAPIView, CourseCreateAPIView, CourseRetrieveUpdateDestroyAPIView, CourseAllocationListAPIView, CourseAllocationCreateAPIView, CourseAllocationRetrieveUpdateDestroyAPIView
 
 
 urlpatterns = [
 
-    path('api/', include(router.urls)),
 
     # Semester urls
     path('api/semesters/', views.SemesterListAPIView.as_view(), name='semester-list'),
@@ -34,4 +31,15 @@ urlpatterns = [
     path('api/modules/<int:pk>/update/', views.ModuleUpdateAPIView.as_view(), name='module-update'),
     path('api/modules/<int:pk>/', views.ModuleRetrieveDestroyAPIView.as_view(), name='module-detail'),
  
+
+    # Course urls
+    path('api/courses/', CourseListAPIView.as_view(), name='course-list'),
+    path('api/courses/create/', CourseCreateAPIView.as_view(), name='course-create'),
+    path('api/courses/<int:pk>/', CourseRetrieveUpdateDestroyAPIView.as_view(), name='course-detail'),
+
+    ### course  urls
+    path('api/course-allocations/', CourseAllocationListAPIView.as_view(), name='courseallocation-list'),
+    path('api/course-allocations/create/', CourseAllocationCreateAPIView.as_view(), name='courseallocation-create'),
+    path('api/course-allocations/<int:pk>/', CourseAllocationRetrieveUpdateDestroyAPIView.as_view(), name='courseallocation-detail'),
+
 ]

@@ -18,8 +18,7 @@ urlpatterns = [
     
     # Apps URLs
     path("", include("core.urls")),
-    path("accounts/", include("accounts.urls")),
-    path("programs/", include("course.urls")),
+    path("/accounts/", include("accounts.urls")),
     path("result/", include("result.urls")), 
     path("attendance/", include("attendance.urls")),
 ]

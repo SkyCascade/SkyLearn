@@ -1,27 +1,8 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from rest_framework import generics
-from accounts.decorators import admin_required, lecturer_required
-from accounts.models import User, Student
-from rest_framework.exceptions import PermissionDenied
-
-
-
-# ########################################################
-# News & Events
-# ########################################################
-
-
-
-
-from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.permissions import IsAdminUser
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Q
-from .models import AcademicYear, Semester, Program, Module
+from .models import AcademicYear, Semester, Program, Module, CourseAllocation, Course
 from .serializers import (
     ModuleWriteSerializer,
     ModuleListSerializer,
@@ -31,7 +12,11 @@ from .serializers import (
     SemesterWriteSerializer,
     SemesterDetailSerializer,
     SemesterListSerializer,
-    AcademicYearListSerializer
+    AcademicYearListSerializer,
+    CourseListSerializer, 
+    CourseWriteSerializer,
+    CourseAllocationListSerializer, 
+    CourseAllocationWriteSerializer
 )
 from .permissions import IsLecturer, IsAdminOrLecturer
 
@@ -39,6 +24,8 @@ User = get_user_model()
 
 
 ### semester views
+
+
 
 class SemesterListAPIView(generics.ListAPIView):
     serializer_class = SemesterListSerializer
@@ -201,3 +188,79 @@ class ModuleRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):
         if self.request.user.is_superuser:
             return Module.objects.filter(admin=self.request.user)
         raise PermissionDenied("Only admins can access this view.")
+
+
+### course views
+
+class CourseListAPIView(generics.ListAPIView):
+    serializer_class = CourseListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return Course.objects.filter(admin=user).order_by("title")
+        else:
+            raise PermissionDenied("Only superusers can access this view.")
+    
+class CourseCreateAPIView(generics.CreateAPIView):
+    serializer_class = CourseWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
+        return context
+    
+    def perform_create(self, serializer):
+        serializer.save(admin=self.request.user)
+
+class CourseRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminUser]
+    queryset = Course.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return CourseWriteSerializer
+        return CourseListSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
+        return context
+
+### course allocation views
+
+class CourseAllocationListAPIView(generics.ListAPIView):
+    serializer_class = CourseAllocationListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+            return CourseAllocation.objects.filter(admin=self.request.user)
+
+
+class CourseAllocationCreateAPIView(generics.CreateAPIView):
+    serializer_class = CourseAllocationWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
+        return context
+    
+    def perform_create(self, serializer):
+        serializer.save(admin=self.request.user)
+
+class CourseAllocationRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminUser]
+    queryset = CourseAllocation.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return CourseAllocationWriteSerializer
+        return CourseAllocationListSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
+        return context

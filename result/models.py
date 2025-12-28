@@ -66,7 +66,7 @@ class Grade_1st_module(models.Model):
         related_name="grade_1st_lecturer",
     )
     student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
-    course = models.ForeignKey('course.Course', on_delete=models.CASCADE, related_name="grade_1st_courses")
+    course = models.ForeignKey('core.Course', on_delete=models.CASCADE, related_name="grade_1st_courses")
     attendance = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     activities = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     exam = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
@@ -94,7 +94,7 @@ class Grade_2nd_module(models.Model):
         related_name="grade_2nd_lecturer",
     )
     student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
-    course = models.ForeignKey('course.Course', on_delete=models.CASCADE, related_name="grade_2nd_courses")
+    course = models.ForeignKey('core.Course', on_delete=models.CASCADE, related_name="grade_2nd_courses")
     attendance = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     activities = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     exam = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
@@ -125,7 +125,7 @@ class Grade_semester(models.Model):
         "core.Semester", on_delete=models.CASCADE, blank=True, null=True
     )
     student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
-    course = models.ForeignKey('course.Course', on_delete=models.CASCADE, related_name="grade_semester_courses")
+    course = models.ForeignKey('core.Course', on_delete=models.CASCADE, related_name="grade_semester_courses")
     attendance = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     activities = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     exam = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))

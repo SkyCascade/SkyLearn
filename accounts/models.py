@@ -1,81 +1,22 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import AbstractUser, UserManager
-from django.conf import settings
+from config import settings
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
-from PIL import Image
 import random
 import string
-from core.models import Program
 from .validators import ASCIIUsernameValidator
 
 
-# LEVEL_COURSE = "Level course"
-BACHELOR_DEGREE = _("Bachelor")
-MASTER_DEGREE = _("Master")
 
-LEVEL = (
-    # (LEVEL_COURSE, "Level course"),
-    (BACHELOR_DEGREE, _("Bachelor Degree")),
-    (MASTER_DEGREE, _("Master Degree")),
-)
-
-
-
-LEVEL = (
-    # (LEVEL_COURSE, "Level course"),
-    (BACHELOR_DEGREE, _("Bachelor Degree")),
-    (MASTER_DEGREE, _("Master Degree")),
-)
 FATHER = _("Father")
 MOTHER = _("Mother")
-BROTHER = _("Brother")
-SISTER = _("Sister")
-GRAND_MOTHER = _("Grand mother")
-GRAND_FATHER = _("Grand father")
-OTHER = _("Other")
 
 RELATION_SHIP = (
     (FATHER, _("Father")),
     (MOTHER, _("Mother")),
-    (BROTHER, _("Brother")),
-    (SISTER, _("Sister")),
-    (GRAND_MOTHER, _("Grand mother")),
-    (GRAND_FATHER, _("Grand father")),
-    (OTHER, _("Other")),
 )
-
-
-class CustomUserManager(UserManager):
-    def search(self, query=None):
-        queryset = self.get_queryset()
-        if query is not None:
-            or_lookup = (
-                Q(username__icontains=query)
-                | Q(first_name__icontains=query)
-                | Q(last_name__icontains=query)
-                | Q(email__icontains=query)
-            )
-            queryset = queryset.filter(
-                or_lookup
-            ).distinct()  # distinct() is often necessary with Q lookups
-        return queryset
-
-    def get_student_count(self):
-        return self.model.objects.filter(is_student=True).count()
-
-    def get_lecturer_count(self):
-        return self.model.objects.filter(is_lecturer=True).count()
-
-    def get_superuser_count(self):
-        return self.model.objects.filter(is_superuser=True).count()
-    
-    def make_random_password(self, length=10):
-        """Генерирует случайный пароль"""
-        characters = string.ascii_letters + string.digits + "!@#$%^&*"
-        return ''.join(random.choice(characters) for i in range(length))
-
 
 GENDERS = ((_("M"), _("Male")), (_("F"), _("Female")))
 
@@ -93,83 +34,43 @@ class User(AbstractUser):
     )
     email = models.EmailField(blank=True, null=True)
 
-    username_validator = ASCIIUsernameValidator()
-
-    objects = CustomUserManager()
 
     class Meta:
-        ordering = ("-date_joined",)
+        verbose_name = "User"
+        verbose_name_plural = "Users"
 
-    @property
-    def get_full_name(self):
-        full_name = self.username
-        if self.first_name and self.last_name:
-            full_name = self.first_name + " " + self.last_name
-        return full_name
+
+class Lecturer(models.Model):
+    lecturer = models.OneToOneField(User, on_delete=models.CASCADE, related_name='lecturer_profile')
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='created_lecturers',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
+    
+    class Meta:
+        verbose_name = "Lecturer"
+        verbose_name_plural = "Lecturers"
 
     def __str__(self):
-        return "{} ({})".format(self.username, self.get_full_name)
+        return self.lecturer.get_full_name
 
-    @property
-    def get_user_role(self):
-        if self.is_superuser:
-            role = _("Admin")
-        elif self.is_student:
-            role = _("Student")
-        elif self.is_lecturer:
-            role = _("Lecturer")
-        elif self.is_parent:
-            role = _("Parent")
-
-        return role
-
-    def get_picture(self):
-        try:
-            return self.picture.url
-        except:
-            no_picture = settings.MEDIA_URL + "default.png"
-            return no_picture
-
-    def get_absolute_url(self):
-        return reverse("profile_single", kwargs={"user_id": self.id})
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        try:
-            img = Image.open(self.picture.path)
-            if img.height > 300 or img.width > 300:
-                output_size = (300, 300)
-                img.thumbnail(output_size)
-                img.save(self.picture.path)
-        except:
-            pass
-
-    def delete(self, *args, **kwargs):
-        if self.picture.url != settings.MEDIA_URL + "default.png":
-            self.picture.delete()
-        super().delete(*args, **kwargs)
-
-
-class StudentManager(models.Manager):
-    def search(self, query=None):
-        qs = self.get_queryset()
-        if query is not None:
-            or_lookup = Q(level__icontains=query) | Q(program__icontains=query)
-            qs = qs.filter(
-                or_lookup
-            ).distinct()  # distinct() is often necessary with Q lookups
-        return qs
 
 class Group(models.Model):
     name = models.CharField(max_length=100)
     admin = models.ForeignKey(
-        User, 
+        settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
         related_name='created_groups',
         limit_choices_to={'is_superuser': True},
         null=True,
         blank=True
     )
+    program = models.ForeignKey(
+        'core.Program', on_delete=models.CASCADE, related_name='groups')
 
     def __str__(self):
         return self.name
@@ -183,10 +84,8 @@ class Group(models.Model):
 
 
 class Student(models.Model):
-    student = models.OneToOneField(User, on_delete=models.CASCADE)
+    student = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
     # id_number = models.CharField(max_length=20, unique=True, blank=True)
-    level = models.CharField(max_length=25, choices=LEVEL, null=True)
-    program = models.ForeignKey(Program, on_delete=models.CASCADE, null=True)
     group = models.ForeignKey(
         Group, 
         on_delete=models.SET_NULL, 
@@ -195,7 +94,7 @@ class Student(models.Model):
         related_name='students'  # Добавляем related_name для удобства
     )
     admin = models.ForeignKey(
-        User, 
+        settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
         related_name='created_students',
         limit_choices_to={'is_superuser': True},
@@ -203,31 +102,12 @@ class Student(models.Model):
         blank=True
     )
     
-    objects = StudentManager()
-
     class Meta:
-        ordering = ("-student__date_joined",)
+        verbose_name = "Student"
+        verbose_name_plural = "Students"
 
     def __str__(self):
         return self.student.get_full_name
-
-    @classmethod
-    def get_gender_count(cls):
-        males_count = Student.objects.filter(student__gender="M").count()
-        females_count = Student.objects.filter(student__gender="F").count()
-
-        return {"M": males_count, "F": females_count}
-
-    def get_absolute_url(self):
-        return reverse("profile_single", kwargs={"user_id": self.id})
-    
-    def get_full_name(self):
-        return self.student.get_full_name
-
-    def delete(self, *args, **kwargs):
-        self.student.delete()
-        super().delete(*args, **kwargs)
-
 
 class Parent(models.Model):
     """
@@ -235,8 +115,8 @@ class Parent(models.Model):
     only view their connected students information
     """
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    student = models.OneToOneField(Student, null=True, on_delete=models.SET_NULL)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='parent_profile')
+    student = models.OneToOneField(Student, null=True, on_delete=models.SET_NULL, related_name='parent_profile')
     first_name = models.CharField(max_length=120)
     last_name = models.CharField(max_length=120)
     phone = models.CharField(max_length=60, blank=True, null=True)
@@ -245,21 +125,10 @@ class Parent(models.Model):
     # What is the relationship between the student and
     # the parent (i.e. father, mother, brother, sister)
     relation_ship = models.TextField(choices=RELATION_SHIP, blank=True)
-
-    class Meta:
-        ordering = ("-user__date_joined",)
-
-    def __str__(self):
-        return self.user.username
-
-
-class DepartmentHead(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    department = models.ForeignKey(Program, on_delete=models.CASCADE, null=True)
     admin = models.ForeignKey(
-        User, 
+        settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
-        related_name='created_department_heads',
+        related_name='created_parents',
         limit_choices_to={'is_superuser': True},
         null=True,
         blank=True
@@ -269,5 +138,6 @@ class DepartmentHead(models.Model):
         ordering = ("-user__date_joined",)
 
     def __str__(self):
-        return "{}".format(self.user)
-    
+        return self.user.username
+
+

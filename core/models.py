@@ -4,6 +4,52 @@ from django.utils.translation import gettext_lazy as _
 from config import settings
 
 
+class Course(models.Model):
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='created_courses',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Course"
+        verbose_name_plural = "Courses"
+
+    def __str__(self):
+        return f"{self.name}"
+
+
+class CourseAllocation(models.Model):
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='created_course_allocations',
+        limit_choices_to={'is_superuser': True},
+        null=True,
+        blank=True
+    )
+    lecturer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='course_allocations',
+        limit_choices_to={'is_staff': True}
+    )
+    courses = models.ManyToManyField(Course, related_name='course_allocations')
+    semester = models.ForeignKey('core.Semester', on_delete=models.CASCADE, related_name='course_allocations')
+    group = models.ForeignKey('accounts.Group', on_delete=models.CASCADE, related_name='course_allocations')
+
+    class Meta:
+        verbose_name = "Course Allocation"
+        verbose_name_plural = "Course Allocations"
+
+    def __str__(self):
+        return f"{self.lecturer.username} - {self.semester} - {self.group.name}"
+
 class SemesterName(models.TextChoices):
     FIRST = "First", _("First")
     SECOND = "Second", _("Second")
@@ -21,9 +67,8 @@ class Program(models.Model):
         null=True,
         blank=True
     )
-    name_ru = models.CharField(max_length=200)
-    name_en = models.CharField(max_length=200)
-    name_kg = models.CharField(max_length=200)
+    name = models.CharField(max_length=200)
+
 
     class Meta:
         verbose_name = "Program"
@@ -31,8 +76,7 @@ class Program(models.Model):
 
     def __str__(self):
         return self.name_ru
-    def get_name(self, lang):
-        return getattr(self, f"name_{lang}", self.name_ru)
+
 
 class AcademicYear(models.Model):
     admin = models.ForeignKey(
@@ -62,7 +106,7 @@ class Semester(models.Model):
     )
     name = models.CharField(max_length=10, choices=SemesterName.choices, default=SemesterName.FIRST)
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='semesters')
-    courses = models.ManyToManyField('course.Course', related_name='semesters')
+    courses = models.ManyToManyField(Course,  related_name='semesters')
     is_current = models.BooleanField(default=False, null=True, blank=True)
 
     def __str__(self):
