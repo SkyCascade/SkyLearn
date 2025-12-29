@@ -1,7 +1,7 @@
 from django.urls import path
 from django.urls import path
 from . import views
-from .views import  CourseListAPIView, CourseCreateAPIView, CourseRetrieveUpdateDestroyAPIView, CourseAllocationListAPIView, CourseAllocationCreateAPIView, CourseAllocationRetrieveUpdateDestroyAPIView
+from .views import  CourseListAPIView, CourseCreateAPIView, CourseRetrieveUpdateDestroyAPIView, CourseAllocationListAPIView, CourseAllocationCreateAPIView, CourseAllocationRetrieveUpdateDestroyAPIView, TeacherCourseAllocations
 
 
 urlpatterns = [
@@ -37,9 +37,10 @@ urlpatterns = [
     path('api/courses/create/', CourseCreateAPIView.as_view(), name='course-create'),
     path('api/courses/<int:pk>/', CourseRetrieveUpdateDestroyAPIView.as_view(), name='course-detail'),
 
-    ### course  urls
+    ### course allocation urls
     path('api/course-allocations/', CourseAllocationListAPIView.as_view(), name='courseallocation-list'),
     path('api/course-allocations/create/', CourseAllocationCreateAPIView.as_view(), name='courseallocation-create'),
     path('api/course-allocations/<int:pk>/', CourseAllocationRetrieveUpdateDestroyAPIView.as_view(), name='courseallocation-detail'),
+    path('api/teacher-allocations/', TeacherCourseAllocations.as_view(), name='teacherallocation-list'),
 
 ]

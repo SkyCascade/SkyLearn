@@ -43,7 +43,7 @@ class StudentGradeSemesterSerializer(StudentGradeSerializer):
     class Meta(StudentGradeSerializer.Meta):
         model = Grade_semester
         fields = StudentGradeSerializer.Meta.fields + [
-            'id', 'course', 'course_title', 'course_code', 'lecturer', 'lecturer_name',
+            'id', 'course', 'course_title',  'lecturer', 'lecturer_name',
             'semester', 'semester_name', 'attendance', 'activities', 'exam', 'total', 'grade'
         ]
         read_only_fields = ['attendance', 'activities', 'exam', 'total', 'grade']
@@ -56,7 +56,7 @@ class LecturerGrade1stModuleSerializer(StudentGradeSerializer):
     class Meta(StudentGradeSerializer.Meta):
         model = Grade_1st_module
         fields = StudentGradeSerializer.Meta.fields + [
-            'id', 'course', 'course_title', 'course_code', 'lecturer', 'lecturer_name',
+            'id', 'course', 'course_title', 'lecturer', 'lecturer_name',
             'attendance', 'activities', 'exam', 'total', 'grade'
         ]
 
@@ -75,7 +75,7 @@ class LecturerGrade2ndModuleSerializer(StudentGradeSerializer):
     class Meta(StudentGradeSerializer.Meta):
         model = Grade_2nd_module
         fields = StudentGradeSerializer.Meta.fields + [
-            'id', 'course', 'course_title', 'course_code', 'lecturer', 'lecturer_name',
+            'id', 'course', 'course_title', 'lecturer', 'lecturer_name',
             'attendance', 'activities', 'exam', 'total', 'grade'
         ]
 

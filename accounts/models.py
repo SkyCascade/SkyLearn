@@ -33,6 +33,8 @@ class User(AbstractUser):
         upload_to="profile_pictures/%y/%m/%d/", default="default.png", null=True
     )
     email = models.EmailField(blank=True, null=True)
+    first_name = models.CharField(max_length=120, blank=True, null=True)
+    last_name = models.CharField(max_length=120, blank=True, null=True)
 
 
     class Meta:

@@ -54,6 +54,12 @@ class SemesterListSerializer(serializers.ModelSerializer):
 
 
 class SemesterWriteSerializer(serializers.ModelSerializer):
+    courses = serializers.PrimaryKeyRelatedField(
+        queryset=Course.objects.all(),
+        many=True,
+        required=False
+    )
+    is_current = serializers.BooleanField(required=False, default=False)
 
     class Meta:
         model = Semester
@@ -106,16 +112,17 @@ class AcademicYearWriteSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """Валидация уникальности года в программе"""
-        program = data.get('program') or self.instance.program
-        year = data.get('year') or self.instance.year
+        program = data.get('program') or (self.instance.program if self.instance else None)
+        year = data.get('year') or (self.instance.year if self.instance else None)
         
-        if AcademicYear.objects.filter(
-            program=program, 
-            year=year
-        ).exclude(id=self.instance.id if self.instance else None).exists():
-            raise serializers.ValidationError({
-                "year": f"Для программы {program.name_ru} уже существует учебный год {year}"
-            })
+        if program and year:
+            queryset = AcademicYear.objects.filter(program=program, year=year)
+            if self.instance:
+                queryset = queryset.exclude(id=self.instance.id)
+            if queryset.exists():
+                raise serializers.ValidationError({
+                    "year": f"Для этой программы уже существует учебный год {year}"
+                })
         
         return data
 
@@ -133,12 +140,8 @@ class ModuleWriteSerializer(serializers.ModelSerializer):
         model = Module
         fields = ["name", "semester"]
 
-    def create(self, validated_data):
-        """
-        Автоматически устанавливаем admin из контекста
-        """
-        admin = self.context.get('admin')
-        return Module.objects.create(admin=admin, **validated_data)
+   
+   
 
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
@@ -168,21 +171,20 @@ class CourseListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = "__all__"
-    
-    def create(self, validated_data):
-        """
-        Автоматически устанавливаем admin из контекста
-        """
-        admin = self.context.get('admin') or self.context.get('request').user
-        validated_data['admin'] = admin
-        return super().create(validated_data)
+        fields = ["id", "name", "description"]
 
 
 class CourseWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ["name", "description"]
+    
+    def create(self, validated_data):
+        """
+        Автоматически устанавливаем admin из контекста
+        """
+        admin = self.context.get('admin')
+        return Course.objects.create(admin=admin, **validated_data)
     
     def update(self, instance, validated_data):
         """
@@ -199,14 +201,17 @@ User = get_user_model()
 
 class CourseAllocationListSerializer(serializers.ModelSerializer):
     lecturer = serializers.StringRelatedField()
+    lecturer_id = serializers.PrimaryKeyRelatedField(source='lecturer', read_only=True)
     group = serializers.StringRelatedField()
+    group_id = serializers.PrimaryKeyRelatedField(source='group', read_only=True)
     courses = CourseListSerializer(many=True, read_only=True)
     semester = serializers.StringRelatedField()
+    semester_id = serializers.PrimaryKeyRelatedField(source='semester', read_only=True)
 
     class Meta:
         model= CourseAllocation
         fields = [
-            'id', 'lecturer', 'courses', 'semester', 'group'
+            'id', 'lecturer', 'lecturer_id', 'courses', 'semester', 'semester_id', 'group', 'group_id'
         ]
 
 
@@ -217,12 +222,23 @@ class CourseAllocationWriteSerializer(serializers.ModelSerializer):
             'lecturer', 'courses', 'semester', 'group'
         ]
     
+    def create(self, validated_data):
+        """Создание с ManyToMany courses"""
+        courses = validated_data.pop('courses', [])
+        allocation = CourseAllocation.objects.create(**validated_data)
+        allocation.courses.set(courses)
+        return allocation
     
     def update(self, instance, validated_data):
-        """patch, put update"""
+        """patch, put update с ManyToMany courses"""
+        courses = validated_data.pop('courses', None)
+        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+        
+        if courses is not None:
+            instance.courses.set(courses)
         return instance
 
 
@@ -230,3 +246,6 @@ class StudentCoursesSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseAllocation
         fields = ['id', 'lecturer', 'courses', 'semester', 'group']
+
+
+

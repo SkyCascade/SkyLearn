@@ -1,5 +1,6 @@
 from rest_framework import generics
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.views import APIView
 from config import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -15,15 +16,18 @@ from .models import Lecturer, Student, User, Group, Parent
 from .serializers import (
     LecturerListSerializer,
     LecturerWriteSerializer,
+    LecturerUpdateSerializer,
 
     StudentListSerializer, 
     StudentWriteSerializer,
+    StudentUpdateSerializer,
 
     GroupListSerializer,
     GroupWriteSerializer,
 
     ParentListSerializer,
     ParentWriteSerializer,
+    ParentUpdateSerializer,
     UserSerializer
 )
 
@@ -37,8 +41,10 @@ class LecturerCreateView(generics.CreateAPIView):
     serializer_class = LecturerWriteSerializer
     permission_classes = [IsAdminUser]
 
-    def perform_create(self, serializer):
-        serializer.save(admin=self.request.user)
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['admin'] = self.request.user
+        return context
 
 class LecturerListAPIView(generics.ListAPIView):
     serializer_class = LecturerListSerializer
@@ -46,25 +52,41 @@ class LecturerListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Lecturer.objects.filter(admin=self.request.user)
-    
-class LecturerRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = LecturerWriteSerializer
+
+class LecturerRetrieveDestroyView(generics.RetrieveDestroyAPIView):
+    serializer_class = LecturerListSerializer
     permission_classes = [IsAdminUser]
 
     def get_queryset(self):
         return Lecturer.objects.filter(admin=self.request.user)
-    
+
+class LecturerUpdateView(generics.UpdateAPIView):
+    serializer_class = LecturerUpdateSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Lecturer.objects.filter(admin=self.request.user)
+
 # ============================================================================
 # STUDENT VIEWS
 # ============================================================================  
 
+class StudentListGroupAPIView(generics.ListAPIView):
+    serializer_class = StudentListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        group_id = self.kwargs.get('group_id')
+        return Student.objects.filter(group_id=group_id)
 
 class StudentCreateView(generics.CreateAPIView):
     serializer_class = StudentWriteSerializer
     permission_classes = [IsAdminUser]
 
-    def perform_create(self, serializer):
-        serializer.save(admin=self.request.user)
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['admin'] = self.request.user
+        return context
 
 class StudentListAPIView(generics.ListAPIView):
     serializer_class = StudentListSerializer
@@ -74,12 +96,25 @@ class StudentListAPIView(generics.ListAPIView):
         return Student.objects.filter(admin=self.request.user)
 
 class StudentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = StudentWriteSerializer
+    serializer_class = StudentListSerializer
     permission_classes = [IsAdminUser]
 
     def get_queryset(self):
         return Student.objects.filter(admin=self.request.user)
     
+class StudentUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = StudentUpdateSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Разрешаем обновлять только своих студентов или все в зависимости от прав
+        if self.request.user.is_superuser or self.request.user.is_dep_head:
+            return Student.objects.all()
+        # Для преподавателей - только студентов их групп
+        elif self.request.user.is_lecturer:
+            return Student.objects.filter(group__in=self.request.user.lecturer_groups.all())
+        else:
+            return Student.objects.none()
 # ============================================================================
 # GROUP VIEWS
 # ============================================================================
@@ -115,8 +150,13 @@ class ParentCreateView(generics.CreateAPIView):
     serializer_class = ParentWriteSerializer
     permission_classes = [IsAdminUser]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['admin'] = self.request.user
+        return context
+
     def perform_create(self, serializer):
-        serializer.save(admin=self.request.user)
+        serializer.save()
 
 
 class ParentListAPIView(generics.ListAPIView):
@@ -134,6 +174,19 @@ class ParentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Parent.objects.filter(admin=self.request.user)
     
+
+class ParentUpdateView(generics.UpdateAPIView):
+    serializer_class = ParentUpdateSerializer
+    permission_classes = [IsAdminUser]
+    
+    def get_queryset(self):
+        user = self.request.user
+
+        return Parent.objects.all(admin=user)
+        
+        
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
 
 
 # ============================================================================
@@ -278,3 +331,14 @@ class SecureTokenRefreshView(TokenRefreshView):
                 {'error': 'Invalid or expired refresh token'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class UserProfileView(APIView):
+    """
+    Возвращает профиль текущего пользователя
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)

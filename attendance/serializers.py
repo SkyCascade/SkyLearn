@@ -22,8 +22,7 @@ class LessonTimeSerializer(serializers.ModelSerializer):
 
 class ScheduleItemSerializer(serializers.ModelSerializer):
     """Базовый сериализатор для расписания"""
-    course_title = serializers.CharField(source='course.title', read_only=True)
-    course_code = serializers.CharField(source='course.code', read_only=True)
+    course_title = serializers.CharField(source='course.name', read_only=True)
     group_name = serializers.CharField(source='group.name', read_only=True)
     lesson_order = serializers.IntegerField(source='lesson_time.order', read_only=True)
     start_time = serializers.TimeField(source='lesson_time.start_time', read_only=True)
@@ -32,7 +31,7 @@ class ScheduleItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScheduleItem
         fields = [
-            'id', 'course', 'course_title', 'course_code', 
+            'id', 'course', 'course_title',
             'group', 'group_name', 'lesson_time', 'lesson_order',
             'day', 'date', 'start_time', 'end_time'
         ]
@@ -48,8 +47,7 @@ class ScheduleItemSerializer(serializers.ModelSerializer):
 
 class StudentScheduleItemSerializer(serializers.ModelSerializer):
     """Сериализатор расписания для студентов (только чтение)"""
-    course_title = serializers.CharField(source='course.title', read_only=True)
-    course_code = serializers.CharField(source='course.code', read_only=True)
+    course_title = serializers.CharField(source='course.name', read_only=True)
     group_name = serializers.CharField(source='group.name', read_only=True)
     lecturer_name = serializers.SerializerMethodField()
     lesson_order = serializers.IntegerField(source='lesson_time.order', read_only=True)
@@ -76,8 +74,8 @@ class StudentScheduleItemSerializer(serializers.ModelSerializer):
 
 class LecturerScheduleItemSerializer(serializers.ModelSerializer):
     """Сериализатор расписания для преподавателей"""
-    course_title = serializers.CharField(source='course.title', read_only=True)
-    course_code = serializers.CharField(source='course.code', read_only=True)
+    course_title = serializers.CharField(source='course.name', read_only=True)
+
     group_name = serializers.CharField(source='group.name', read_only=True)
     lesson_order = serializers.IntegerField(source='lesson_time.order', read_only=True)
     start_time = serializers.TimeField(source='lesson_time.start_time', read_only=True)
@@ -86,16 +84,15 @@ class LecturerScheduleItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScheduleItem
         fields = [
-            'id', 'course', 'course_title', 'course_code', 
+            'id', 'course', 'course_title',
             'group', 'group_name', 'lesson_order', 'day', 'date', 'start_time', 'end_time'
         ]
-        read_only_fields = ['id', 'course_title', 'course_code', 'group_name']
+        read_only_fields = ['id', 'course_title', 'group_name']
 
 
 class AdminScheduleItemSerializer(serializers.ModelSerializer):
     """Сериализатор расписания для администраторов (полный доступ)"""
-    course_title = serializers.CharField(source='course.title', read_only=True)
-    course_code = serializers.CharField(source='course.code', read_only=True)
+    course_title = serializers.CharField(source='course.name', read_only=True)
     group_name = serializers.CharField(source='group.name', read_only=True)
     lesson_order = serializers.IntegerField(source='lesson_time.order', read_only=True)
     start_time = serializers.TimeField(source='lesson_time.start_time', read_only=True)
@@ -104,7 +101,7 @@ class AdminScheduleItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScheduleItem
         fields = [
-            'id', 'course', 'course_title', 'course_code', 
+            'id', 'course', 'course_title',
             'group', 'group_name', 'lesson_time', 'lesson_order',
             'day', 'date', 'start_time', 'end_time'
         ]

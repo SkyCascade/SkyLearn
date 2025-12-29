@@ -66,9 +66,7 @@ class ScheduleItemViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['course', 'group', 'day']
-    search_fields = ['course__title', 'course__code', 'group__name']
     ordering_fields = ['day', 'start', 'order']
-    ordering = ['day', 'start', 'order']
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -85,7 +83,7 @@ class ScheduleItemViewSet(viewsets.ModelViewSet):
         # Преподаватели видят расписание групп, где они преподают
         elif user.is_lecturer:
             # Получаем курсы и группы преподавателя через CourseAllocation
-            from course.models import CourseAllocation
+            from core.models import CourseAllocation
             allocations = CourseAllocation.objects.filter(lecturer=user)
             
             # Фильтруем расписание по курсам и группам преподавателя

@@ -3,46 +3,54 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     CustomTokenObtainPairView,
     SecureTokenRefreshView,
+    UserProfileView,
+
     LecturerCreateView, 
     LecturerListAPIView,
-    LecturerRetrieveUpdateDestroyView,
+    LecturerRetrieveDestroyView,
+    LecturerUpdateView,
+
     StudentCreateView, 
     StudentListAPIView,
     StudentRetrieveUpdateDestroyView,
+    StudentUpdateAPIView,
+    StudentListGroupAPIView,
+
     GroupListAPIView,
     GroupCreateView,
     GroupRetrieveUpdateDestroyView,
+
     ParentCreateView,
     ParentListAPIView,
     ParentRetrieveUpdateDestroyView,
+    ParentUpdateView
 )
 
 
 urlpatterns = [
-    path('/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('/token/refresh/', SecureTokenRefreshView.as_view(), name='token_refresh'),
+    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', SecureTokenRefreshView.as_view(), name='token_refresh'),
+    path('profile/', UserProfileView.as_view(), name='user-profile'),
     # Lecturer URLs
     path('lecturers/', LecturerListAPIView.as_view(), name='lecturer-list'),
     path('lecturers/create/', LecturerCreateView.as_view(), name='lecturer-create'),
-    path('lecturers/<int:pk>/', LecturerRetrieveUpdateDestroyView.as_view(), name='lecturer-detail'),
-    path('lecturers/update/<int:pk>/', LecturerRetrieveUpdateDestroyView.as_view(), name='lecturer-update'),
-    path('lecturers/delete/<int:pk>/', LecturerRetrieveUpdateDestroyView.as_view(), name='lecturer-delete'),
+    path('lecturers/<int:pk>/', LecturerRetrieveDestroyView.as_view(), name='lecturer-detail-delete'),
+    path('lecturers/update/<int:pk>/', LecturerUpdateView.as_view(), name='lecturer-update'),
+
     # Group URLs
     path('groups/', GroupListAPIView.as_view(), name='group-list'),
     path('groups/create/', GroupCreateView.as_view(), name='group-create'),
-    path('groups/<int:pk>/', GroupRetrieveUpdateDestroyView.as_view(), name='group-detail'),
+    path('groups/<int:pk>/', GroupRetrieveUpdateDestroyView.as_view(), name='group-detail-delete'),
     path('groups/update/<int:pk>/', GroupRetrieveUpdateDestroyView.as_view(), name='group-update'),
-    path('groups/delete/<int:pk>/', GroupRetrieveUpdateDestroyView.as_view(), name='group-delete'),
     # Parent URLs
     path('parents/', ParentListAPIView.as_view(), name='parent-list'),
     path('parents/create/', ParentCreateView.as_view(), name='parent-create'),
-    path('parents/<int:pk>/', ParentRetrieveUpdateDestroyView.as_view(), name='parent-detail'),
-    path('parents/update/<int:pk>/', ParentRetrieveUpdateDestroyView.as_view(), name='parent-update'),
-    path('parents/delete/<int:pk>/', ParentRetrieveUpdateDestroyView.as_view(), name='parent-delete'),
+    path('parents/<int:pk>/', ParentRetrieveUpdateDestroyView.as_view(), name='parent-detail-delete'),
+    path('parents/update/<int:pk>/', ParentUpdateView.as_view(), name='parent-update'),
     # Student URLs
     path('students/create/', StudentCreateView.as_view(), name='student-create'),
-    path('students/<int:pk>/', StudentRetrieveUpdateDestroyView.as_view(), name='student-detail'),
-    path('students/update/<int:pk>/', StudentRetrieveUpdateDestroyView.as_view(), name='student-update'),
-    path('students/delete/<int:pk>/', StudentRetrieveUpdateDestroyView.as_view(), name='student-delete'),
+    path('students/<int:pk>/', StudentRetrieveUpdateDestroyView.as_view(), name='student-detail-delete'),
+    path('students/update/<int:pk>/', StudentUpdateAPIView.as_view(), name='student-update'),
     path('students/', StudentListAPIView.as_view(), name='student-list'),
+    path('students/by-group/<int:group_id>/', StudentListGroupAPIView.as_view(), name='student-by-group'),
 ]

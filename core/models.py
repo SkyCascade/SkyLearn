@@ -37,7 +37,7 @@ class CourseAllocation(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='course_allocations',
-        limit_choices_to={'is_staff': True}
+        limit_choices_to={'is_lecturer': True}
     )
     courses = models.ManyToManyField(Course, related_name='course_allocations')
     semester = models.ForeignKey('core.Semester', on_delete=models.CASCADE, related_name='course_allocations')
@@ -75,7 +75,7 @@ class Program(models.Model):
         verbose_name_plural = "Programs"
 
     def __str__(self):
-        return self.name_ru
+        return self.name
 
 
 class AcademicYear(models.Model):
@@ -92,7 +92,7 @@ class AcademicYear(models.Model):
     is_current = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.year} - {self.program.name_ru}"
+        return f"{self.year} - {self.program.name}"
 
 
 class Semester(models.Model):

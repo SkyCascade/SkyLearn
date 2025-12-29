@@ -45,12 +45,11 @@ class SemesterCreateAPIView(generics.CreateAPIView):
 
     def get_serializer_context(self):
         """giving admin to serializer context"""
+        context = super().get_serializer_context()
         if self.request.user.is_superuser:
-            admin = self.request.user
+            context["admin"] = self.request.user
         else:
             raise PermissionDenied("only admins can access this view")
-        context = super().get_serializer_context()
-        context["admin"] = admin
         return context
 
 class SemesterUpdateAPIView(generics.UpdateAPIView):
@@ -199,7 +198,7 @@ class CourseListAPIView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.is_superuser:
-            return Course.objects.filter(admin=user).order_by("title")
+            return Course.objects.filter(admin=user).order_by("name")
         else:
             raise PermissionDenied("Only superusers can access this view.")
     
@@ -228,6 +227,7 @@ class CourseRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         context = super().get_serializer_context()
         context["admin"] = self.request.user
         return context
+    
 
 ### course allocation views
 
@@ -264,3 +264,13 @@ class CourseAllocationRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestro
         context = super().get_serializer_context()
         context["admin"] = self.request.user
         return context
+    
+
+class TeacherCourseAllocations(generics.ListAPIView):
+    serializer_class = CourseAllocationListSerializer
+    permission_classes = [IsLecturer]
+
+    def get_queryset(self):
+        user = self.request.user
+        return CourseAllocation.objects.filter(lecturer=user)
+        raise PermissionDenied("Only lecturers can access this view.")
