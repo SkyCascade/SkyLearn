@@ -66,7 +66,6 @@ class ScheduleItemViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['course', 'group', 'day']
-    ordering_fields = ['day', 'start', 'order']
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -181,11 +180,6 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         'Student', 'Student__student', 'shcedule', 'shcedule__course', 'shcedule__group'
     ).all()
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['Student', 'status', 'shcedule', 'shcedule__course', 'shcedule__day']
-    search_fields = ['Student__student__first_name', 'Student__student__last_name', 'shcedule__course__title']
-    ordering_fields = ['shcedule__day', 'shcedule__start']
-    ordering = ['shcedule__day', 'shcedule__start']
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -197,7 +191,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         
         # Преподаватели видят посещаемость на своих занятиях
         elif user.is_lecturer:
-            from course.models import CourseAllocation
+            from core.models import CourseAllocation
             allocations = CourseAllocation.objects.filter(lecturer=user)
             
             # Фильтруем посещаемость по курсам и группам преподавателя
@@ -339,7 +333,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         
         # Проверяем права преподавателя
         if request.user.is_lecturer and not request.user.is_staff:
-            from course.models import CourseAllocation
+            from core.models import CourseAllocation
             # Проверяем, что преподаватель назначен на этот курс И группу
             has_permission = CourseAllocation.objects.filter(
                 lecturer=request.user,

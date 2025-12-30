@@ -178,13 +178,7 @@ class CourseWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ["name", "description"]
-    
-    def create(self, validated_data):
-        """
-        Автоматически устанавливаем admin из контекста
-        """
-        admin = self.context.get('admin')
-        return Course.objects.create(admin=admin, **validated_data)
+
     
     def update(self, instance, validated_data):
         """

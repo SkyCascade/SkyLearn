@@ -1,6 +1,6 @@
 from rest_framework import generics
 from rest_framework.exceptions import PermissionDenied, NotFound
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from django.contrib.auth import get_user_model
 from .models import AcademicYear, Semester, Program, Module, CourseAllocation, Course
 from .serializers import (
@@ -238,6 +238,13 @@ class CourseAllocationListAPIView(generics.ListAPIView):
     def get_queryset(self):
             return CourseAllocation.objects.filter(admin=self.request.user)
 
+class CourseAllocationListByGroupAPIView(generics.ListAPIView):
+    serializer_class = CourseAllocationListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        group_id = self.kwargs.get('group_id')
+        return CourseAllocation.objects.filter(group_id=group_id)
 
 class CourseAllocationCreateAPIView(generics.CreateAPIView):
     serializer_class = CourseAllocationWriteSerializer

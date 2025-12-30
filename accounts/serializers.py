@@ -101,7 +101,12 @@ class StudentListSerializer(serializers.ModelSerializer):
         model = Student
         fields = ["id", "student", "group"]
 
+class StudentListByGroupSerializer(serializers.ModelSerializer):
+    student = UserSerializer()
 
+    class Meta:
+        model = Student
+        fields = ["id", "student", "group"]
 
 class StudentWriteSerializer(serializers.ModelSerializer):
     student = serializers.DictField(write_only=True)

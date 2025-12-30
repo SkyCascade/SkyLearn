@@ -42,6 +42,10 @@ class User(AbstractUser):
         verbose_name_plural = "Users"
 
 
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+
 class Lecturer(models.Model):
     lecturer = models.OneToOneField(User, on_delete=models.CASCADE, related_name='lecturer_profile')
     admin = models.ForeignKey(
@@ -58,7 +62,11 @@ class Lecturer(models.Model):
         verbose_name_plural = "Lecturers"
 
     def __str__(self):
-        return self.lecturer.get_full_name
+        return self.lecturer.get_full_name()
+    
+    def get_full_name(self):
+        """Return the full name of the lecturer"""
+        return self.lecturer.get_full_name()
 
 
 class Group(models.Model):
@@ -109,7 +117,11 @@ class Student(models.Model):
         verbose_name_plural = "Students"
 
     def __str__(self):
-        return self.student.get_full_name
+        return self.student.get_full_name()
+    
+    def get_full_name(self):
+        """Return the full name of the student"""
+        return self.student.get_full_name()
 
 class Parent(models.Model):
     """

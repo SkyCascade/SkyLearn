@@ -1,6 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.views import APIView
+from attendance.permissions import IsLecturer
 from config import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -21,6 +22,7 @@ from .serializers import (
     StudentListSerializer, 
     StudentWriteSerializer,
     StudentUpdateSerializer,
+    StudentListByGroupSerializer,
 
     GroupListSerializer,
     GroupWriteSerializer,
@@ -72,8 +74,8 @@ class LecturerUpdateView(generics.UpdateAPIView):
 # ============================================================================  
 
 class StudentListGroupAPIView(generics.ListAPIView):
-    serializer_class = StudentListSerializer
-    permission_classes = [IsAdminUser]
+    serializer_class = StudentListByGroupSerializer
+    permission_classes = [IsLecturer]
 
     def get_queryset(self):
         group_id = self.kwargs.get('group_id')
@@ -341,4 +343,12 @@ class UserProfileView(APIView):
 
     def get(self, request):
         serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+        data = serializer.data
+        
+        # Если это студент, добавляем данные студента
+        if request.user.is_student and hasattr(request.user, 'student_profile'):
+            student = request.user.student_profile
+            student_serializer = StudentListSerializer(student)
+            data['student_data'] = student_serializer.data
+            
+        return Response(data)
