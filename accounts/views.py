@@ -18,6 +18,7 @@ from accounts.forms import (
     ProgramUpdateForm,
     StaffAddForm,
     StudentAddForm,
+    LearnerSelfRegistrationForm,
 )
 from accounts.models import Parent, Student, User
 from core.models import Semester, Session
@@ -53,16 +54,21 @@ def validate_username(request):
 
 def register(request):
     if request.method == "POST":
-        form = StudentAddForm(request.POST)
+        form = LearnerSelfRegistrationForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Account created successfully.")
+            user = form.save()
+            messages.success(
+                request,
+                f"🎉 Welcome to Women In FlutterFlow, {user.first_name}! "
+                f"A temporary password has been sent to {user.email}. "
+                f"Use your username '{user.username}' and the password from your email to log in.",
+            )
             return redirect("login")
         messages.error(
             request, "Something is not correct, please fill all fields correctly."
         )
     else:
-        form = StudentAddForm()
+        form = LearnerSelfRegistrationForm()
     return render(request, "registration/register.html", {"form": form})
 
 

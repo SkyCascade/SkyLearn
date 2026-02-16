@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{{ title }} | {% trans 'Women In FlutterFlow Academy' %}{% endblock title %}
 
 {% block content %}
 
@@ -29,7 +29,7 @@
         <thead>
             <tr>
                 <th>#</th>
-                <th>{% trans 'Lecturer' %}</th>
+                <th>{% trans 'Facilitator' %}</th>
                 <th>{% trans 'Courses' %}</th>
                 {% if request.user.is_superuser %}
                 <th>{% trans 'Action' %}</th>

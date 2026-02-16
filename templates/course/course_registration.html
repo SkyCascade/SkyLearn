@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{{ title }} | {% trans 'Women In FlutterFlow Academy' %}{% endblock title %}
 {% load static %}
 
 {% load crispy_forms_tags %}
@@ -39,7 +39,7 @@
             </div>
 
             <div class="table-responsive p-0 px-2 mt-2">
-                <div class="table-title"><u>{% trans 'First Semester:' %}</u></div>
+                <div class="table-title"><u>{% trans 'Phase 1 - Foundations:' %}</u></div>
                 <div class="table-shadow">
                     <table class="table">
                         <thead>
@@ -102,7 +102,7 @@
             </div>
 
             <div class="table-responsive p-0 px-2 mt-2">
-                <div class="table-title"><u>{% trans 'Second Semester:' %}</u></div>
+                <div class="table-title"><u>{% trans 'Phase 2 - Building:' %}</u></div>
                 <div class="table-shadow">
                     <table class="table">
                         <thead>
@@ -156,7 +156,7 @@
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td><b>{% trans 'Second semester credit(s):' %}</b> {{ total_sec_semester_credit }} </td>
+                                <td><b>{% trans 'Second phase credit(s):' %}</b> {{ total_sec_semester_credit }} </td>
                                 <td></td>
                             </tr>
                             <tr>

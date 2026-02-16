@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{{ title }} | {% trans 'Women In FlutterFlow Academy' %}{% endblock title %}
 {% load static %}
 
 {% block content %}
@@ -27,7 +27,7 @@
 </div>
 
 <br>
-<h4 class="title-1">{% trans 'Students result form' %} | {{ course|truncatechars:15 }}</h4>
+<h4 class="title-1">{% trans 'Learners result form' %} | {{ course|truncatechars:15 }}</h4>
 <p>{{ course.summary }}</p>
 
 {% include 'snippets/messages.html' %}
@@ -49,7 +49,7 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>{% trans 'Student' %}</th>
+                    <th>{% trans 'Learner' %}</th>
                     <th>{% trans 'Assignment' %}</th>
                     <th>{% trans 'Mid exam' %}</th>
                     <th>{% trans 'Quiz' %}</th>
@@ -102,7 +102,7 @@
                     <td></td>
                     <td>
                         <span class="text-danger">
-                            {% trans 'No Student.' %}
+                            {% trans 'No Learner.' %}
                         </span>
                     </td>
                     <td></td>

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %} {% trans 'Dashboard' %} | {% trans 'Learning management system' %} {% endblock title %}
+{% block title %} {% trans 'Dashboard' %} | {% trans 'Women In FlutterFlow Academy' %} {% endblock title %}
 {% load static %}
 
 {% block header %}
@@ -39,7 +39,7 @@
 		<div class="card-count p-3">
 			<h3><i class="fas fa-users bg-light-aqua"></i></h3>
 			<div class="text-right">
-				{% trans 'Students' %}
+				{% trans 'Learners' %}
 				<h2>{{ student_count }}</h2>
 			</div>
 		</div>
@@ -48,7 +48,8 @@
 		<div class="card-count p-3">
 			<h3><i class="fas fa-users bg-light-orange"></i></h3>
 			<div class="text-right">
-				{% trans 'Lecturers' %}
+				{% trans 'Facilitators' %}
+				{% trans 'Facilitators' %}
 				<h2>{{ lecturer_count }}</h2>
 			</div>
 		</div>
@@ -196,7 +197,7 @@ $(document).ready(function () {
     const data = {
         labels: labels,
         datasets: [{
-            label: gettext('Students'),
+            label: gettext('Learners'),
             backgroundColor: 'rgba(86, 224, 224, 0.5)',
             borderColor: 'rgb(86, 224, 224)',
             hoverBorderWidth: 3,
@@ -341,7 +342,7 @@ $(document).ready(function () {
             plugins: {
                 title: {
                     display: true,
-                    text: gettext('Students average grade (performance)'),
+                    text: gettext('Learners average grade (performance)'),
                     padding: 20
                 }
             }
@@ -354,7 +355,7 @@ $(document).ready(function () {
             gettext('Women')
         ],
         datasets: [{
-            label: gettext("Students Gender Dataset"),
+            label: gettext("Learners Gender Dataset"),
             data: [malesCount, femalesCount],
             backgroundColor: [
             'rgb(255, 99, 132)',
@@ -372,7 +373,7 @@ $(document).ready(function () {
             plugins: {
                 title: {
                     display: true,
-                    text: gettext('Students Gender'),
+                    text: gettext('Learners Gender'),
                     padding: 20
                 }
             }
@@ -386,7 +387,7 @@ $(document).ready(function () {
             gettext('BSc degree')
         ],
         datasets: [{
-            label: gettext("Lecturer Qualifications Dataset"),
+            label: gettext("Facilitator Qualifications Dataset"),
             data: [24, 30, 26],
             backgroundColor: [
             'rgb(255, 99, 132)',
@@ -404,7 +405,7 @@ $(document).ready(function () {
             plugins: {
                 title: {
                     display: true,
-                    text: gettext('Lecturer qualifications'),
+                    text: gettext('Facilitator qualifications'),
                     padding: 20
                 }
             }
@@ -418,7 +419,7 @@ $(document).ready(function () {
             gettext('BSc degree')
         ],
         datasets: [{
-            label: gettext("Students level"),
+            label: gettext("Learners level"),
             data: [14, 30, 56],
             backgroundColor: [
             'rgb(255, 99, 132)',
@@ -436,7 +437,7 @@ $(document).ready(function () {
             plugins: {
                 title: {
                     display: true,
-                    text: gettext('Student levels'),
+                    text: gettext('Learner levels'),
                     padding: 20
                 }
             }

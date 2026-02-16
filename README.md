@@ -1,14 +1,28 @@
-![Group 23](https://github.com/user-attachments/assets/4e84251a-27b0-462b-bd5e-fb0bcadc4694)
+# 💜 Women In FlutterFlow
 
-### The world’s most high-end designed, lightweight, and feature-rich learning management system.
+### Empowering Women to Build Professional Apps
 
-# SkyLearn: Open source learning management system
+## About This Program
 
-Learning management system using Django web framework. You might want to develop a learning management system (also known as a school/college management system) for a school/college organization, or simply for the purpose of learning the tech stack and enhancing your portfolio. In either case, this project would be a great way to get started. The aim is to create the world's most lightweight yet feature-rich learning management system. However, this is not possible without your support, so please give it a star ⭐️.
+**Women In FlutterFlow** is a women-led initiative dedicated to teaching women how to build professional mobile and web applications using FlutterFlow. Our mission is to bridge the gender gap in tech by providing accessible, hands-on education in no-code/low-code app development.
 
-_Documentation is under development_
+### 🎯 Our Mission
+- Empower women with the skills to build professional applications
+- Create a supportive community of women builders
+- Bridge the gender gap in mobile app development
+- Transform learners into confident app creators and entrepreneurs
 
-Let's enhance the project by contributing! 👩‍💻👩‍💻
+### 💪 What You'll Learn
+- FlutterFlow fundamentals and UI/UX design
+- Building responsive, professional interfaces
+- Firebase integration and backend setup
+- API connections and data management
+- Publishing apps to App Store and Google Play
+- Monetization and app business strategies
+
+_Built with Django LMS - Powered by community 💜_
+
+Let's build the future together! 👩‍💻💜
 
 <img width="1440" alt="screenshot" src="https://github.com/user-attachments/assets/08644f49-6ae0-4695-86cc-afe331c6f61a">
 
