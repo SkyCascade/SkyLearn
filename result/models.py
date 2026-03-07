@@ -5,7 +5,7 @@ from django.db import models
 from django.urls import reverse
 
 from accounts.models import Student
-from core.models import Semester
+from core.models import Cohort
 from course.models import Course
 
 A_PLUS = "A+"
@@ -147,14 +147,14 @@ class TakenCourse(models.Model):
         super().save(*args, **kwargs)
 
     def calculate_gpa(self):
-        current_semester = Semester.objects.filter(is_current_semester=True).first()
-        if not current_semester:
+        current_cohort = Cohort.objects.filter(is_current_cohort=True).first()
+        if not current_cohort:
             return Decimal("0.00")
 
         taken_courses = TakenCourse.objects.filter(
             student=self.student,
             course__level=self.student.level,
-            course__semester=current_semester.semester,
+            course__semester=current_cohort.cohort,
         )
 
         total_points = sum(tc.point for tc in taken_courses)

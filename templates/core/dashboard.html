@@ -44,70 +44,42 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-6 col-md-3 mb-3 px-2">
-		<div class="card-count p-3">
-			<h3><i class="fas fa-users bg-light-orange"></i></h3>
-			<div class="text-right">
-				{% trans 'Facilitators' %}
-				{% trans 'Facilitators' %}
-				<h2>{{ lecturer_count }}</h2>
-			</div>
-		</div>
-	</div>
-	<div class="col-6 col-md-3 mb-3 px-2">
-		<div class="card-count p-3">
-			<h3><i class="fas fa-users bg-light-red"></i></h3>
-			<div class="text-right">
-				{% trans 'Administrators' %}
-				<h2>{{ superuser_count }}</h2>
-			</div>
-		</div>
-	</div>
-	<div class="col-6 col-md-3 mb-3 px-2">
-		<div class="card-count p-3">
-			<h3><i class="fas fa-users bg-light-purple"></i></h3>
-			<div class="text-right">
-				{% trans 'Lab Assistance' %}
-				<h2>500</h2>
-			</div>
-		</div>
-	</div>
-	<div class="col-6 col-md-3 mb-3 px-2">
-		<div class="card-count p-3">
-			<h3><i class="fas fa-users bg-light-red"></i></h3>
-			<div class="text-right">
-				{% trans 'Librarians' %}
-				<h2>300</h2>
-			</div>
-		</div>
-	</div>
-	<div class="col-6 col-md-3 mb-3 px-2">
-		<div class="card-count p-3">
-			<h3><i class="fas fa-users bg-light-purple"></i></h3>
-			<div class="text-right">
-				{% trans 'Supervisors' %}
-				<h2>660</h2>
-			</div>
-		</div>
-	</div>
-	<div class="col-6 col-md-3 mb-3 px-2">
-		<div class="card-count p-3">
-			<h3><i class="fas fa-users bg-light-orange"></i></h3>
-			<div class="text-right pl-2">
-				{% trans 'Office Assistance' %}
-				<h2>1,700</h2>
-			</div>
-		</div>
-	</div>
-	<div class="col-6 col-md-3 mb-3 px-2">
-		<div class="card-count p-3">
-			<h3><i class="fas fa-users bg-light-aqua"></i></h3>
-			<div class="text-right">
-				{% trans 'Others' %}
-				<h2>1,250</h2>
-			</div>
-		</div>
-	</div>
+    <div class="col-6 col-md-3 mb-3 px-2">
+        <div class="card-count p-3">
+            <h3><i class="fas fa-chalkboard-teacher bg-light-orange"></i></h3>
+            <div class="text-right">
+                {% trans 'Facilitators' %}
+                <h2>{{ lecturer_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-3 px-2">
+        <div class="card-count p-3">
+            <h3><i class="fas fa-user-shield bg-light-red"></i></h3>
+            <div class="text-right">
+                {% trans 'Administrators' %}
+                <h2>{{ superuser_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-3 px-2">
+        <div class="card-count p-3">
+            <h3><i class="fas fa-book bg-light-purple"></i></h3>
+            <div class="text-right">
+                {% trans 'Active Courses' %}
+                <h2>{{ active_courses_count|default:'--' }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-3 px-2">
+        <div class="card-count p-3">
+            <h3><i class="fas fa-user-plus bg-light-aqua"></i></h3>
+            <div class="text-right">
+                {% trans 'Recent Registrations' %}
+                <h2>{{ recent_registrations_count|default:'--' }}</h2>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row px-2">
@@ -144,21 +116,21 @@
 </div>
 <br>
 <div class="bg-white p-3">
-	<h5 class="border-bottom pb-2">{% trans 'School Demographics' %}</h5>
-	<div class="row">
-		<div class="col-md-4">
-			<i class="fas fa-expand-alt"></i>
-			<canvas id="gender"></canvas>
-		</div>
-		<div class="col-md-4">
-			<i class="fas fa-expand-alt"></i>
-			<canvas id="ethnicity"></canvas>
-		</div>
-		<div class="col-md-4">
-			<i class="fas fa-expand-alt"></i>
-			<canvas id="language"></canvas>
-		</div>
-	</div>
+    <h5 class="border-bottom pb-2">{% trans 'Community Insights' %}</h5>
+    <div class="row">
+        <div class="col-md-4">
+            <i class="fas fa-expand-alt"></i>
+            <canvas id="gender"></canvas>
+        </div>
+        <div class="col-md-4">
+            <i class="fas fa-expand-alt"></i>
+            <canvas id="ethnicity"></canvas>
+        </div>
+        <div class="col-md-4">
+            <i class="fas fa-expand-alt"></i>
+            <canvas id="language"></canvas>
+        </div>
+    </div>
 </div>
 
 {% endblock content %}
@@ -382,9 +354,9 @@ $(document).ready(function () {
 
     const dataQualification = {
         labels: [
-            gettext('PHD'),
-            gettext('Masters'),
-            gettext('BSc degree')
+            gettext('Beginner'),
+            gettext('Intermediate'),
+            gettext('Advanced')
         ],
         datasets: [{
             label: gettext("Facilitator Qualifications Dataset"),
@@ -414,9 +386,9 @@ $(document).ready(function () {
 
     const dataLevels = {
         labels: [
-            gettext('PHD'),
-            gettext('Masters'),
-            gettext('BSc degree')
+            gettext('Mentor'),
+            gettext('Facilitator'),
+            gettext('Learner')
         ],
         datasets: [{
             label: gettext("Learners level"),

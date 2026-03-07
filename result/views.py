@@ -22,7 +22,7 @@ from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 
-from core.models import Session, Semester
+from core.models import ProgramCycle, Cohort
 from course.models import Course
 from accounts.models import Student
 from accounts.decorators import lecturer_required, student_required
@@ -42,13 +42,13 @@ def add_score(request):
     Shows a page where a lecturer will select a course allocated
     to him for score entry. in a specific semester and session
     """
-    current_session = Session.objects.filter(is_current_session=True).first()
-    current_semester = Semester.objects.filter(
-        is_current_semester=True, session=current_session
+    current_session = ProgramCycle.objects.filter(is_current_program_cycle=True).first()
+    current_semester = Cohort.objects.filter(
+        is_current_cohort=True, program_cycle=current_session
     ).first()
 
     if not current_session or not current_semester:
-        messages.error(request, "No active semester found.")
+        messages.error(request, "No active cohort found.")
         return render(request, "result/add_score.html")
 
     # semester = Course.objects.filter(
@@ -72,9 +72,9 @@ def add_score_for(request, id):
     Shows a page where a lecturer will add score for students that
     are taking courses allocated to him in a specific semester and session
     """
-    current_session = Session.objects.get(is_current_session=True)
+    current_session = ProgramCycle.objects.get(is_current_program_cycle=True)
     current_semester = get_object_or_404(
-        Semester, is_current_semester=True, session=current_session
+        Cohort, is_current_cohort=True, program_cycle=current_session
     )
     if request.method == "GET":
         courses = Course.objects.filter(
@@ -277,15 +277,15 @@ def assessment_result(request):
 @login_required
 @lecturer_required
 def result_sheet_pdf_view(request, id):
-    current_semester = Semester.objects.get(is_current_semester=True)
-    current_session = Session.objects.get(is_current_session=True)
+    current_semester = Cohort.objects.get(is_current_cohort=True)
+    current_session = ProgramCycle.objects.get(is_current_program_cycle=True)
     result = TakenCourse.objects.filter(course__pk=id)
     course = get_object_or_404(Course, id=id)
     no_of_pass = TakenCourse.objects.filter(course__pk=id, comment="PASS").count()
     no_of_fail = TakenCourse.objects.filter(course__pk=id, comment="FAIL").count()
     fname = (
         str(current_semester)
-        + "_semester_"
+        + "_cohort_"
         + str(current_session)
         + "_"
         + str(course)
@@ -337,7 +337,7 @@ def result_sheet_pdf_view(request, id):
     title = (
         "<b> "
         + str(current_semester)
-        + " Semester "
+        + " Cohort "
         + str(current_session)
         + " Result Sheet</b>"
     )
@@ -449,7 +449,7 @@ def result_sheet_pdf_view(request, id):
 @login_required
 @student_required
 def course_registration_form(request):
-    current_session = Session.objects.get(is_current_session=True)
+    current_session = ProgramCycle.objects.get(is_current_program_cycle=True)
     courses = TakenCourse.objects.filter(student__student__id=request.user.id)
     fname = request.user.username + ".pdf"
     fname = fname.replace("/", "-")
@@ -521,7 +521,7 @@ def course_registration_form(request):
         ],
         [
             Paragraph(
-                "<b>Session : " + current_session.session.upper() + "</b>",
+                "<b>Session : " + current_session.program_cycle.upper() + "</b>",
                 styles["Normal"],
             ),
             Paragraph("<b>Level: " + student.level + "</b>", styles["Normal"]),
@@ -537,11 +537,11 @@ def course_registration_form(request):
     semester.fontName = "Helvetica"
     semester.fontSize = 9
     semester.leading = 18
-    semester_title = "<b>FIRST SEMESTER</b>"
+    semester_title = "<b>FIRST COHORT</b>"
     semester_title = Paragraph(semester_title, semester)
     Story.append(semester_title)
 
-    # FIRST SEMESTER
+    # FIRST COHORT
     count = 0
     header = [
         (
@@ -611,12 +611,12 @@ def course_registration_form(request):
     semester.fontSize = 8
     semester.leading = 18
     semester_title = (
-        "<b>Total Second First Credit : " + str(first_semester_unit) + "</b>"
+        "<b>Total First Cohort Credit : " + str(first_semester_unit) + "</b>"
     )
     semester_title = Paragraph(semester_title, semester)
     Story.append(semester_title)
 
-    # FIRST SEMESTER ENDS HERE
+    # FIRST COHORT ENDS HERE
     Story.append(Spacer(1, 0.6 * inch))
 
     style = getSampleStyleSheet()
@@ -625,10 +625,10 @@ def course_registration_form(request):
     semester.fontName = "Helvetica"
     semester.fontSize = 9
     semester.leading = 18
-    semester_title = "<b>SECOND SEMESTER</b>"
+    semester_title = "<b>SECOND COHORT</b>"
     semester_title = Paragraph(semester_title, semester)
     Story.append(semester_title)
-    # SECOND SEMESTER
+    # SECOND COHORT
     count = 0
     header = [
         (
@@ -701,7 +701,7 @@ def course_registration_form(request):
     semester.fontSize = 8
     semester.leading = 18
     semester_title = (
-        "<b>Total Second Semester Credit : " + str(second_semester_unit) + "</b>"
+        "<b>Total Second Cohort Credit : " + str(second_semester_unit) + "</b>"
     )
     semester_title = Paragraph(semester_title, semester)
     Story.append(semester_title)
@@ -727,7 +727,7 @@ def course_registration_form(request):
     certification_text = Paragraph(certification_text, certification)
     Story.append(certification_text)
 
-    # FIRST SEMESTER ENDS HERE
+    # FIRST COHORT ENDS HERE
 
     logo = settings.STATICFILES_DIRS[0] + "/img/brand.png"
     im_logo = Image(logo, 1 * inch, 1 * inch)

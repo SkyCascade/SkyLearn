@@ -114,7 +114,7 @@
                 <div class="dashboard-description">
                     <p><strong>{% trans 'Last login' %}:</strong> {{ user.last_login }}</p>
                     {% if current_semester and current_session %}
-                    <p><strong>{% trans 'Academic Year' %}:</strong> {{ current_semester }} {% trans 'Semester' %} {{ current_session }}</p>
+                    <p><strong>{% trans 'Program Cycle' %}:</strong> {{ current_semester }} {% trans 'Cohort' %} {{ current_session }}</p>
                     {% endif %}
                     <p><strong>{% trans 'Registered Date' %}:</strong> {{ user.date_joined|date }}</p>
                 </div>

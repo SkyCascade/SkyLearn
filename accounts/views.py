@@ -21,7 +21,7 @@ from accounts.forms import (
     LearnerSelfRegistrationForm,
 )
 from accounts.models import Parent, Student, User
-from core.models import Semester, Session
+from core.models import Cohort, ProgramCycle
 from course.models import Course
 from result.models import TakenCourse
 
@@ -80,20 +80,20 @@ def register(request):
 @login_required
 def profile(request):
     """Show profile of the current user."""
-    current_session = Session.objects.filter(is_current_session=True).first()
-    current_semester = Semester.objects.filter(
-        is_current_semester=True, session=current_session
+    current_program_cycle = ProgramCycle.objects.filter(is_current_program_cycle=True).first()
+    current_cohort = Cohort.objects.filter(
+        is_current_cohort=True, program_cycle=current_program_cycle
     ).first()
 
     context = {
         "title": request.user.get_full_name,
-        "current_session": current_session,
-        "current_semester": current_semester,
+        "current_session": current_program_cycle,
+        "current_semester": current_cohort,
     }
 
     if request.user.is_lecturer:
         courses = Course.objects.filter(
-            allocated_course__lecturer__pk=request.user.id, semester=current_semester
+            allocated_course__lecturer__pk=request.user.id, semester=current_cohort
         )
         context["courses"] = courses
         return render(request, "accounts/profile.html", context)
@@ -126,22 +126,22 @@ def profile_single(request, user_id):
     if request.user.id == user_id:
         return redirect("profile")
 
-    current_session = Session.objects.filter(is_current_session=True).first()
-    current_semester = Semester.objects.filter(
-        is_current_semester=True, session=current_session
+    current_program_cycle = ProgramCycle.objects.filter(is_current_program_cycle=True).first()
+    current_cohort = Cohort.objects.filter(
+        is_current_cohort=True, program_cycle=current_program_cycle
     ).first()
     user = get_object_or_404(User, pk=user_id)
 
     context = {
         "title": user.get_full_name,
         "user": user,
-        "current_session": current_session,
-        "current_semester": current_semester,
+        "current_session": current_program_cycle,
+        "current_semester": current_cohort,
     }
 
     if user.is_lecturer:
         courses = Course.objects.filter(
-            allocated_course__lecturer__pk=user_id, semester=current_semester
+            allocated_course__lecturer__pk=user_id, semester=current_cohort
         )
         context.update(
             {

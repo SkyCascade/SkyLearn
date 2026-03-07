@@ -23,7 +23,7 @@
 		{% url 'home' as hom %} {% url 'dashboard' as dash %} {% url 'profile' as prof %}
 		{% url 'lecturer_list' as lec %}
 		{% url 'student_list' as stu %} {% url 'course_allocation_view' as cav %}
-		{% url 'programs' as pro %} {% url 'session_list' as sess %} {% url 'semester_list' as sem %}
+		{% url 'programs' as pro %} {% url 'program_cycle_list' as sess %} {% url 'cohort_list' as sem %}
 		{% url 'add_score' as ascore %} {% url 'grade_results' as vr %}{% url 'ass_results' as ar %}
 		{% url 'course_registration' as cr %} {% url 'edit_profile' as ep %} {% url 'change_password' as cp %}
 		{% url 'quiz_progress' as qpr %} {% url 'quiz_marking' as qce %} {% url 'user_course_list' as ucl %}
@@ -82,10 +82,10 @@
 				<a href="{% url 'course_allocation_view' %}"><i class="fas fa-tasks"></i>{% trans 'Course Allocation' %}</a>
 			</li>
 			<li class="{% if request.path == sess %}active{% endif %}">
-				<a href="{% url 'session_list' %}"><i class="fas fa-calendar-week"></i>{% trans 'Manage Session' %}</a>
+				<a href="{% url 'program_cycle_list' %}"><i class="fas fa-calendar-week"></i>{% trans 'Manage Program Cycles' %}</a>
 			</li>
 			<li class="{% if request.path == sem %}active{% endif %}">
-				<a href="{% url 'semester_list' %}"><i class="fas fa-calendar-alt"></i>{% trans 'Manage Phases' %}</a>
+				<a href="{% url 'cohort_list' %}"><i class="fas fa-calendar-alt"></i>{% trans 'Manage Cohorts' %}</a>
 			</li>
 			{% endif %}
 

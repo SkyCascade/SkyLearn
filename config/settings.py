@@ -268,8 +268,11 @@ FIRST = "First"
 SECOND = "Second"
 THIRD = "Third"
 
-SEMESTER_CHOICES = (
+COHORT_CHOICES = (
     (FIRST, _("Phase 1 - Foundations")),
     (SECOND, _("Phase 2 - Building")),
     (THIRD, _("Phase 3 - Launch")),
 )
+
+# Backward-compatible alias
+SEMESTER_CHOICES = COHORT_CHOICES

@@ -13,10 +13,10 @@ from course.models import (
     CourseOffer,
 )
 from accounts.models import User, DepartmentHead
-from core.models import Session
+from core.models import ProgramCycle
 
 from .generate_fake_accounts_data import UserFactory, ProgramFactory
-from .generate_fake_core_data import SessionFactory
+from .generate_fake_core_data import ProgramCycleFactory
 
 fake = Faker()
 
@@ -73,7 +73,7 @@ class CourseFactory(DjangoModelFactory):
     program: Type[Program] = SubFactory(ProgramFactory)
     level: str = Iterator(["Beginner", "Intermediate", "Advanced"])
     year: int = LazyAttribute(lambda x: fake.random_int(min=1, max=4))
-    semester: str = Iterator([choice[0] for choice in settings.SEMESTER_CHOICES])
+    semester: str = Iterator([choice[0] for choice in settings.COHORT_CHOICES])
     is_elective: bool = LazyAttribute(lambda x: fake.boolean())
 
 
@@ -90,7 +90,7 @@ class CourseAllocationFactory(DjangoModelFactory):
         model = CourseAllocation
 
     lecturer: Type[User] = SubFactory(UserFactory, is_lecturer=True)
-    session: Type[Session] = SubFactory(SessionFactory)
+    session: Type[ProgramCycle] = SubFactory(ProgramCycleFactory)
 
 
 class UploadFactory(DjangoModelFactory):
@@ -160,9 +160,9 @@ def populate_course_allocation(num_allocations: int) -> None:
     Args:
         num_allocations (int): The number of CourseAllocation instances to generate.
     """
-    # Fetch all available courses and sessions
+    # Fetch all available courses and program cycles
     courses = list(Course.objects.all())
-    sessions = list(Session.objects.all())
+    sessions = list(ProgramCycle.objects.all())
 
     if not courses:
         print("No courses found. Please add some courses before running this script.")

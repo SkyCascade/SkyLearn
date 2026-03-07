@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Women In FlutterFlow Academy' %}{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans 'Program Cycle List' %}</li>
+    </ol>
+</nav>
+
+{% if request.user.is_superuser %}
+<div class="manage-wrap">
+    <a class="btn btn-primary" href="{% url 'add_program_cycle' %}"><i class="fas fa-plus"></i>{% trans 'Add New Program Cycle' %}</a>
+</div>
+{% endif %}
+
+<div class="title-1"><i class="fas fa-calendar-week"></i>{% trans 'Program Cycle List' %}</div>
+
+{% include 'snippets/messages.html' %}
+
+<div class="table-responsive table-shadow p-0 mt-5">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th> {% trans 'Program Cycle' %} </th>
+                <th> {% trans 'Is Current Program Cycle' %} </th>
+                <th> {% trans 'Next Program Cycle Begins' %} </th>
+                {% if request.user.is_superuser %}
+                <th> {% trans 'Actions' %} </th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for program_cycle in program_cycles %}
+            <tr>
+                <td>{{ forloop.counter }}.</td>
+                <td>{{ program_cycle.program_cycle }}</td>
+                <th>
+                    {% if program_cycle.is_current_program_cycle == True %}
+                    <i class="fas fa-check-circle fa-1-5x"></i>
+                    {% else %}
+                    <i class="fas fa-times-circle fa-1-5x danger"></i>
+                    {% endif %}
+                </th>
+                <td>{{ program_cycle.next_program_cycle_begins }}</td>
+
+                {% if request.user.is_superuser %}
+                <td> <div class="update-delete">
+                    <a href="{% url 'edit_program_cycle' pk=program_cycle.pk %}" class="update" title="{% trans 'Edit' %}"><i class="fas fa-pencil-alt"></i></a>
+                    <a href="{% url 'delete_program_cycle' pk=program_cycle.pk %}" class="delete" title="{% trans 'Delete' %}"><i class="fas fa-trash-alt"></i></a>
+                    </div>
+                </td>
+                {% endif %}
+                
+                {% empty %}
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>
+                  <span class="text-danger">
+                    {% trans 'No Program Cycle.' %}
+                    {% if request.user.is_superuser %}
+                    <a href="{% url 'add_program_cycle' %}">
+                    <i class="primary" style="font-size: 22px;">
+                        {% trans 'Add Program Cycle Now.' %}
+                    </i>
+                    {% endif %}
+                    </a>
+                  </span>
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                </tr>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}
