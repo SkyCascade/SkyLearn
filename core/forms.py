@@ -31,7 +31,11 @@ class ProgramCycleForm(forms.ModelForm):
 
     class Meta:
         model = ProgramCycle
-        fields = ["program_cycle", "is_current_program_cycle", "next_program_cycle_begins"]
+        fields = [
+            "program_cycle",
+            "is_current_program_cycle",
+            "next_program_cycle_begins",
+        ]
 
 
 # Backward-compatible alias

@@ -6,7 +6,14 @@ from django.utils import timezone
 from faker import Faker
 from factory.django import DjangoModelFactory
 from factory import SubFactory, LazyAttribute, Iterator, LazyFunction
-from core.models import ActivityLog, NewsAndEvents, ProgramCycle, Cohort, COHORT_CHOICES, POST
+from core.models import (
+    ActivityLog,
+    NewsAndEvents,
+    ProgramCycle,
+    Cohort,
+    COHORT_CHOICES,
+    POST,
+)
 
 # Set up Django environment
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
@@ -52,7 +59,9 @@ class ProgramCycleFactory(DjangoModelFactory):
     class Meta:
         model = ProgramCycle
 
-    program_cycle: str = LazyAttribute(lambda x: str(fake.random_int(min=2020, max=2030)))
+    program_cycle: str = LazyAttribute(
+        lambda x: str(fake.random_int(min=2020, max=2030))
+    )
     is_current_program_cycle: bool = fake.boolean(chance_of_getting_true=50)
     next_program_cycle_begins = LazyAttribute(lambda x: fake.future_datetime())
 
@@ -118,7 +127,9 @@ def generate_fake_core_data(
     print(f"Generated {num_news_and_events} NewsAndEvents instances.")
 
     # Generate fake ProgramCycle instances
-    program_cycles: List[ProgramCycle] = ProgramCycleFactory.create_batch(num_program_cycles)
+    program_cycles: List[ProgramCycle] = ProgramCycleFactory.create_batch(
+        num_program_cycles
+    )
     print(f"Generated {num_program_cycles} ProgramCycle instances.")
 
     # Generate fake Cohort instances

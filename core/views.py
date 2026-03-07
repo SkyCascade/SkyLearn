@@ -29,9 +29,12 @@ def dashboard_view(request):
 
     # Count active courses (current cohort)
     from course.models import Course
+
     current_cohort = Cohort.objects.filter(is_current_cohort=True).first()
     if current_cohort:
-        active_courses_count = Course.objects.filter(semester=current_cohort.cohort).count()
+        active_courses_count = Course.objects.filter(
+            semester=current_cohort.cohort
+        ).count()
     else:
         active_courses_count = 0
 
@@ -39,8 +42,11 @@ def dashboard_view(request):
     from accounts.models import User
     from django.utils import timezone
     from datetime import timedelta
+
     thirty_days_ago = timezone.now() - timedelta(days=30)
-    recent_registrations_count = User.objects.filter(date_joined__gte=thirty_days_ago).count()
+    recent_registrations_count = User.objects.filter(
+        date_joined__gte=thirty_days_ago
+    ).count()
 
     context = {
         "student_count": User.objects.get_student_count(),
@@ -104,8 +110,12 @@ def delete_post(request, pk):
 @lecturer_required
 def program_cycle_list_view(request):
     """Show list of all program cycles"""
-    program_cycles = ProgramCycle.objects.all().order_by("-is_current_program_cycle", "-program_cycle")
-    return render(request, "core/program_cycle_list.html", {"program_cycles": program_cycles})
+    program_cycles = ProgramCycle.objects.all().order_by(
+        "-is_current_program_cycle", "-program_cycle"
+    )
+    return render(
+        request, "core/program_cycle_list.html", {"program_cycles": program_cycles}
+    )
 
 
 @login_required

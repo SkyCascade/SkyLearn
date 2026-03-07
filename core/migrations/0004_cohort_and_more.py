@@ -7,66 +7,66 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('course', '0005_alter_course_level_alter_course_semester'),
-        ('core', '0003_newsandevents_summary_es_newsandevents_summary_fr_and_more'),
+        ("course", "0005_alter_course_level_alter_course_semester"),
+        ("core", "0003_newsandevents_summary_es_newsandevents_summary_fr_and_more"),
     ]
 
     operations = [
         # Step 1: Rename Session model to ProgramCycle
         migrations.RenameModel(
-            old_name='Session',
-            new_name='ProgramCycle',
+            old_name="Session",
+            new_name="ProgramCycle",
         ),
         # Step 2: Rename ProgramCycle fields
         migrations.RenameField(
-            model_name='programcycle',
-            old_name='is_current_session',
-            new_name='is_current_program_cycle',
+            model_name="programcycle",
+            old_name="is_current_session",
+            new_name="is_current_program_cycle",
         ),
         migrations.RenameField(
-            model_name='programcycle',
-            old_name='next_session_begins',
-            new_name='next_program_cycle_begins',
+            model_name="programcycle",
+            old_name="next_session_begins",
+            new_name="next_program_cycle_begins",
         ),
         migrations.RenameField(
-            model_name='programcycle',
-            old_name='session',
-            new_name='program_cycle',
+            model_name="programcycle",
+            old_name="session",
+            new_name="program_cycle",
         ),
         # Step 3: Set db_table so the table name stays core_session
         migrations.AlterModelTable(
-            name='programcycle',
-            table='core_session',
+            name="programcycle",
+            table="core_session",
         ),
         # Step 4: Rename Semester model to Cohort
         migrations.RenameModel(
-            old_name='Semester',
-            new_name='Cohort',
+            old_name="Semester",
+            new_name="Cohort",
         ),
         # Step 5: Rename Cohort fields
         migrations.RenameField(
-            model_name='cohort',
-            old_name='semester',
-            new_name='cohort',
+            model_name="cohort",
+            old_name="semester",
+            new_name="cohort",
         ),
         migrations.RenameField(
-            model_name='cohort',
-            old_name='is_current_semester',
-            new_name='is_current_cohort',
+            model_name="cohort",
+            old_name="is_current_semester",
+            new_name="is_current_cohort",
         ),
         migrations.RenameField(
-            model_name='cohort',
-            old_name='next_semester_begins',
-            new_name='next_cohort_begins',
+            model_name="cohort",
+            old_name="next_semester_begins",
+            new_name="next_cohort_begins",
         ),
         migrations.RenameField(
-            model_name='cohort',
-            old_name='session',
-            new_name='program_cycle',
+            model_name="cohort",
+            old_name="session",
+            new_name="program_cycle",
         ),
         # Step 6: Set db_table so the table name stays core_semester
         migrations.AlterModelTable(
-            name='cohort',
-            table='core_semester',
+            name="cohort",
+            table="core_semester",
         ),
     ]

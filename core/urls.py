@@ -26,8 +26,16 @@ urlpatterns = [
     # Program Cycle (formerly Session) urls
     path("program-cycle/", program_cycle_list_view, name="program_cycle_list"),
     path("program-cycle/add/", program_cycle_add_view, name="add_program_cycle"),
-    path("program-cycle/<int:pk>/edit/", program_cycle_update_view, name="edit_program_cycle"),
-    path("program-cycle/<int:pk>/delete/", program_cycle_delete_view, name="delete_program_cycle"),
+    path(
+        "program-cycle/<int:pk>/edit/",
+        program_cycle_update_view,
+        name="edit_program_cycle",
+    ),
+    path(
+        "program-cycle/<int:pk>/delete/",
+        program_cycle_delete_view,
+        name="delete_program_cycle",
+    ),
     # Backward-compatible aliases
     path("session/", program_cycle_list_view, name="session_list"),
     path("session/add/", program_cycle_add_view, name="add_session"),

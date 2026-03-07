@@ -110,7 +110,10 @@ class CourseAllocation(models.Model):
     )
     courses = models.ManyToManyField(Course, related_name="allocated_course")
     session = models.ForeignKey(
-        "core.ProgramCycle", on_delete=models.CASCADE, blank=True, null=True,
+        "core.ProgramCycle",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
         db_column="session_id",
     )
 

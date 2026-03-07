@@ -80,7 +80,9 @@ def register(request):
 @login_required
 def profile(request):
     """Show profile of the current user."""
-    current_program_cycle = ProgramCycle.objects.filter(is_current_program_cycle=True).first()
+    current_program_cycle = ProgramCycle.objects.filter(
+        is_current_program_cycle=True
+    ).first()
     current_cohort = Cohort.objects.filter(
         is_current_cohort=True, program_cycle=current_program_cycle
     ).first()
@@ -126,7 +128,9 @@ def profile_single(request, user_id):
     if request.user.id == user_id:
         return redirect("profile")
 
-    current_program_cycle = ProgramCycle.objects.filter(is_current_program_cycle=True).first()
+    current_program_cycle = ProgramCycle.objects.filter(
+        is_current_program_cycle=True
+    ).first()
     current_cohort = Cohort.objects.filter(
         is_current_cohort=True, program_cycle=current_program_cycle
     ).first()
