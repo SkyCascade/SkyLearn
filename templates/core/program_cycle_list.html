@@ -7,17 +7,17 @@
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{% trans 'Session List' %}</li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans 'Program Cycle List' %}</li>
     </ol>
 </nav>
 
 {% if request.user.is_superuser %}
 <div class="manage-wrap">
-    <a class="btn btn-primary" href="{% url 'add_session' %}"><i class="fas fa-plus"></i>{% trans 'Add New Session' %}</a>
+    <a class="btn btn-primary" href="{% url 'add_program_cycle' %}"><i class="fas fa-plus"></i>{% trans 'Add New Program Cycle' %}</a>
 </div>
 {% endif %}
 
-<div class="title-1"><i class="fas fa-calendar-week"></i>{% trans 'Session List' %}</div>
+<div class="title-1"><i class="fas fa-calendar-week"></i>{% trans 'Program Cycle List' %}</div>
 
 {% include 'snippets/messages.html' %}
 
@@ -26,32 +26,32 @@
         <thead>
             <tr>
                 <th>#</th>
-                <th> {% trans 'Session' %} </th>
-                <th> {% trans 'Is Current Session' %} </th>
-                <th> {% trans 'Next Session Begins' %} </th>
+                <th> {% trans 'Program Cycle' %} </th>
+                <th> {% trans 'Is Current Program Cycle' %} </th>
+                <th> {% trans 'Next Program Cycle Begins' %} </th>
                 {% if request.user.is_superuser %}
                 <th> {% trans 'Actions' %} </th>
                 {% endif %}
             </tr>
         </thead>
         <tbody>
-            {% for session in sessions %}
+            {% for program_cycle in program_cycles %}
             <tr>
                 <td>{{ forloop.counter }}.</td>
-                <td>{{ session.session }}</td>
+                <td>{{ program_cycle.program_cycle }}</td>
                 <th>
-                    {% if session.is_current_session == True %}
+                    {% if program_cycle.is_current_program_cycle == True %}
                     <i class="fas fa-check-circle fa-1-5x"></i>
                     {% else %}
                     <i class="fas fa-times-circle fa-1-5x danger"></i>
                     {% endif %}
                 </th>
-                <td>{{ session.next_session_begins }}</td>
+                <td>{{ program_cycle.next_program_cycle_begins }}</td>
 
                 {% if request.user.is_superuser %}
                 <td> <div class="update-delete">
-                    <a href="{% url 'edit_session' pk=session.pk %}" class="update" title="{% trans 'Edit' %}"><i class="fas fa-pencil-alt"></i></a>
-                    <a href="{% url 'delete_session' pk=session.pk %}" class="delete" title="{% trans 'Delete' %}"><i class="fas fa-trash-alt"></i></a>
+                    <a href="{% url 'edit_program_cycle' pk=program_cycle.pk %}" class="update" title="{% trans 'Edit' %}"><i class="fas fa-pencil-alt"></i></a>
+                    <a href="{% url 'delete_program_cycle' pk=program_cycle.pk %}" class="delete" title="{% trans 'Delete' %}"><i class="fas fa-trash-alt"></i></a>
                     </div>
                 </td>
                 {% endif %}
@@ -62,11 +62,11 @@
                   <td></td>
                   <td>
                   <span class="text-danger">
-                    {% trans 'No Session.' %}
+                    {% trans 'No Program Cycle.' %}
                     {% if request.user.is_superuser %}
-                    <a href="{% url 'add_session' %}">
+                    <a href="{% url 'add_program_cycle' %}">
                     <i class="primary" style="font-size: 22px;">
-                        {% trans 'Add Session Now.' %}
+                        {% trans 'Add Program Cycle Now.' %}
                     </i>
                     {% endif %}
                     </a>

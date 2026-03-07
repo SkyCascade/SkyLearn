@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{{ title }} | {% trans 'Women In FlutterFlow Academy' %}{% endblock title %}
 
 {% block content %}
 
@@ -17,7 +17,7 @@
 <p>{{ student.level }} {% trans 'Result' %}</p>
 
 <div class="table-responsive">
-  <div class="table-title"><u>{% trans 'First Semester:' %}</u></div>
+  <div class="table-title"><u>{% trans 'Phase 1 - Foundations:' %}</u></div>
   <table class="table table-light">
     <thead>
       <tr>
@@ -64,7 +64,7 @@
       <th></th>
       <th></th>
       <th></th>
-      <th>{% trans 'Total first semester credit:' %} {{ total_first_semester_credit }}</th>
+      <th>{% trans 'Total first phase credit:' %} {{ total_first_semester_credit }}</th>
     </tr>
     <tr class="bg-orange text-white">
       <th></th>
@@ -73,7 +73,7 @@
       <th></th>
       <th></th>
       <th></th>
-      <th>{% trans 'First Semester GPA:' %} {{ result.gpa }}</th>
+      <th>{% trans 'Phase 1 - Foundations GPA:' %} {{ result.gpa }}</th>
     </tr>
     {% endif %}
     {% endfor %}
@@ -82,7 +82,7 @@
 </div>
   
 <div class="table-responsive p-0 px-2 mt-3">
-  <div class="table-title"><u>{% trans 'Second Semester:' %}</u></div>
+  <div class="table-title"><u>{% trans 'Phase 2 - Building:' %}</u></div>
   <table class="table table-light">
     <thead>
       <tr>
@@ -124,7 +124,7 @@
     {% if result.semester == "Second" %}
     <tr style="background: #f3f2f2;">
       <th></th>
-      <th>{% trans 'Total second semester credit:' %} {{ total_sec_semester_credit }}</th>
+      <th>{% trans 'Total second phase credit:' %} {{ total_sec_semester_credit }}</th>
       <th></th>
       <th></th>
       <th></th>
@@ -138,7 +138,7 @@
       <th></th>
       <th></th>
       <th></th>
-      <th>{% trans 'Second Semester GPA:' %} {{ result.gpa }}</th>
+      <th>{% trans 'Phase 2 - Building GPA:' %} {{ result.gpa }}</th>
     </tr>
     <tr style="background: #fd7e14; color: #fff;">
       <th></th>
@@ -162,14 +162,14 @@
   <tr>
     <th></th>
     <th></th>
-    <th><label>{% trans 'First Semester GPA:' %}</label> {{ result.gpa }}</th>
+    <th><label>{% trans 'Phase 1 - Foundations GPA:' %}</label> {{ result.gpa }}</th>
   </tr>
   <br>
   {% elif result.semester == "Second" %}
     <tr>
     <th></th>
     <th></th>
-    <th><label>{% trans 'Second Semester GPA:' %}</label> {{ result.gpa }}</th>
+    <th><label>{% trans 'Phase 2 - Building GPA:' %}</label> {{ result.gpa }}</th>
   </tr>
   <br>
   {% endif %}

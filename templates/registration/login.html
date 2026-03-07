@@ -1,19 +1,34 @@
 {% extends 'registration/registration_base.html' %}
 {% load i18n %}
-{% block title %}{% trans 'Dj Learning Management System - Login' %}{% endblock title %}
+{% load static %}
+{% block title %}{% trans 'Women In FlutterFlow - Sign In' %}{% endblock title %}
 {% load crispy_forms_tags %}
 {% block content %}
 
-<div class="col-md-4 mx-auto mt-5">
+<div class="col-md-5 mx-auto mt-5">
+  <div class="text-center mb-4">
+    <img src="{% static 'img/WIFFLogo.png' %}" width="200px" alt="Women In FlutterFlow" class="mb-2">
+    <p class="text-muted">{% trans 'Empowering women to build professional apps' %}</p>
+  </div>
+  
+  {% if messages %}
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endfor %}
+  {% endif %}
+
   <div class="card">
     <div class="form-title">
       <i class="fas fa-lock me-2"></i>
-      {% trans 'Sign in' %}
+      {% trans 'Welcome Back, Builder!' %}
     </div>
     <div class="card-body">
         <form action="" method="POST" id="login-form">{% csrf_token %}
           <div class="form-group mb-3">
-              <label class="mb-2" for="username_id"><i class="fas fa-address-card me-2"></i>{% trans 'ID Number' %}</label>
+              <label class="mb-2" for="username_id"><i class="fas fa-user me-2"></i>{% trans 'Username' %}</label>
               <input type="text" name="username" id="username_id" class="form-control" required>
               <div id="message-wrapper"></div>
           </div>
@@ -30,6 +45,13 @@
         <br>
         <div class="login-bottom">
           <a href="{% url 'password_reset' %}" class="link">{% trans 'Forgot password ?' %}</a>
+        </div>
+        <hr>
+        <div class="text-center">
+          <p class="text-muted mb-2">{% trans "New to Women In FlutterFlow?" %}</p>
+          <a href="{% url 'register' %}" class="btn btn-outline-primary">
+            <i class="fas fa-rocket me-2"></i>{% trans 'Register for this cohort' %}
+          </a>
         </div>
       </div>
   </div>

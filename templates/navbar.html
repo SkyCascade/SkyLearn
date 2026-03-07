@@ -9,7 +9,7 @@
 
 			<form class="form-header" action="{% url 'query' %}" method="GET">
 				<input id="primary-search" class="form-control rounded-end-0" type="text" name="q" value="{{ request.GET.q }}"
-					placeholder="{% trans 'Search All... #course, #program, #Quiz, #News, #Events' %}" required />
+					placeholder="{% trans 'Search modules, quizzes, updates...' %}" required />
 				<button class="btn btn-dark rounded-start-0" type="submit">
 					<i class="fas fa-search"></i>
 				</button>
@@ -31,7 +31,7 @@
 					<hr>
 
 					{% if request.user.is_lecturer or request.user.is_student %}
-					<a class="dropdown-item" href="{% url 'user_course_list' %}"><i class="fas fa-book me-2"></i>{% trans 'My Courses' %}</a>
+					<a class="dropdown-item" href="{% url 'user_course_list' %}"><i class="fas fa-book me-2"></i>{% trans 'My Modules' %}</a>
 					{% endif %}
 
 					{% if request.user.is_superuser %}

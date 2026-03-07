@@ -1,24 +1,24 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{{ title }} | {% trans 'Women In FlutterFlow Academy' %}{% endblock title %}
 
 {% block content %}
 
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{% trans 'Lecturers' %}</li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans 'Facilitators' %}</li>
     </ol>
 </nav>
 
 {% if request.user.is_superuser %}
 <div class="manage-wrap">
-    <a class="btn btn-primary" href="{% url 'add_lecturer' %}"><i class="fas fa-plus"></i>{% trans 'Add Lecturer' %}</a>
+    <a class="btn btn-primary" href="{% url 'add_lecturer' %}"><i class="fas fa-plus"></i>{% trans 'Add Mentor' %}</a>
     <a class="btn btn-primary" target="_blank" href="{% url 'lecturer_list_pdf' %}"><i class="fas fa-download"></i> {% trans 'Download pdf' %}</a><!--new-->
 </div>
 {% endif %}
 
-<p class="title-1"><i class="fas fa-chalkboard-teacher"></i>{% trans 'Lecturers' %}</p>
+<p class="title-1"><i class="fas fa-chalkboard-teacher"></i>{% trans 'Facilitators' %} 💜</p>
 
 {% include 'snippets/messages.html' %}
 {% include 'snippets/filter_form.html' %}
@@ -68,11 +68,11 @@
                 <tr>
                   <td colspan="8">
                   <span class="text-danger">
-                    {% trans 'No Lecturer(s).' %}
+                    {% trans 'No Facilitator(s).' %}
                     {% if request.user.is_superuser %}
                     <a href="{% url 'add_lecturer' %}">
                     <i class="primary" style="font-size: 22px;">
-                        {% trans 'Add Lecturer Now.' %}
+                        {% trans 'Add Facilitator.' %}
                     </i>
                     {% endif %}
                     </a>

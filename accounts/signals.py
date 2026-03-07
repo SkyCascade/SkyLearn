@@ -1,18 +1,25 @@
 from .utils import (
     generate_student_credentials,
     generate_lecturer_credentials,
+    generate_password,
     send_new_account_email,
 )
 
 
 def post_save_account_receiver(instance=None, created=False, *args, **kwargs):
     """
-    Send email notification
+    Send email notification with auto-generated password
     """
     if created:
         if instance.is_student:
-            username, password = generate_student_credentials()
-            instance.username = username
+            # Only generate username if not already set (self-registered users set their own)
+            if not instance.username or instance.username.startswith("STU-"):
+                username, password = generate_student_credentials()
+                instance.username = username
+            else:
+                # User already has a username, just generate password
+                password = generate_password()
+
             instance.set_password(password)
             instance.save()
             # Send email with the generated credentials

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %} {{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %} {{ title }} | {% trans 'Women In FlutterFlow Academy' %}{% endblock title %}
 {% load static %}
 
 {% block content %}
@@ -45,8 +45,8 @@
                     <th> {% trans 'Cr.Hr' %} </th>
                     <th> {% trans 'Level' %} </th>
                     <th> {% trans 'Year' %} </th>
-                    <th> {% trans 'Semester' %} </th>
-                    <th> {% trans 'Current Semester' %} </th>
+                    <th> {% trans 'Cohort' %} </th>
+                    <th> {% trans 'Current Cohort' %} </th>
                     {% if request.user.is_superuser %}
                     <th>{% trans 'Action' %}</th>
                     {% endif %}

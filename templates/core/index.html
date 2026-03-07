@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{{ title }} | {% trans 'Women In FlutterFlow Academy' %}{% endblock title %}
 {% load static %}
 
 {% block content %}
@@ -20,12 +20,12 @@
 {% include 'snippets/messages.html' %}
 
 <div>
-    <div class="title-1">{% trans 'News' %} &amp; {% trans 'Events' %}</div>
+    <div class="title-1">💜 {% trans 'Community Updates' %}</div>
 </div>
 
 <div class="col-md-2 ms-auto d-flex">
     <div class="me-3">
-        <span class="color-indicator bg-primary"></span> {% trans 'News' %}
+        <span class="color-indicator bg-primary"></span> {% trans 'Announcements' %}
     </div>
     <div>
         <span class="color-indicator bg-purple"></span> {% trans 'Events' %}
@@ -71,7 +71,7 @@
 
     {% else %}
     <h4 class="text-center mt-5 py-5 text-muted">
-        <i class="fa-regular fa-folder-open me-2"></i>{% trans 'School news and events will appear here.' %}
+        <i class="fa-regular fa-folder-open me-2"></i>{% trans 'Community updates and events will appear here. Welcome to Women In FlutterFlow! 💜' %}
     </h4>
 
     {% endif %}

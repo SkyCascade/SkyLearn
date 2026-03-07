@@ -18,9 +18,10 @@ from accounts.forms import (
     ProgramUpdateForm,
     StaffAddForm,
     StudentAddForm,
+    LearnerSelfRegistrationForm,
 )
 from accounts.models import Parent, Student, User
-from core.models import Semester, Session
+from core.models import Cohort, ProgramCycle
 from course.models import Course
 from result.models import TakenCourse
 
@@ -53,16 +54,21 @@ def validate_username(request):
 
 def register(request):
     if request.method == "POST":
-        form = StudentAddForm(request.POST)
+        form = LearnerSelfRegistrationForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Account created successfully.")
+            user = form.save()
+            messages.success(
+                request,
+                f"🎉 Welcome to Women In FlutterFlow, {user.first_name}! "
+                f"A temporary password has been sent to {user.email}. "
+                f"Use your username '{user.username}' and the password from your email to log in.",
+            )
             return redirect("login")
         messages.error(
             request, "Something is not correct, please fill all fields correctly."
         )
     else:
-        form = StudentAddForm()
+        form = LearnerSelfRegistrationForm()
     return render(request, "registration/register.html", {"form": form})
 
 
@@ -74,20 +80,22 @@ def register(request):
 @login_required
 def profile(request):
     """Show profile of the current user."""
-    current_session = Session.objects.filter(is_current_session=True).first()
-    current_semester = Semester.objects.filter(
-        is_current_semester=True, session=current_session
+    current_program_cycle = ProgramCycle.objects.filter(
+        is_current_program_cycle=True
+    ).first()
+    current_cohort = Cohort.objects.filter(
+        is_current_cohort=True, program_cycle=current_program_cycle
     ).first()
 
     context = {
         "title": request.user.get_full_name,
-        "current_session": current_session,
-        "current_semester": current_semester,
+        "current_session": current_program_cycle,
+        "current_semester": current_cohort,
     }
 
     if request.user.is_lecturer:
         courses = Course.objects.filter(
-            allocated_course__lecturer__pk=request.user.id, semester=current_semester
+            allocated_course__lecturer__pk=request.user.id, semester=current_cohort
         )
         context["courses"] = courses
         return render(request, "accounts/profile.html", context)
@@ -120,22 +128,24 @@ def profile_single(request, user_id):
     if request.user.id == user_id:
         return redirect("profile")
 
-    current_session = Session.objects.filter(is_current_session=True).first()
-    current_semester = Semester.objects.filter(
-        is_current_semester=True, session=current_session
+    current_program_cycle = ProgramCycle.objects.filter(
+        is_current_program_cycle=True
+    ).first()
+    current_cohort = Cohort.objects.filter(
+        is_current_cohort=True, program_cycle=current_program_cycle
     ).first()
     user = get_object_or_404(User, pk=user_id)
 
     context = {
         "title": user.get_full_name,
         "user": user,
-        "current_session": current_session,
-        "current_semester": current_semester,
+        "current_session": current_program_cycle,
+        "current_semester": current_cohort,
     }
 
     if user.is_lecturer:
         courses = Course.objects.filter(
-            allocated_course__lecturer__pk=user_id, semester=current_semester
+            allocated_course__lecturer__pk=user_id, semester=current_cohort
         )
         context.update(
             {

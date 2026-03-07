@@ -9,8 +9,10 @@
 					<i class="fas fa-times"></i>
 				</div>
 			</div>
-			<a href="/">
-				<img src="{% static 'img/brand.svg' %}" width="210px" alt="SkyLearn">
+			<a href="/" class="text-decoration-none">
+				<img src="{% static 'img/WIFFLogo.png' %}" width="180px" alt="Women In FlutterFlow" class="mb-2">
+				<br>
+				<small class="text-light opacity-75">Build Apps. Build Futures.</small>
 			</a>
 			<p class="mt-2 small">
 				<mark class="bg-secondary text-light" style="border-radius: 2px; padding: 2px 5px;">
@@ -21,7 +23,7 @@
 		{% url 'home' as hom %} {% url 'dashboard' as dash %} {% url 'profile' as prof %}
 		{% url 'lecturer_list' as lec %}
 		{% url 'student_list' as stu %} {% url 'course_allocation_view' as cav %}
-		{% url 'programs' as pro %} {% url 'session_list' as sess %} {% url 'semester_list' as sem %}
+		{% url 'programs' as pro %} {% url 'program_cycle_list' as sess %} {% url 'cohort_list' as sem %}
 		{% url 'add_score' as ascore %} {% url 'grade_results' as vr %}{% url 'ass_results' as ar %}
 		{% url 'course_registration' as cr %} {% url 'edit_profile' as ep %} {% url 'change_password' as cp %}
 		{% url 'quiz_progress' as qpr %} {% url 'quiz_marking' as qce %} {% url 'user_course_list' as ucl %}
@@ -47,22 +49,22 @@
 				<a href="{% url 'admin_panel' %}"><i class="fas fa-user-tie"></i>{% trans 'Admin Panel' %}</a>
 			</li>
 			<li class="{% if request.path == lec %}active{% endif %}">
-				<a href="{% url 'lecturer_list' %}"><i class="fas fa-chalkboard-teacher"></i>{% trans 'Lecturers' %}</a>
+				<a href="{% url 'lecturer_list' %}"><i class="fas fa-chalkboard-teacher"></i>{% trans 'Facilitators' %}</a>
 			</li>
 			<li class="{% if request.path == stu %}active{% endif %}">
-				<a href="{% url 'student_list' %}"><i class="fas fa-user-graduate"></i>{% trans 'Students' %}</a>
+				<a href="{% url 'student_list' %}"><i class="fas fa-user-graduate"></i>{% trans 'Learners' %}</a>
 			</li>
 			{% endif %}
 
 			{% if request.user.is_lecturer or request.user.is_student %}
 			<li class="{% if request.path == ucl %}active{% endif %}">
-				<a href="{% url 'user_course_list' %}"><i class="fas fa-book"></i>{% trans 'My Courses' %}</a>
+				<a href="{% url 'user_course_list' %}"><i class="fas fa-book"></i>{% trans 'My Modules' %}</a>
 			</li>
 			{% endif %}
 
 			{% if request.user.is_superuser or request.user.is_lecturer %}
 			<li class="{% if request.path == pro %}active{% endif %}">
-				<a href="{% url 'programs' %}"><i class="fas fa-book-open"></i>{% trans 'Programs & Courses' %}</a>
+				<a href="{% url 'programs' %}"><i class="fas fa-book-open"></i>{% trans 'Learning Tracks' %}</a>
 			</li>
 			{% endif %}
 
@@ -80,10 +82,10 @@
 				<a href="{% url 'course_allocation_view' %}"><i class="fas fa-tasks"></i>{% trans 'Course Allocation' %}</a>
 			</li>
 			<li class="{% if request.path == sess %}active{% endif %}">
-				<a href="{% url 'session_list' %}"><i class="fas fa-calendar-week"></i>{% trans 'Manage Session' %}</a>
+				<a href="{% url 'program_cycle_list' %}"><i class="fas fa-calendar-week"></i>{% trans 'Manage Program Cycles' %}</a>
 			</li>
 			<li class="{% if request.path == sem %}active{% endif %}">
-				<a href="{% url 'semester_list' %}"><i class="fas fa-calendar-alt"></i>{% trans 'Manage Semester' %}</a>
+				<a href="{% url 'cohort_list' %}"><i class="fas fa-calendar-alt"></i>{% trans 'Manage Cohorts' %}</a>
 			</li>
 			{% endif %}
 
@@ -137,10 +139,10 @@
 
 			<p class="small m-0">
 				{% trans 'Read our' %} <a href="#"> {% trans 'Privacy' %} </a> {% trans 'and' %} <a href="#"> {% trans 'Terms of use.' %} </a>
-				<br />SkyLearn &copy; <script>document.write(new Date().getFullYear());</script>
+				<br />Women In FlutterFlow &copy; <script>document.write(new Date().getFullYear());</script>
 				<br />
 			</p>
-			<a href="https://github.com/SkyCascade/SkyLearn" class="btn btn-sm btn-dark mx-auto" target="_blank">
+			<a href="https://github.com/SkyCascade/Women In FlutterFlow" class="btn btn-sm btn-dark mx-auto" target="_blank">
 				{% trans '⭐️ Star This Project' %}
 			</a>
 		</div>

@@ -252,20 +252,27 @@ YEARS = (
     (6, "6"),
 )
 
-BACHELOR_DEGREE = "Bachelor"
-MASTER_DEGREE = "Master"
+# Skill Levels for Women In FlutterFlow
+BEGINNER = "Beginner"
+INTERMEDIATE = "Intermediate"
+ADVANCED = "Advanced"
 
 LEVEL_CHOICES = (
-    (BACHELOR_DEGREE, _("Bachelor Degree")),
-    (MASTER_DEGREE, _("Master Degree")),
+    (BEGINNER, _("Beginner - New to FlutterFlow")),
+    (INTERMEDIATE, _("Intermediate - Building Apps")),
+    (ADVANCED, _("Advanced - Professional Builder")),
 )
 
+# Cohort Phases
 FIRST = "First"
 SECOND = "Second"
 THIRD = "Third"
 
-SEMESTER_CHOICES = (
-    (FIRST, _("First")),
-    (SECOND, _("Second")),
-    (THIRD, _("Third")),
+COHORT_CHOICES = (
+    (FIRST, _("Phase 1 - Foundations")),
+    (SECOND, _("Phase 2 - Building")),
+    (THIRD, _("Phase 3 - Launch")),
 )
+
+# Backward-compatible alias
+SEMESTER_CHOICES = COHORT_CHOICES

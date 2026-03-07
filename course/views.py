@@ -10,7 +10,7 @@ from django_filters.views import FilterView
 
 from accounts.decorators import lecturer_required, student_required
 from accounts.models import Student
-from core.models import Semester
+from core.models import Cohort
 from course.filters import CourseAllocationFilter, ProgramFilter
 from course.forms import (
     CourseAddForm,
@@ -404,9 +404,9 @@ def course_registration(request):
         messages.success(request, "Courses registered successfully!")
         return redirect("course_registration")
     else:
-        current_semester = Semester.objects.filter(is_current_semester=True).first()
+        current_semester = Cohort.objects.filter(is_current_cohort=True).first()
         if not current_semester:
-            messages.error(request, "No active semester found.")
+            messages.error(request, "No active cohort found.")
             return render(request, "course/course_registration.html")
 
         # student = Student.objects.get(student__pk=request.user.id)

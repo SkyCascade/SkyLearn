@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{{ title }} | {% trans 'Women In FlutterFlow Academy' %}{% endblock title %}
 {% load crispy_forms_tags %}
 {% load static %}
 
@@ -9,12 +9,12 @@
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-      <li class="breadcrumb-item"><a href="{% url 'lecturer_list' %}">{% trans 'Lecturers' %}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'lecturer_list' %}">{% trans 'Facilitators' %}</a></li>
       <li class="breadcrumb-item active" aria-current="page">{% trans 'Update' %}</li>
     </ol>
 </nav>
 
-<div class="title-1"><i class="fas fa-cogs"></i>{% trans 'Lecturer Update Form' %}</div>
+<div class="title-1"><i class="fas fa-cogs"></i>{% trans 'Facilitator Update Form' %}</div>
 <br>
 <br>
 

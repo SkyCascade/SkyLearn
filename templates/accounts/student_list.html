@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% block title %}{{ title }} | {% trans 'Women In FlutterFlow Academy' %}{% endblock title %}
 
 {% block content %}
 
@@ -8,20 +8,20 @@
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{% trans 'Students' %}</li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans 'Learners' %}</li>
     </ol>
 </nav>
 
-<!-- <div id="input-nav"><a href="{% url 'home' %}" class="primary1">Home</a> Students</div> -->
+<!-- <div id="input-nav"><a href="{% url 'home' %}" class="primary1">Home</a> Learners</div> -->
 
 {% if request.user.is_superuser %}
 <div class="manage-wrap">
-    <a class="btn btn-sm btn-primary" href="{% url 'add_student' %}"><i class="fas fa-plus"></i>{% trans 'Add Student' %}</a>
+    <a class="btn btn-sm btn-primary" href="{% url 'add_student' %}"><i class="fas fa-plus"></i>{% trans 'Add Learner' %}</a>
     <a class="btn btn-sm btn-primary" target="_blank" href="{% url 'student_list_pdf' %}"><i class="fas fa-download"></i>{% trans 'Download pdf' %}</a> <!--new-->
 </div>
 {% endif %}
 
-<div class="title-1"><i class="fas fa-user-graduate"></i>{% trans 'Students' %}</div>
+<div class="title-1"><i class="fas fa-user-graduate"></i>{% trans 'Cohort Learners' %} 💜</div>
 <br>
 <br>
 
@@ -36,7 +36,7 @@
                 <th>{% trans 'ID No.' %} </th>
                 <th> {% trans 'Full Name' %} </th>
                 <th> {% trans 'Email' %} </th>
-                <th> {% trans 'Program' %} </th>
+                <th> {% trans 'Learning Track' %} </th>
                 {% if request.user.is_superuser %}
                 <th> {% trans 'Action' %} </th>
                 {% endif %}
@@ -70,11 +70,11 @@
                 <tr>
                   <td colspan="6">
                   <span class="text-danger">
-                    {% trans 'No Student.' %}
+                    {% trans 'No Learner.' %}
                     {% if request.user.is_superuser %}
                     <a href="{% url 'add_student' %}">
                     <i class="primary" style="font-size: 22px;">
-                        {% trans 'Add Student Now.' %}
+                        {% trans 'Add Learner.' %}
                     </i>
                     {% endif %}
                     </a>

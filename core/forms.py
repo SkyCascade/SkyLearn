@@ -1,5 +1,5 @@
 from django import forms
-from .models import NewsAndEvents, Session, Semester, SEMESTER
+from .models import NewsAndEvents, ProgramCycle, Cohort, COHORT_CHOICES
 
 
 # news and events
@@ -19,8 +19,8 @@ class NewsAndEventsForm(forms.ModelForm):
         self.fields["posted_as"].widget.attrs.update({"class": "form-control"})
 
 
-class SessionForm(forms.ModelForm):
-    next_session_begins = forms.DateTimeField(
+class ProgramCycleForm(forms.ModelForm):
+    next_program_cycle_begins = forms.DateTimeField(
         widget=forms.TextInput(
             attrs={
                 "type": "date",
@@ -30,31 +30,39 @@ class SessionForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Session
-        fields = ["session", "is_current_session", "next_session_begins"]
+        model = ProgramCycle
+        fields = [
+            "program_cycle",
+            "is_current_program_cycle",
+            "next_program_cycle_begins",
+        ]
 
 
-class SemesterForm(forms.ModelForm):
-    semester = forms.CharField(
+# Backward-compatible alias
+SessionForm = ProgramCycleForm
+
+
+class CohortForm(forms.ModelForm):
+    cohort = forms.CharField(
         widget=forms.Select(
-            choices=SEMESTER,
+            choices=COHORT_CHOICES,
             attrs={
                 "class": "browser-default custom-select",
             },
         ),
-        label="semester",
+        label="Cohort",
     )
-    is_current_semester = forms.CharField(
+    is_current_cohort = forms.CharField(
         widget=forms.Select(
             choices=((True, "Yes"), (False, "No")),
             attrs={
                 "class": "browser-default custom-select",
             },
         ),
-        label="is current semester ?",
+        label="Is current cohort?",
     )
-    session = forms.ModelChoiceField(
-        queryset=Session.objects.all(),
+    program_cycle = forms.ModelChoiceField(
+        queryset=ProgramCycle.objects.all(),
         widget=forms.Select(
             attrs={
                 "class": "browser-default custom-select",
@@ -63,7 +71,7 @@ class SemesterForm(forms.ModelForm):
         required=True,
     )
 
-    next_semester_begins = forms.DateTimeField(
+    next_cohort_begins = forms.DateTimeField(
         widget=forms.TextInput(
             attrs={
                 "type": "date",
@@ -74,5 +82,9 @@ class SemesterForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Semester
-        fields = ["semester", "is_current_semester", "session", "next_semester_begins"]
+        model = Cohort
+        fields = ["cohort", "is_current_cohort", "program_cycle", "next_cohort_begins"]
+
+
+# Backward-compatible alias
+SemesterForm = CohortForm

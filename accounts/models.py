@@ -10,14 +10,15 @@ from course.models import Program
 from .validators import ASCIIUsernameValidator
 
 
-# LEVEL_COURSE = "Level course"
-BACHELOR_DEGREE = _("Bachelor")
-MASTER_DEGREE = _("Master")
+# Skill Levels for Women In FlutterFlow
+BEGINNER = _("Beginner")
+INTERMEDIATE = _("Intermediate")
+ADVANCED = _("Advanced")
 
 LEVEL = (
-    # (LEVEL_COURSE, "Level course"),
-    (BACHELOR_DEGREE, _("Bachelor Degree")),
-    (MASTER_DEGREE, _("Master Degree")),
+    (BEGINNER, _("Beginner - New to FlutterFlow")),
+    (INTERMEDIATE, _("Intermediate - Building Apps")),
+    (ADVANCED, _("Advanced - Professional Builder")),
 )
 
 FATHER = _("Father")

@@ -15,11 +15,14 @@ FIRST = _("First")
 SECOND = _("Second")
 THIRD = _("Third")
 
-SEMESTER = (
+COHORT_CHOICES = (
     (FIRST, _("First")),
     (SECOND, _("Second")),
     (THIRD, _("Third")),
 )
+
+# Keep backward-compatible alias
+SEMESTER = COHORT_CHOICES
 
 
 class NewsAndEventsQuerySet(models.query.QuerySet):
@@ -64,25 +67,39 @@ class NewsAndEvents(models.Model):
         return f"{self.title}"
 
 
-class Session(models.Model):
-    session = models.CharField(max_length=200, unique=True)
-    is_current_session = models.BooleanField(default=False, blank=True, null=True)
-    next_session_begins = models.DateField(blank=True, null=True)
+class ProgramCycle(models.Model):
+    program_cycle = models.CharField(max_length=200, unique=True)
+    is_current_program_cycle = models.BooleanField(default=False, blank=True, null=True)
+    next_program_cycle_begins = models.DateField(blank=True, null=True)
+
+    class Meta:
+        db_table = "core_session"
 
     def __str__(self):
-        return f"{self.session}"
+        return f"{self.program_cycle}"
 
 
-class Semester(models.Model):
-    semester = models.CharField(max_length=10, choices=SEMESTER, blank=True)
-    is_current_semester = models.BooleanField(default=False, blank=True, null=True)
-    session = models.ForeignKey(
-        Session, on_delete=models.CASCADE, blank=True, null=True
+# Backward-compatible alias
+Session = ProgramCycle
+
+
+class Cohort(models.Model):
+    cohort = models.CharField(max_length=10, choices=COHORT_CHOICES, blank=True)
+    is_current_cohort = models.BooleanField(default=False, blank=True, null=True)
+    program_cycle = models.ForeignKey(
+        ProgramCycle, on_delete=models.CASCADE, blank=True, null=True
     )
-    next_semester_begins = models.DateField(null=True, blank=True)
+    next_cohort_begins = models.DateField(null=True, blank=True)
+
+    class Meta:
+        db_table = "core_semester"
 
     def __str__(self):
-        return f"{self.semester}"
+        return f"{self.cohort}"
+
+
+# Backward-compatible alias
+Semester = Cohort
 
 
 class ActivityLog(models.Model):

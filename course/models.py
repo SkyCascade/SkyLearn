@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from core.models import ActivityLog, Semester
+from core.models import ActivityLog, Cohort
 from core.utils import unique_slug_generator
 
 
@@ -81,8 +81,8 @@ class Course(models.Model):
     @property
     def is_current_semester(self):
 
-        current_semester = Semester.objects.filter(is_current_semester=True).first()
-        return self.semester == current_semester.semester if current_semester else False
+        current_cohort = Cohort.objects.filter(is_current_cohort=True).first()
+        return self.semester == current_cohort.cohort if current_cohort else False
 
 
 @receiver(pre_save, sender=Course)
@@ -110,7 +110,11 @@ class CourseAllocation(models.Model):
     )
     courses = models.ManyToManyField(Course, related_name="allocated_course")
     session = models.ForeignKey(
-        "core.Session", on_delete=models.CASCADE, blank=True, null=True
+        "core.ProgramCycle",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        db_column="session_id",
     )
 
     def __str__(self):
@@ -248,7 +252,7 @@ def log_uploadvideo_delete(sender, instance, **kwargs):
 
 
 class CourseOffer(models.Model):
-    """NOTE: Only department head can offer semester courses"""
+    """NOTE: Only department head can offer cohort courses"""
 
     dep_head = models.ForeignKey("accounts.DepartmentHead", on_delete=models.CASCADE)
 
