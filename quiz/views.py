@@ -367,7 +367,7 @@ def generate_ai_questions(request, slug, quiz_id):
             explanation=q.get("explain", "")
             )
             
-            question.quiz.add(quiz) 
+            question.quiz.add(quiz)
             correct_index = q.get("correct")
             
             for index, option_text in enumerate(q["options"]):
