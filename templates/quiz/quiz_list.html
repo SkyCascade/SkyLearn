@@ -38,15 +38,17 @@
         {% for quiz in quizzes %}
         <div class="col-md-4 mb-2">
             <div class="card p-2 quiz-wrapper">
-                <div class="d-flex justify-content-between align-items-center text-success mb-4">
+                <div class="d-flex justify-content-between align-items-center text-success mb-2">
                     <em class="text-left">{{ quiz.category|title }} {% trans 'Quiz' %}</em>
                     <div class="text-right text-light bg-danger px-2 small rounded">
                         {{ quiz.get_questions.count }} {% trans 'Questions' %}
                     </div>
                 </div>
 
-                <h6>{{ quiz.title|title }}</h6>
+                <!-- Title -->
+                <h6 class="fw-bold mb-1">{{ quiz.title|title }}</h6>
 
+                <!-- Description -->
                 {% if quiz.description %}
                 <p class="text-muted small">{{ quiz.description }}</p>
                 {% else %}
@@ -57,12 +59,24 @@
                 <p class="p-2 bg-light-warning small">{% trans "You will only get one attempt at this quiz" %}.</p>
                 {% endif %}
 
-                <div class="d-flex align-items-center">
-                    <a class="btn btn-block btn-secondary w-100" href="{% url 'quiz_take' pk=course.pk slug=quiz.slug %}">{% trans "Start quiz" %} &raquo;</a>
+                <!-- Lecturer/Admin button -->
+                {% if request.user.is_superuser or request.user.is_lecturer %}
+                <a href="{% url 'quiz_questions' quiz.slug quiz.id %}"
+                class="btn btn-outline-info btn-sm w-100 mt-0.5">
+                <i class="fas fa-list me-1"></i>
+                Manage Questions
+                </a>
+                {% endif %}
+
+                <!-- Student button -->
+                <a class="btn btn-secondary w-100 mt-2"
+                href="{% url 'quiz_take' pk=course.pk slug=quiz.slug %}">
+                {% trans "Start quiz" %} »
+                </a>
 
                     {% if request.user.is_superuser or request.user.is_lecturer %}
                         <div class="dropup">
-                            <button class="btn btn-sm p-0 ms-2" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v m-0"></i></button>
+                            <button class="btn btn-sm p-0 ms-2" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v mt-2"></i></button>
                             <div class="dropdown-menu" aria-labelledby="dropdown01">
                                 <div class="dropdown-item">
                                     <a href="{% url 'quiz_update' slug=course.slug pk=quiz.id %}" class="update"><i class="unstyled me-2 fas fa-pencil-alt"></i>{% trans 'Edit' %}</a>
@@ -73,7 +87,6 @@
                             </div>
                         </div>
                     {% endif %}
-                </div>
             </div>
         </div>
 

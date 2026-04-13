@@ -419,20 +419,19 @@ def course_registration(request):
         courses = (
             Course.objects.filter(
                 program__pk=student.program.id,
-                level=student.level,
                 semester=current_semester,
             )
             .exclude(id__in=t)
             .order_by("year")
         )
         all_courses = Course.objects.filter(
-            level=student.level, program__pk=student.program.id
+            program__pk=student.program.id
         )
 
         no_course_is_registered = False  # Check if no course is registered
         all_courses_are_registered = False
 
-        registered_courses = Course.objects.filter(level=student.level).filter(id__in=t)
+        registered_courses = Course.objects.filter(id__in=t)
         if (
             registered_courses.count() == 0
         ):  # Check if number of registered courses is 0

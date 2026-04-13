@@ -1,30 +1,12 @@
-/* rubik-300 - latin */
-@font-face {
-  font-family: "Rubik";
-  font-style: normal;
-  font-weight: 300;
-  src: url("../fonts/rubik-v14-latin/rubik-v14-latin-300.eot"); /* IE9 Compat Modes */
-  src: local(""),
-    url("../fonts/rubik-v14-latin/rubik-v14-latin-300.eot?#iefix")
-      format("embedded-opentype"),
-    /* IE6-IE8 */ url("../fonts/rubik-v14-latin/rubik-v14-latin-300.woff2")
-      format("woff2"),
-    /* Super Modern Browsers */
-      url("../fonts/rubik-v14-latin/rubik-v14-latin-300.woff") format("woff"),
-    /* Modern Browsers */
-      url("../fonts/rubik-v14-latin/rubik-v14-latin-300.ttf") format("truetype"),
-    /* Safari, Android, iOS */
-      url("../fonts/rubik-v14-latin/rubik-v14-latin-300.svg#Rubik")
-      format("svg"); /* Legacy iOS */
-}
-
-:root {
+:root,
+[data-bs-theme] {
   --primary: #f8d270;
+  --bs-font-sans-serif: "Inter", sans-serif;
+  --bs-body-font-family: "Inter", sans-serif;
 }
 
-*,
 body {
-  font-family: "Rubik", sans-serif;
+  font-family: "Inter", sans-serif;
 }
 body {
   background-color: #f3f2f2;

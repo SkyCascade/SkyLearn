@@ -2,9 +2,9 @@
 
 -r base.txt
 
-gunicorn==20.1.0  # https://github.com/benoitc/gunicorn
+gunicorn>=21.2,<23.0  # https://github.com/benoitc/gunicorn
 
 # Django
 # ------------------------------------------------------------------------------
-django-storages[boto3]==1.13.1  # https://github.com/jschneier/django-storages
-django-anymail[amazon_ses]==9.0  # https://github.com/anymail/django-anymail
+django-storages[boto3]>=1.14,<2.0  # https://github.com/jschneier/django-storages
+django-anymail[amazon_ses]>=10.0,<12.0  # https://github.com/anymail/django-anymail

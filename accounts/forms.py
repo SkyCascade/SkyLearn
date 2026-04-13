@@ -191,15 +191,6 @@ class StudentAddForm(UserCreationForm):
         ),
     )
 
-    level = forms.CharField(
-        widget=forms.Select(
-            choices=LEVEL,
-            attrs={
-                "class": "browser-default custom-select form-control",
-            },
-        ),
-    )
-
     program = forms.ModelChoiceField(
         queryset=Program.objects.all(),
         widget=forms.Select(
@@ -266,7 +257,7 @@ class StudentAddForm(UserCreationForm):
             user.save()
             Student.objects.create(
                 student=user,
-                level=self.cleaned_data.get("level"),
+                level="Bachelor",
                 program=self.cleaned_data.get("program"),
             )
 

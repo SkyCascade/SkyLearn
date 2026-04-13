@@ -2,6 +2,6 @@
 
 # Code quality
 # ------------------------------------------------------------------------------
-black==22.12.0  # https://github.com/psf/black
-factory-boy==3.3.1
-django-extensions==3.2.3
+black>=24.0,<25.0  # https://github.com/psf/black
+factory-boy>=3.3,<4.0
+django-extensions>=3.2,<4.0

@@ -123,10 +123,9 @@ def add_score_for(request, id):
             # print(student.student)
             # print(student.student.program.id)
             courses = (
-                Course.objects.filter(level=student.student.level)
-                .filter(program__pk=student.student.program.id)
+                Course.objects.filter(program__pk=student.student.program.id)
                 .filter(semester=current_semester)
-            )  # all courses of a specific level in current semester
+            )  # all courses in current semester
             total_credit_in_semester = 0
             for i in courses:
                 if i == courses.count():
@@ -204,9 +203,7 @@ def add_score_for(request, id):
 @student_required
 def grade_result(request):
     student = Student.objects.get(student__pk=request.user.id)
-    courses = TakenCourse.objects.filter(student__student__pk=request.user.id).filter(
-        course__level=student.level
-    )
+    courses = TakenCourse.objects.filter(student__student__pk=request.user.id)
     # total_credit_in_semester = 0
     results = Result.objects.filter(student__student__pk=request.user.id)
 
@@ -261,7 +258,7 @@ def grade_result(request):
 def assessment_result(request):
     student = Student.objects.get(student__pk=request.user.id)
     courses = TakenCourse.objects.filter(
-        student__student__pk=request.user.id, course__level=student.level
+        student__student__pk=request.user.id
     )
     result = Result.objects.filter(student__student__pk=request.user.id)
 
@@ -362,7 +359,7 @@ def result_sheet_pdf_view(request, id):
     normal.fontSize = 10
     normal.leading = 15
     level = result.filter(course_id=id).first()
-    title = "<b>Level: </b>" + str(level.course.level)
+    title = "<b>Level: </b>" + str(level.student.level)
     title = Paragraph(title.upper(), normal)
     Story.append(title)
     Story.append(Spacer(1, 0.6 * inch))

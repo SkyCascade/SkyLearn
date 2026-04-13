@@ -1,3 +1,6 @@
+from ai_core.services import GeminiService, QuizService
+from django.shortcuts import get_object_or_404, redirect #new 
+from .models import Quiz, MCQuestion, Choice    #new
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -334,3 +337,96 @@ class QuizTake(FormView):
             self.sitting.delete()
 
         return render(self.request, self.result_template_name, results)
+
+
+# ########################################################
+# Quiz Gen
+# ########################################################
+def generate_ai_questions(request, slug, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+
+    num_questions = int(request.GET.get("num", 5))
+
+    # Use quiz description/title as context
+    lesson_content = quiz.description or quiz.title
+
+    try:
+        llm = GeminiService()
+        service = QuizService(llm)
+
+        questions_data = service.generate(
+            lesson_content,
+            num_questions,
+            difficulty=None
+        )
+
+        for q in questions_data:
+            
+            question = MCQuestion.objects.create(
+            content=q["q"],
+            explanation=q.get("explain", "")
+            )
+            
+            question.quiz.add(quiz) 
+            correct_index = q.get("correct")
+            
+            for index, option_text in enumerate(q["options"]):
+                Choice.objects.create(
+                question=question,
+                choice_text=option_text,
+                correct=(index == correct_index)
+            )
+
+        messages.success(request, f"{len(questions_data)} questions generated successfully!")
+
+    except Exception as e:
+        messages.error(request, "AI generation failed.")
+
+    return redirect("quiz_index", slug=slug)
+
+# ########################################################
+# Quiz List
+# ########################################################
+@login_required
+def quiz_questions(request, slug, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    questions = MCQuestion.objects.filter(quiz=quiz)
+
+    context = {
+        'quiz': quiz,
+        'questions': questions
+    }
+    return render(request, 'quiz/quiz_questions.html', context)
+
+# ########################################################
+# MCQ update
+# ########################################################
+@method_decorator([login_required, lecturer_required], name="dispatch")
+class MCQuestionUpdate(UpdateView):
+    model = MCQuestion
+    form_class = MCQuestionForm
+    template_name = "quiz/mcquestion_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["quiz_obj"] = get_object_or_404(Quiz, id=self.kwargs["quiz_id"])
+        context["course"] = get_object_or_404(Course, slug=self.kwargs["slug"])
+
+        if self.request.method == "POST":
+            context["formset"] = MCQuestionFormSet(self.request.POST, instance=self.object)
+        else:
+            context["formset"] = MCQuestionFormSet(instance=self.object)
+
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context["formset"]
+
+        if formset.is_valid():
+            self.object = form.save()
+            formset.save()
+            return redirect("quiz_question_list",
+                            slug=self.kwargs["slug"],
+                            quiz_id=self.kwargs["quiz_id"])
+        return self.form_invalid(form)

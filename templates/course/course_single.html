@@ -32,7 +32,7 @@
             </a>
             <a class="btn btn-sm btn-primary" href="{% url 'upload_video' course.slug %}"><i class="fas fa-plus"></i>
                 {% trans 'Upload new video' %}
-            </a>
+            </a> 
             {% endif %}
         </div>
         <div class="ms-auto">
@@ -52,7 +52,9 @@
 
     <div class="row mb-5">
         <div class="col-md-12 p-0">
-            <p class="form-title m-0">{% trans 'Video Tutorials' %}</p>
+             <div class="d-flex justify-content-between align-items-center text-white p-3 mb-0" style="background-color: #0d6efd; border-radius: 8px 8px 0 0;">
+                <h5 class="m-0 fw-bold">{% trans 'Video Tutorials' %}</h5>
+            </div>
             <div class="table-responsive">
                 <table class="table table-shadow table-light table-striped m-0">
                     <thead>
@@ -128,7 +130,14 @@
 
     <div class="row">
         <div class="col-md-12 p-0">
-            <p class="form-title m-0">{% trans 'Documentations' %}</p>
+            <div class="d-flex justify-content-between align-items-center text-white p-3 mb-0" style="background-color: #0d6efd; border-radius: 8px 8px 0 0;">
+                <h5 class="m-0 fw-bold">{% trans 'Documentations' %}</h5>
+                {% if request.user.is_superuser or request.user.is_lecturer %}
+                <button class="btn btn-light btn-sm text-primary fw-bold" style="border-radius: 20px; padding: 5px 15px;" data-bs-toggle="modal" data-bs-target="#createAILessonModal">
+                    <i class="fas fa-graduation-cap"></i> Create AI Lesson
+                </button>
+                {% endif %}
+            </div>
             <div class="table-responsive">
                 <table class="table table-shadow table-light table-striped m-0">
                     <thead>
@@ -147,10 +156,18 @@
                         {% for file in files %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
-                            <td><a href="{{ file.file.url }}" title="{{ file }}" class="d-flex align-items-center">
+                            <td>
+                                {% if file.html_content %}
+                                <a href="#" class="d-flex align-items-center view-lesson-link" data-upload-id="{{ file.pk }}" title="{{ file }}">
+                                    <i class="fas fa-book me-1"></i>
+                                    {{ file.title|title }}
+                                </a>
+                                {% else %}
+                                <a href="{{ file.file.url }}" title="{{ file }}" class="d-flex align-items-center">
                                     <i class="fas fa-file-{{ file.get_extension_short }} me-1"></i>
                                     {{ file.title|title }}
                                 </a>
+                                {% endif %}
                             </td>
                             <td>{{ file.upload_time|date }}</td>
                             <td>{{ file.updated_date|date }}</td>
@@ -182,14 +199,12 @@
                             <td></td>
                             <td>
                                 <span class="text-danger">
-                                    {% trans 'No File Uploaded.' %}
+                                    No lessons available.
                                     {% if request.user.is_superuser or request.user.is_lecturer %}
-                                    <a href="{% url 'upload_file_view' course.slug %}" class="text-primary">
-                                        <i class="primary" style="font-size: 22px;">
-                                            {% trans 'Upload now.' %}
-                                        </i>
-                                        {% endif %}
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#createAILessonModal" class="text-primary" style="text-decoration: none;">
+                                        Create one AI Lesson now.
                                     </a>
+                                    {% endif %}
                                 </span>
                             </td>
                             <td></td>
@@ -239,5 +254,322 @@
         </div>
     </div>
 </div>
+
+
+<!-- Create Lesson Modal -->
+<div class="modal fade" id="createAILessonModal" tabindex="-1" aria-labelledby="createAILessonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <div class="modal-header border-bottom-0 pb-0 mt-3 mx-2">
+        <h5 class="modal-title fw-bold" id="createAILessonModalLabel" style="color: #334155;">Create New Lesson</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body mx-2">
+        <form id="createAILessonForm">
+            <div class="mb-4">
+                <label for="aiLessonTopic" class="form-label fw-bold" style="color: #475569;">Topic <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-lg" id="aiLessonTopic" placeholder="Enter lesson topic." required style="background-color: #f1f5f9; border: none; font-size: 1rem;">
+            </div>
+            <div class="mb-4">
+                <label for="aiLessonRequirements" class="form-label fw-bold" style="color: #475569;">Requirements </label>
+                <textarea class="form-control form-control-lg" id="aiLessonRequirements" rows="4" placeholder="Describe your specific requirements for the lesson." style="background-color: #f1f5f9; border: none; font-size: 1rem; resize: none;"></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-bold" style="color: #475569;">Reference Documents</label>
+                <p class="text-muted small mb-2">Select documents to use as reference material for this lesson.</p>
+                <div style="max-height: 180px; overflow-y: auto; background-color: #f1f5f9; border-radius: 8px; padding: 12px;">
+                    {% for file in files %}
+                    <div class="form-check mb-1">
+                        <input class="form-check-input rag-doc-check" type="checkbox" value="{{ file.pk }}" id="ragDoc{{ file.pk }}">
+                        <label class="form-check-label" for="ragDoc{{ file.pk }}" style="font-size: 0.9rem;">
+                            <i class="fas fa-file-{{ file.get_extension_short }} me-1 text-muted"></i> {{ file.title }}
+                        </label>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">No documents uploaded yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer border-top-0 pt-0 mb-3 mx-2">
+        <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 24px; color: #475569;">Cancel</button>
+        <button type="button" class="btn btn-primary fw-bold" id="btnSubmitAILesson" style="border-radius: 8px; padding: 10px 24px; background-color: #0d6efd; border: none;">Create Lesson</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Preview/Edit (for newly generated lessons) -->
+<div class="modal fade" id="previewAILessonModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <div class="modal-header border-bottom-0 align-items-start pb-0 py-4 px-4">
+        <div class="w-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="modal-title fw-bold" id="previewModalTitle" style="color: #1e293b;">[Topic]</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2 text-muted" id="previewModalSubtitleContainer">
+                <span id="previewModalSubtitleLeft">Review and edit the lesson if needed</span>
+                <span id="previewModalSubtitleRight" style="display: none;">You can edit the lesson directly</span>
+            </div>
+        </div>
+      </div>
+      <div class="modal-body px-4 bg-light mx-4 my-2" style="border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div id="aiLessonViewMode" style="min-height: 400px; padding: 20px; color: #334155; transition: all 0.2s;" spellcheck="false">
+        </div>
+      </div>
+      <div class="modal-footer border-top-0 pt-3 pb-4 px-4 d-flex justify-content-between">
+        <button type="button" class="btn fw-bold" id="btnRecreateAILesson" style="border-radius: 8px; background-color: #f1f5f9; color: #475569;">
+            <i class="fas fa-sync-alt me-1"></i> Regenerate Lesson
+        </button>
+        <div id="viewModeButtons" style="display: flex; gap: 0.5rem;" class="align-items-center">
+            <button type="button" class="btn fw-bold" id="btnEditAILesson" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 24px; color: #475569; background-color: white;">Edit</button>
+            <button type="button" class="btn btn-primary fw-bold" id="btnFinishAILesson" style="border-radius: 8px; padding: 10px 24px; background-color: #2563eb; border: none;">
+                <i class="fas fa-check me-1"></i> Finish & Save Lesson
+            </button>
+        </div>
+        <div id="editModeButtons" style="display: none; gap: 0.5rem;" class="align-items-center">
+            <button type="button" class="btn fw-bold" id="btnCancelEditAILesson" style="border-radius: 8px; padding: 10px 24px; color: #475569; background-color: white;">Cancel Edit</button>
+            <button type="button" class="btn btn-success fw-bold" id="btnSaveEditAILesson" style="border-radius: 8px; padding: 10px 24px;">
+                <i class="fas fa-save me-1"></i> Save Edit
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal View Saved Lesson -->
+<div class="modal fade" id="viewLessonModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <div class="modal-header border-bottom-0 align-items-start pb-0 py-4 px-4">
+        <div class="w-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="modal-title fw-bold" id="viewLessonTitle" style="color: #1e293b;"></h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+        </div>
+      </div>
+      <div class="modal-body px-4 bg-light mx-4 my-2" style="border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div id="viewLessonContent" style="min-height: 400px; padding: 20px; color: #334155;"></div>
+      </div>
+      <div class="modal-footer border-top-0 pt-3 pb-4 px-4 d-flex justify-content-end">
+        <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 24px; color: #475569;">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = '{{ csrf_token }}';
+    const generateUrl = "{% url 'ai_core:generate_lesson' %}";
+    const saveDocUrl = "{% url 'ai_core:save_lesson_doc' %}";
+    const lessonHtmlBaseUrl = "{% url 'ai_core:get_lesson_html' upload_id=0 %}".replace('/0/', '/{id}/');
+    const courseSlug = "{{ course.slug }}";
+
+    const createModalEl = document.getElementById('createAILessonModal');
+    const previewModalEl = document.getElementById('previewAILessonModal');
+    
+    if (!createModalEl || !previewModalEl) return;
+    
+    const createModal = new bootstrap.Modal(createModalEl);
+    const previewModal = new bootstrap.Modal(previewModalEl);
+
+    let currentGeneratedHtml = "";
+
+    document.getElementById('btnSubmitAILesson').addEventListener('click', async function() {
+        const topic = document.getElementById('aiLessonTopic').value.trim();
+        if (!topic) {
+            alert("Please enter a topic!");
+            return;
+        }
+        const requirements = document.getElementById('aiLessonRequirements').value.trim();
+
+        // UI Loading state
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(generateUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    topic: topic,
+                    requirements: requirements,
+                    upload_ids: Array.from(document.querySelectorAll('.rag-doc-check:checked')).map(cb => parseInt(cb.value))
+                })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                currentGeneratedHtml = data.content;
+                
+                // Set data in preview modal
+                document.getElementById('previewModalTitle').innerText = data.topic || topic;
+                
+                // Revert view mode
+                switchToViewMode();
+                updatePreviewContent(currentGeneratedHtml);
+                
+                // Hide create modal, show preview modal
+                createModal.hide();
+                previewModal.show();
+            } else {
+                alert(data.error || "An error occurred while creating the lesson.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Unable to connect to the server. Please try again.");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    function updatePreviewContent(htmlContent) {
+        document.getElementById('aiLessonViewMode').innerHTML = htmlContent;
+    }
+
+    const editorDiv = document.getElementById('aiLessonViewMode');
+
+    function switchToEditMode() {
+        editorDiv.contentEditable = "true";
+        editorDiv.style.backgroundColor = "#fff";
+        editorDiv.style.border = "2px dashed #94a3b8";
+        editorDiv.style.borderRadius = "8px";
+        editorDiv.focus();
+        
+        document.getElementById('btnRecreateAILesson').style.display = 'none';
+        document.getElementById('viewModeButtons').style.display = 'none';
+        document.getElementById('editModeButtons').style.display = 'flex';
+        
+        document.getElementById('previewModalSubtitleLeft').innerText = 'Edit directly on the document (Rich Text)';
+        document.getElementById('previewModalSubtitleRight').style.display = 'none';
+        
+        // Place cursor at the end
+        if (window.getSelection) {
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(editorDiv);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
+    function switchToViewMode() {
+        editorDiv.contentEditable = "false";
+        editorDiv.style.backgroundColor = "transparent";
+        editorDiv.style.border = "none";
+        
+        document.getElementById('editModeButtons').style.display = 'none';
+        document.getElementById('btnRecreateAILesson').style.display = 'block';
+        document.getElementById('viewModeButtons').style.display = 'flex';
+        
+        document.getElementById('previewModalSubtitleLeft').innerText = 'Review and edit the lesson if needed';
+        document.getElementById('previewModalSubtitleRight').style.display = 'none';
+    }
+
+    document.getElementById('btnEditAILesson').addEventListener('click', switchToEditMode);
+    
+    document.getElementById('btnCancelEditAILesson').addEventListener('click', function() {
+        editorDiv.innerHTML = currentGeneratedHtml; // revert changes
+        switchToViewMode();
+    });
+
+    document.getElementById('btnSaveEditAILesson').addEventListener('click', function() {
+        currentGeneratedHtml = editorDiv.innerHTML;
+        switchToViewMode();
+    });
+
+    document.getElementById('btnRecreateAILesson').addEventListener('click', function() {
+        previewModal.hide();
+        setTimeout(() => createModal.show(), 400); // allow backdrop animation 
+    });
+
+    // View saved lesson links
+    document.querySelectorAll('.view-lesson-link').forEach(function(link) {
+        link.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const uploadId = this.dataset.uploadId;
+            const viewModal = new bootstrap.Modal(document.getElementById('viewLessonModal'));
+            const contentEl = document.getElementById('viewLessonContent');
+            const titleEl = document.getElementById('viewLessonTitle');
+
+            contentEl.innerHTML = '<div class="text-center py-5"><span class="spinner-border" role="status"></span></div>';
+            titleEl.innerText = '';
+            viewModal.show();
+
+            try {
+                const response = await fetch(lessonHtmlBaseUrl.replace('{id}', uploadId));
+                const data = await response.json();
+                if (response.ok) {
+                    titleEl.innerText = data.title;
+                    contentEl.innerHTML = data.html_content;
+                } else {
+                    contentEl.innerHTML = '<p class="text-danger">Unable to load lesson content.</p>';
+                }
+            } catch (err) {
+                console.error(err);
+                contentEl.innerHTML = '<p class="text-danger">Unable to connect to the server.</p>';
+            }
+        });
+    });
+
+    document.getElementById('btnFinishAILesson').addEventListener('click', async function() {
+        if (!currentGeneratedHtml) {
+            alert("No lesson content to save.");
+            return;
+        }
+
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+        btn.disabled = true;
+
+        const topic = document.getElementById('previewModalTitle').innerText;
+
+        try {
+            const response = await fetch(saveDocUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    course_slug: courseSlug,
+                    topic: topic,
+                    html_content: currentGeneratedHtml
+                })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                previewModal.hide();
+                window.location.reload();
+            } else {
+                alert(data.error || "An error occurred while saving the lesson.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Unable to connect to the server. Please try again.");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+});
+</script>
 
 {% endblock content %}

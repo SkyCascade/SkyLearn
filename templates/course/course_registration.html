@@ -185,7 +185,7 @@
 <div class="col-md-12 p-0 bg-white">
     <p class="form-title"><b>{% trans 'Course Drop' %}</b></p>
     <div class="container">
-        <p class="fw-bold">{{ student.level }}</p>
+
         <form action="{% url 'course_drop' %}" method="POST">
             {% csrf_token %}
             <div class="d-flex justify-content-between mb-4">

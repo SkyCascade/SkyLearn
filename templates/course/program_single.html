@@ -43,7 +43,6 @@
                     <th> {% trans 'Course Name' %} </th>
                     <th> {% trans 'Course Code' %} </th>
                     <th> {% trans 'Cr.Hr' %} </th>
-                    <th> {% trans 'Level' %} </th>
                     <th> {% trans 'Year' %} </th>
                     <th> {% trans 'Semester' %} </th>
                     <th> {% trans 'Current Semester' %} </th>
@@ -60,7 +59,6 @@
                             {{ course.title }}</a></td>
                     <td>{{ course.code }}</td>
                     <td>{{ course.credit }}</td>
-                    <td>{{ course.level }}</td>
                     <td>{{ course.year }}</td>
                     <td>{{ course.semester }}</td>
                     <th>
@@ -91,7 +89,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="9">
+                  <td colspan="8">
                   <span class="text-danger">
                     {% trans 'No course for this progrm.' %}
                     {% if request.user.is_superuser %}

@@ -20,5 +20,20 @@ urlpatterns = [
         views.MCQuestionCreate.as_view(),
         name="mc_create",
     ),
+    path(
+        "<slug>/<int:quiz_id>/generate-ai/",
+        views.generate_ai_questions,
+        name="generate_ai_questions",
+    ), #new path for generate MCQ
+    path(
+    "<slug>/<int:quiz_id>/questions/",
+    views.quiz_questions,
+    name="quiz_questions",
+    ), #another new path for checking questions that generate
+    path(
+    "mc-question/<slug>/<int:quiz_id>/<int:pk>/edit/",
+    views.MCQuestionUpdate.as_view(),
+    name="mc_update",
+    ), #new path for viewing questions
     # path('mc-question/add/<int:pk>/<quiz_pk>/', MCQuestionCreate.as_view(), name='mc_create'),
 ]

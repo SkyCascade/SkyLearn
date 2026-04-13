@@ -153,7 +153,6 @@ class TakenCourse(models.Model):
 
         taken_courses = TakenCourse.objects.filter(
             student=self.student,
-            course__level=self.student.level,
             course__semester=current_semester.semester,
         )
 

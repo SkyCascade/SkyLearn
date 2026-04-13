@@ -17,12 +17,16 @@
 
 			<div class="dropdown">
 				<div class="avatar border border-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+					{% if request.user.picture %}
 					<img src="{{ request.user.picture.url }}">
+					{% endif %}
 				</div>
 				<div class="dropdown-menu" style="min-width: 14rem !important;">
 					<div class="d-flex flex-column align-items-center">
 						<div class="avatar avatar-md border">
+							{% if request.user.picture %}
 							<img src="{{ request.user.picture.url }}">
+							{% endif %}
 						</div>
 	
 						<p class="small text-muted text-center mb-0">

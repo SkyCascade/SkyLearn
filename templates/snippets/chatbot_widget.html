@@ -1,0 +1,67 @@
+{% load static %}
+{% load i18n %}
+
+<!-- Chatbot Floating Widget -->
+<div id="skylearn-chatbot">
+  <!-- Floating Toggle Button -->
+  <button id="chatbot-toggle" class="chatbot-toggle-btn" title="{% trans 'Chat with AI Assistant' %}">
+    <i class="fas fa-comment-dots chatbot-icon-open"></i>
+    <i class="fas fa-times chatbot-icon-close d-none"></i>
+    <span id="chatbot-badge" class="chatbot-badge d-none">1</span>
+  </button>
+
+  <!-- Chat Window -->
+  <div id="chatbot-window" class="chatbot-window d-none">
+    <!-- Header -->
+    <div class="chatbot-header">
+      <div class="chatbot-header-info">
+        <div class="chatbot-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div>
+          <div class="chatbot-header-title">SkyLearn AI</div>
+          <div class="chatbot-header-status">
+            <span class="chatbot-status-dot"></span> {% trans 'Online' %}
+          </div>
+        </div>
+      </div>
+      <div class="chatbot-header-actions">
+        <button id="chatbot-clear" class="chatbot-header-btn" title="{% trans 'Clear chat' %}">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+        <button id="chatbot-minimize" class="chatbot-header-btn" title="{% trans 'Minimize' %}">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Messages Area -->
+    <div id="chatbot-messages" class="chatbot-messages">
+      <div class="chatbot-msg chatbot-msg-bot">
+        <div class="chatbot-msg-avatar"><i class="fas fa-robot"></i></div>
+        <div class="chatbot-msg-bubble">
+          {% trans 'Hi there' %} 👋 {% trans "I'm your SkyLearn AI Assistant. How can I help you today?" %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="chatbot-input-area">
+      <form id="chatbot-form" autocomplete="off">
+        <div class="chatbot-input-wrapper">
+          <input
+            type="text"
+            id="chatbot-input"
+            class="chatbot-input"
+            placeholder="{% trans 'Enter your message...' %}"
+            maxlength="2000"
+            required
+          />
+          <button type="submit" id="chatbot-send" class="chatbot-send-btn" disabled>
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

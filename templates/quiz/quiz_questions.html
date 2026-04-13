@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Questions for {{ quiz.title }}</h2>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Question</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for question in questions %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ question.content }}</td>
+                <td>
+                    <a href="{% url 'admin:quiz_mcquestion_change' question.id %}" 
+                       class="btn btn-warning btn-sm text-dark fw-bold">
+                       <i class="fas fa-edit me-1"></i> Edit
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No questions found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

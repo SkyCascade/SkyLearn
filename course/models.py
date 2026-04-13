@@ -65,7 +65,7 @@ class Course(models.Model):
     credit = models.IntegerField(default=0)
     summary = models.TextField(max_length=200, blank=True)
     program = models.ForeignKey(Program, on_delete=models.CASCADE)
-    level = models.CharField(max_length=25, choices=settings.LEVEL_CHOICES)
+
     year = models.IntegerField(choices=settings.YEARS, default=1)
     semester = models.CharField(choices=settings.SEMESTER_CHOICES, max_length=200)
     is_elective = models.BooleanField(default=False)
@@ -123,6 +123,7 @@ class CourseAllocation(models.Model):
 class Upload(models.Model):
     title = models.CharField(max_length=100)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    html_content = models.TextField(null=True, blank=True)
     file = models.FileField(
         upload_to="course_files/",
         help_text=_(

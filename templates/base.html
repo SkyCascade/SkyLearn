@@ -10,7 +10,12 @@
 
     <title>{% block title %}DjangoSMS{% endblock title %}</title>
 
-    <link rel="shortcut icon" href="{% static 'img/favicon.png' %}" type="image/x-icon">
+    <!-- Google Fonts - Inter with Vietnamese support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+    <link rel="shortcut icon" href="{% static 'img/favicon_new.jpg' %}" type="image/x-icon">
 
     <!-- Fontawesome icons -->
     <link rel="stylesheet" type="text/css" href="{% static 'vendor/fontawesome-6.5.1/css/all.min.css' %}">
@@ -19,6 +24,8 @@
     <link rel="stylesheet" type="text/css" href="{% static 'vendor/bootstrap-5.3.2/css/bootstrap.min.css' %}">
 
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.min.css' %}">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'css/chatbot.css' %}">
 
     <!-- <script src="https://js.stripe.com/v3/"></script> -->
     {% block header %}{% endblock %}
@@ -46,6 +53,13 @@
     <script type="text/javascript" src="{% static 'vendor/bootstrap-5.3.2/js/bootstrap.bundle.min.js' %}"></script>
 
     <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
+
+    {% if user.is_authenticated %}
+        {% if request.resolver_match.url_name != 'quiz_take' %}
+            {% include 'snippets/chatbot_widget.html' %}
+            <script type="text/javascript" src="{% static 'js/chatbot.js' %}"></script>
+        {% endif %}
+    {% endif %}
 
     {% block js %}
     {% endblock js %}
