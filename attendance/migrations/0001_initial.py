@@ -10,50 +10,133 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('accounts', '0001_initial'),
+        ("accounts", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Attendance',
+            name="Attendance",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.BooleanField(default=False)),
-                ('Student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='accounts.student')),
-                ('admin', models.ForeignKey(blank=True, limit_choices_to={'is_superuser': True}, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='created_attendances', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("status", models.BooleanField(default=False)),
+                (
+                    "Student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.student",
+                    ),
+                ),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        limit_choices_to={"is_superuser": True},
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="created_attendances",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='LessonTime',
+            name="LessonTime",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order', models.IntegerField(help_text='Номер урока (1, 2, 3, ...)', unique=True)),
-                ('start_time', models.TimeField(help_text='Время начала урока')),
-                ('end_time', models.TimeField(help_text='Время окончания урока')),
-                ('admin', models.ForeignKey(blank=True, help_text='Администратор, создавший это расписание времен', limit_choices_to={'is_superuser': True}, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='lesson_times', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "order",
+                    models.IntegerField(
+                        help_text="Номер урока (1, 2, 3, ...)", unique=True
+                    ),
+                ),
+                ("start_time", models.TimeField(help_text="Время начала урока")),
+                ("end_time", models.TimeField(help_text="Время окончания урока")),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Администратор, создавший это расписание времен",
+                        limit_choices_to={"is_superuser": True},
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="lesson_times",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Lesson Time',
-                'verbose_name_plural': 'Lesson Times',
-                'ordering': ['order'],
+                "verbose_name": "Lesson Time",
+                "verbose_name_plural": "Lesson Times",
+                "ordering": ["order"],
             },
         ),
         migrations.CreateModel(
-            name='ScheduleItem',
+            name="ScheduleItem",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('day', models.CharField(choices=[('Monday', 'Monday'), ('Tuesday', 'Tuesday'), ('Wednesday', 'Wednesday'), ('Thursday', 'Thursday'), ('Friday', 'Friday')], max_length=10)),
-                ('date', models.DateField(blank=True, help_text='Дата проведения урока', null=True)),
-                ('order', models.IntegerField(blank=True, null=True)),
-                ('start', models.TimeField(blank=True, null=True)),
-                ('end', models.TimeField(blank=True, null=True)),
-                ('admin', models.ForeignKey(blank=True, limit_choices_to={'is_superuser': True}, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='created_schedule_items', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "day",
+                    models.CharField(
+                        choices=[
+                            ("Monday", "Monday"),
+                            ("Tuesday", "Tuesday"),
+                            ("Wednesday", "Wednesday"),
+                            ("Thursday", "Thursday"),
+                            ("Friday", "Friday"),
+                        ],
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "date",
+                    models.DateField(
+                        blank=True, help_text="Дата проведения урока", null=True
+                    ),
+                ),
+                ("order", models.IntegerField(blank=True, null=True)),
+                ("start", models.TimeField(blank=True, null=True)),
+                ("end", models.TimeField(blank=True, null=True)),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        limit_choices_to={"is_superuser": True},
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="created_schedule_items",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Schedule Item',
-                'verbose_name_plural': 'Schedule Items',
-                'ordering': ['date', 'lesson_time__order'],
+                "verbose_name": "Schedule Item",
+                "verbose_name_plural": "Schedule Items",
+                "ordering": ["date", "lesson_time__order"],
             },
         ),
     ]

@@ -1,6 +1,6 @@
 from .utils import (
-    generate_student_credentials,
     generate_lecturer_credentials,
+    generate_student_credentials,
     send_new_account_email,
 )
 

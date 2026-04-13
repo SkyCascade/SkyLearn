@@ -1,12 +1,14 @@
 from rest_framework import serializers
-from django.db.models import Sum
+
 from .models import Invoice, Payment
 
 
 class InvoiceListSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source="student.get_full_name", read_only=True)
     student_id = serializers.PrimaryKeyRelatedField(source="student", read_only=True)
-    total_paid = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    total_paid = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = Invoice

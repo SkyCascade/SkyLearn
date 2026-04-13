@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import Invoice, Payment
 
 
@@ -6,7 +7,11 @@ from .models import Invoice, Payment
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ["title", "student", "amount", "status", "due_date", "created_at"]
     list_filter = ["status", "due_date"]
-    search_fields = ["title", "student__student__first_name", "student__student__last_name"]
+    search_fields = [
+        "title",
+        "student__student__first_name",
+        "student__student__last_name",
+    ]
 
 
 @admin.register(Payment)

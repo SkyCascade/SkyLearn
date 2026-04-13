@@ -1,0 +1,52 @@
+# Web framework
+Django
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+django-filter
+drf-spectacular
+
+# Cache & async tasks
+redis
+celery
+django-redis
+
+# Database
+psycopg2-binary
+
+# Config
+python-decouple
+python-dotenv
+
+# Static files
+whitenoise
+
+# Admin
+django-jet-reboot
+
+# Forms
+crispy-bootstrap5
+django-crispy-forms
+
+# Payments
+stripe
+
+# PDF generation
+reportlab
+xhtml2pdf
+svglib
+pillow
+
+# Testing
+factory-boy
+Faker
+
+# Logging & monitoring
+structlog
+sentry-sdk
+
+# Dev tools
+pre-commit
+flake8
+isort
+black

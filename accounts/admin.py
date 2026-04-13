@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import User, Student, Parent
+
+from .models import Parent, Student, User
 
 
 class UserAdmin(admin.ModelAdmin):

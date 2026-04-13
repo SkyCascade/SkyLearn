@@ -1,0 +1,14 @@
+[flake8]
+max-line-length = 88
+# E203/W503 — conflicts with black's formatting style
+# E501 — line length enforced by black instead
+# E266 — block comment style (## allowed)
+# F841 — local variable assigned but never used
+extend-ignore = E203, W503, E501, E266, F841
+exclude =
+    .git,
+    __pycache__,
+    migrations,
+    venv,
+    staticfiles,
+    .pre-commit-config.yaml

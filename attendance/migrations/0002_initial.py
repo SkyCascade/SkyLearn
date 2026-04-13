@@ -9,34 +9,47 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('accounts', '0002_group_program_user_groups_user_user_permissions'),
-        ('attendance', '0001_initial'),
-        ('core', '0001_initial'),
+        ("accounts", "0002_group_program_user_groups_user_user_permissions"),
+        ("attendance", "0001_initial"),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='scheduleitem',
-            name='course',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.course'),
+            model_name="scheduleitem",
+            name="course",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="core.course"
+            ),
         ),
         migrations.AddField(
-            model_name='scheduleitem',
-            name='group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='accounts.group'),
+            model_name="scheduleitem",
+            name="group",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="accounts.group"
+            ),
         ),
         migrations.AddField(
-            model_name='scheduleitem',
-            name='lesson_time',
-            field=models.ForeignKey(blank=True, help_text='Время урока (автоматически определяет start и end)', null=True, on_delete=django.db.models.deletion.CASCADE, to='attendance.lessontime'),
+            model_name="scheduleitem",
+            name="lesson_time",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Время урока (автоматически определяет start и end)",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="attendance.lessontime",
+            ),
         ),
         migrations.AddField(
-            model_name='attendance',
-            name='shcedule',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='attendance.scheduleitem'),
+            model_name="attendance",
+            name="shcedule",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="attendance.scheduleitem",
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='lessontime',
-            unique_together={('order', 'admin')},
+            name="lessontime",
+            unique_together={("order", "admin")},
         ),
     ]

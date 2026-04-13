@@ -1,7 +1,8 @@
-from django.test import TestCase
-from accounts.filters import LecturerFilter, StudentFilter
-from accounts.models import User, Student
 from course.models import Program
+from django.test import TestCase
+
+from accounts.filters import LecturerFilter, StudentFilter
+from accounts.models import Student, User
 
 
 class LecturerFilterTestCase(TestCase):

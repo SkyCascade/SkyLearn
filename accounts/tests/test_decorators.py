@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
+
 from accounts.decorators import admin_required, lecturer_required, student_required
 
 User = get_user_model()

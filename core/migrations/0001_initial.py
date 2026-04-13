@@ -10,88 +10,263 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('accounts', '0001_initial'),
+        ("accounts", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Course',
+            name="Course",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('admin', models.ForeignKey(blank=True, limit_choices_to={'is_superuser': True}, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='created_courses', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                ("description", models.TextField(blank=True, null=True)),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        limit_choices_to={"is_superuser": True},
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="created_courses",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Course',
-                'verbose_name_plural': 'Courses',
+                "verbose_name": "Course",
+                "verbose_name_plural": "Courses",
             },
         ),
         migrations.CreateModel(
-            name='Program',
+            name="Program",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
-                ('admin', models.ForeignKey(blank=True, limit_choices_to={'is_superuser': True}, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='created_programs', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        limit_choices_to={"is_superuser": True},
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="created_programs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Program',
-                'verbose_name_plural': 'Programs',
+                "verbose_name": "Program",
+                "verbose_name_plural": "Programs",
             },
         ),
         migrations.CreateModel(
-            name='AcademicYear',
+            name="AcademicYear",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('year', models.IntegerField(unique=True)),
-                ('is_current', models.BooleanField(default=False)),
-                ('admin', models.ForeignKey(blank=True, limit_choices_to={'is_superuser': True}, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='created_academic_years', to=settings.AUTH_USER_MODEL)),
-                ('program', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='academic_years', to='core.program')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("year", models.IntegerField(unique=True)),
+                ("is_current", models.BooleanField(default=False)),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        limit_choices_to={"is_superuser": True},
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="created_academic_years",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "program",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="academic_years",
+                        to="core.program",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Semester',
+            name="Semester",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(choices=[('First', 'First'), ('Second', 'Second')], default='First', max_length=10)),
-                ('is_current', models.BooleanField(blank=True, default=False, null=True)),
-                ('academic_year', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='semesters', to='core.academicyear')),
-                ('admin', models.ForeignKey(blank=True, limit_choices_to={'is_superuser': True}, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='created_semesters', to=settings.AUTH_USER_MODEL)),
-                ('courses', models.ManyToManyField(related_name='semesters', to='core.course')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        choices=[("First", "First"), ("Second", "Second")],
+                        default="First",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "is_current",
+                    models.BooleanField(blank=True, default=False, null=True),
+                ),
+                (
+                    "academic_year",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="semesters",
+                        to="core.academicyear",
+                    ),
+                ),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        limit_choices_to={"is_superuser": True},
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="created_semesters",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "courses",
+                    models.ManyToManyField(related_name="semesters", to="core.course"),
+                ),
             ],
             options={
-                'verbose_name': 'Semester',
-                'verbose_name_plural': 'Semesters',
+                "verbose_name": "Semester",
+                "verbose_name_plural": "Semesters",
             },
         ),
         migrations.CreateModel(
-            name='Module',
+            name="Module",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(choices=[('First', 'First'), ('Second', 'Second')], max_length=10)),
-                ('is_current', models.BooleanField(default=False)),
-                ('admin', models.ForeignKey(blank=True, limit_choices_to={'is_superuser': True}, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='created_modules', to=settings.AUTH_USER_MODEL)),
-                ('semester', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='modules', to='core.semester')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        choices=[("First", "First"), ("Second", "Second")],
+                        max_length=10,
+                    ),
+                ),
+                ("is_current", models.BooleanField(default=False)),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        limit_choices_to={"is_superuser": True},
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="created_modules",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "semester",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="modules",
+                        to="core.semester",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Module',
-                'verbose_name_plural': 'Modules',
+                "verbose_name": "Module",
+                "verbose_name_plural": "Modules",
             },
         ),
         migrations.CreateModel(
-            name='CourseAllocation',
+            name="CourseAllocation",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('admin', models.ForeignKey(blank=True, limit_choices_to={'is_superuser': True}, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='created_course_allocations', to=settings.AUTH_USER_MODEL)),
-                ('courses', models.ManyToManyField(related_name='course_allocations', to='core.course')),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='course_allocations', to='accounts.group')),
-                ('lecturer', models.ForeignKey(limit_choices_to={'is_staff': True}, on_delete=django.db.models.deletion.CASCADE, related_name='course_allocations', to=settings.AUTH_USER_MODEL)),
-                ('semester', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='course_allocations', to='core.semester')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        limit_choices_to={"is_superuser": True},
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="created_course_allocations",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "courses",
+                    models.ManyToManyField(
+                        related_name="course_allocations", to="core.course"
+                    ),
+                ),
+                (
+                    "group",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="course_allocations",
+                        to="accounts.group",
+                    ),
+                ),
+                (
+                    "lecturer",
+                    models.ForeignKey(
+                        limit_choices_to={"is_staff": True},
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="course_allocations",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "semester",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="course_allocations",
+                        to="core.semester",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Course Allocation',
-                'verbose_name_plural': 'Course Allocations',
+                "verbose_name": "Course Allocation",
+                "verbose_name_plural": "Course Allocations",
             },
         ),
     ]

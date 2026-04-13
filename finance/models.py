@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import Sum
-from config import settings
 
+from config import settings
 
 INVOICE_STATUS = (
     ("pending", "Pending"),
@@ -82,7 +82,9 @@ class Payment(models.Model):
         related_name="payments",
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD, default="cash")
+    payment_method = models.CharField(
+        max_length=20, choices=PAYMENT_METHOD, default="cash"
+    )
     comment = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 

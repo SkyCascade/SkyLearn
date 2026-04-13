@@ -1,7 +1,6 @@
 from django.contrib import admin
-from .models import Semester, Program, AcademicYear, Module, CourseAllocation, Course
 
-
+from .models import AcademicYear, Course, CourseAllocation, Module, Program, Semester
 
 admin.site.register(Semester)
 admin.site.register(Program)
