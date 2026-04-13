@@ -1,12 +1,13 @@
-from django import forms
-from django.db import transaction
-from django.contrib.auth.forms import (
-    UserCreationForm,
-    UserChangeForm,
-)
-from django.contrib.auth.forms import PasswordResetForm
 from course.models import Program
-from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS
+from django import forms
+from django.contrib.auth.forms import (
+    PasswordResetForm,
+    UserChangeForm,
+    UserCreationForm,
+)
+from django.db import transaction
+
+from .models import GENDERS, LEVEL, RELATION_SHIP, Parent, Student, User
 
 
 class StaffAddForm(UserCreationForm):

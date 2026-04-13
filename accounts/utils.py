@@ -1,7 +1,9 @@
 import threading
 from datetime import datetime
-from django.contrib.auth import get_user_model
+
 from django.conf import settings
+from django.contrib.auth import get_user_model
+
 from core.utils import send_html_email
 
 
@@ -51,6 +53,8 @@ class EmailThread(threading.Thread):
 def send_new_account_email(user, password):
     if user.is_student:
         template_name = "accounts/email/new_student_account_confirmation.html"
+    elif user.is_parent:
+        template_name = "accounts/email/new_parent_account_confirmation.html"
     else:
         template_name = "accounts/email/new_lecturer_account_confirmation.html"
     email = {

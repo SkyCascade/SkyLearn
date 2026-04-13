@@ -1,92 +1,82 @@
-from django.urls import path, include
+from django.urls import path
 
-# from django.contrib.auth.views import (
-#     PasswordResetView,
-#     PasswordResetDoneView,
-#     PasswordResetConfirmView,
-#     PasswordResetCompleteView,
-#     LoginView,
-#     LogoutView,
-# )
 from .views import (
-    profile,
-    profile_single,
-    admin_panel,
-    profile_update,
-    change_password,
-    LecturerFilterView,
-    StudentListView,
-    staff_add_view,
-    edit_staff,
-    delete_staff,
-    student_add_view,
-    edit_student,
-    delete_student,
-    edit_student_program,
-    ParentAdd,
-    validate_username,
-    register,
-    render_lecturer_pdf_list,  # new
-    render_student_pdf_list,  # new
+    CustomTokenObtainPairView,
+    GroupCreateView,
+    GroupListAPIView,
+    GroupRetrieveUpdateDestroyView,
+    LecturerCreateView,
+    LecturerListAPIView,
+    LecturerRetrieveDestroyView,
+    LecturerUpdateView,
+    ParentCreateView,
+    ParentListAPIView,
+    ParentRetrieveUpdateDestroyView,
+    ParentUpdateView,
+    SecureTokenRefreshView,
+    StudentCreateView,
+    StudentListAPIView,
+    StudentListGroupAPIView,
+    StudentRetrieveUpdateDestroyView,
+    StudentUpdateAPIView,
+    UserProfileView,
 )
 
-# from .forms import EmailValidationOnForgotPassword
-
-
 urlpatterns = [
-    path("", include("django.contrib.auth.urls")),
-    path("admin_panel/", admin_panel, name="admin_panel"),
-    path("profile/", profile, name="profile"),
-    path("profile/<int:user_id>/detail/", profile_single, name="profile_single"),
-    path("setting/", profile_update, name="edit_profile"),
-    path("change_password/", change_password, name="change_password"),
-    path("lecturers/", LecturerFilterView.as_view(), name="lecturer_list"),
-    path("lecturer/add/", staff_add_view, name="add_lecturer"),
-    path("staff/<int:pk>/edit/", edit_staff, name="staff_edit"),
-    path("lecturers/<int:pk>/delete/", delete_staff, name="lecturer_delete"),
-    path("students/", StudentListView.as_view(), name="student_list"),
-    path("student/add/", student_add_view, name="add_student"),
-    path("student/<int:pk>/edit/", edit_student, name="student_edit"),
-    path("students/<int:pk>/delete/", delete_student, name="student_delete"),
+    path("token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("token/refresh/", SecureTokenRefreshView.as_view(), name="token_refresh"),
+    path("profile/", UserProfileView.as_view(), name="user-profile"),
+    # Lecturer URLs
+    path("lecturers/", LecturerListAPIView.as_view(), name="lecturer-list"),
+    path("lecturers/create/", LecturerCreateView.as_view(), name="lecturer-create"),
     path(
-        "edit_student_program/<int:pk>/",
-        edit_student_program,
-        name="student_program_edit",
+        "lecturers/<int:pk>/",
+        LecturerRetrieveDestroyView.as_view(),
+        name="lecturer-detail-delete",
     ),
-    path("parents/add/", ParentAdd.as_view(), name="add_parent"),
-    path("ajax/validate-username/", validate_username, name="validate_username"),
-    path("register/", register, name="register"),
-    # paths to pdf
     path(
-        "create_lecturers_pdf_list/", render_lecturer_pdf_list, name="lecturer_list_pdf"
-    ),  # new
+        "lecturers/update/<int:pk>/",
+        LecturerUpdateView.as_view(),
+        name="lecturer-update",
+    ),
+    # Group URLs
+    path("groups/", GroupListAPIView.as_view(), name="group-list"),
+    path("groups/create/", GroupCreateView.as_view(), name="group-create"),
     path(
-        "create_students_pdf_list/", render_student_pdf_list, name="student_list_pdf"
-    ),  # new
-    # path('add-student/', StudentAddView.as_view(), name='add_student'),
-    # path('programs/course/delete/<int:pk>/', course_delete, name='delete_course'),
-    # Setting urls
-    # path('profile/<int:pk>/edit/', profileUpdateView, name='edit_profile'),
-    # path('profile/<int:pk>/change-password/', changePasswordView, name='change_password'),
-    # ################################################################
-    # path('login/', LoginView.as_view(), name='login'),
-    # path('logout/', LogoutView.as_view(), name='logout', kwargs={'next_page': '/'}),
-    # path('password-reset/', PasswordResetView.as_view(
-    #     form_class=EmailValidationOnForgotPassword,
-    #     template_name='registration/password_reset.html'
-    # ),
-    #      name='password_reset'),
-    # path('password-reset/done/', PasswordResetDoneView.as_view(
-    #     template_name='registration/password_reset_done.html'
-    # ),
-    #      name='password_reset_done'),
-    # path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(
-    #     template_name='registration/password_reset_confirm.html'
-    # ),
-    #      name='password_reset_confirm'),
-    # path('password-reset-complete/', PasswordResetCompleteView.as_view(
-    #     template_name='registration/password_reset_complete.html'
-    # ),
-    #      name='password_reset_complete')
-    # ################################################################
+        "groups/<int:pk>/",
+        GroupRetrieveUpdateDestroyView.as_view(),
+        name="group-detail-delete",
+    ),
+    path(
+        "groups/update/<int:pk>/",
+        GroupRetrieveUpdateDestroyView.as_view(),
+        name="group-update",
+    ),
+    # Parent URLs
+    path("parents/", ParentListAPIView.as_view(), name="parent-list"),
+    path("parents/create/", ParentCreateView.as_view(), name="parent-create"),
+    path(
+        "parents/<int:pk>/",
+        ParentRetrieveUpdateDestroyView.as_view(),
+        name="parent-detail-delete",
+    ),
+    path("parents/update/<int:pk>/", ParentUpdateView.as_view(), name="parent-update"),
+    # Student URLs
+    path("students/create/", StudentCreateView.as_view(), name="student-create"),
+    path(
+        "students/<int:pk>/",
+        StudentRetrieveUpdateDestroyView.as_view(),
+        name="student-detail-delete",
+    ),
+    path(
+        "students/update/<int:pk>/",
+        StudentUpdateAPIView.as_view(),
+        name="student-update",
+    ),
+    path("students/", StudentListAPIView.as_view(), name="student-list"),
+    path(
+        "students/by-group/<int:group_id>/",
+        StudentListGroupAPIView.as_view(),
+        name="student-by-group",
+    ),
 ]

@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+
+import sentry_sdk
+import structlog
 from decouple import config
 from django.utils.translation import gettext_lazy as _
 
@@ -28,7 +31,7 @@ SECRET_KEY = config(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = ["127.0.0.1", "adilmohak1.pythonanywhere.com"]
+ALLOWED_HOSTS = ["127.0.0.1", "adilmohak1.pythonanywhere.com", "localhost"]
 
 # change the default user models to our custom model
 AUTH_USER_MODEL = "accounts.User"
@@ -36,7 +39,6 @@ AUTH_USER_MODEL = "accounts.User"
 # Application definition
 
 DJANGO_APPS = [
-    "modeltranslation",  # Translation
     "jet.dashboard",
     "jet",
     "django.contrib.admin",
@@ -46,23 +48,31 @@ DJANGO_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
+if DEBUG:
+    # Add django_browser_reload only in DEBUG mode
+    DJANGO_APPS += ["django_browser_reload"]
+
+TAILWIND_APP_NAME = "theme"
+
 
 # Third party apps
 THIRD_PARTY_APPS = [
     "crispy_forms",
-    "crispy_bootstrap5",
     "django_filters",
+    "rest_framework.authtoken",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "corsheaders",
+    "drf_spectacular",
 ]
 
 # Custom apps
 PROJECT_APPS = [
     "core.apps.CoreConfig",
     "accounts.apps.AccountsConfig",
-    "course.apps.CourseConfig",
     "result.apps.ResultConfig",
-    "search.apps.SearchConfig",
-    "quiz.apps.QuizConfig",
-    "payments.apps.PaymentsConfig",
+    "attendance.apps.AttendanceConfig",
+    "finance.apps.FinanceConfig",
 ]
 
 # Combine all apps
@@ -76,9 +86,75 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django.middleware.locale.LocaleMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # whitenoise to serve static files
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
+if DEBUG:
+    # Add django_browser_reload middleware only in DEBUG mode
+    MIDDLEWARE += [
+        "django_browser_reload.middleware.BrowserReloadMiddleware",
+    ]
+
+from datetime import timedelta  # noqa: E402
+
+# CORS Settings - Important for cookie-based auth
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "https://yourdomain.com",  # Add your production frontend URL
+        "https://www.yourdomain.com",
+    ]
+
+CORS_ALLOW_CREDENTIALS = True  # Required for cookies
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+# JWT Settings with Cookie support
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=5),  # Shorter for better security
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # 7 days
+    "ROTATE_REFRESH_TOKENS": True,  # Enable token rotation for better security
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    # Cookie settings
+    "AUTH_COOKIE": "access_token",  # Cookie name for access token
+    "AUTH_COOKIE_REFRESH": "refresh_token",  # Cookie name for refresh token
+    "AUTH_COOKIE_DOMAIN": None,  # None = current domain, or set specific domain
+    "AUTH_COOKIE_SECURE": not DEBUG,  # True in production (requires HTTPS)
+    "AUTH_COOKIE_HTTP_ONLY": True,  # httpOnly flag
+    "AUTH_COOKIE_PATH": "/",
+    "AUTH_COOKIE_SAMESITE": "Lax",  # Lax or Strict for CSRF protection
+}
+
+# Cookie name for JWT in requests
+SIMPLE_JWT_COOKIE_NAME = "access_token"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "accounts.authentication.JWTCookieAuthentication",  # Our custom auth
+        "rest_framework_simplejwt.authentication.JWTAuthentication",  # Fallback
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "core.exception_handler.custom_exception_handler",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "SU API",
+    "DESCRIPTION": "API for SU educational platform",
+    "VERSION": "1.0.0",
+}
+
 
 ROOT_URLCONF = "config.urls"
 
@@ -144,21 +220,9 @@ def gettext(s):
     return s
 
 
-LANGUAGES = (
-    ("en", gettext("English")),
-    ("fr", gettext("French")),
-    ("es", gettext("Spanish")),
-    ("ru", gettext("Russia")),
-)
-
-LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
-
-MODELTRANSLATION_DEFAULT_LANGUAGE = "en"
-LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
 
-USE_I18N = True
+USE_I18N = False
 
 USE_L10N = True
 
@@ -268,4 +332,73 @@ SEMESTER_CHOICES = (
     (FIRST, _("First")),
     (SECOND, _("Second")),
     (THIRD, _("Third")),
+)
+
+
+LOGS_DIR = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.processors.JSONRenderer(),
+            "foreign_pre_chain": [
+                structlog.stdlib.add_log_level,
+                structlog.stdlib.add_logger_name,
+                structlog.processors.TimeStamper(fmt="iso"),
+            ],
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "django.log"),
+            "maxBytes": 10 * 1024 * 1024,  # 10 MB
+            "backupCount": 5,
+            "formatter": "json",
+        },
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    wrapper_class=structlog.stdlib.BoundLogger,
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    cache_logger_on_first_use=True,
+)
+
+sentry_sdk.init(
+    dsn="https://834dca7c82eb8fd3693afb02042eee38@o4511205924274176.ingest.us.sentry.io/4511205929779200",
+    send_default_pii=True,
+    traces_sample_rate=1.0,
+    environment="development",
 )

@@ -1,21 +1,31 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
 from .views import (
-    add_score,
-    add_score_for,
-    grade_result,
-    assessment_result,
-    course_registration_form,
-    result_sheet_pdf_view,
+    Grade1stModuleViewSet,
+    Grade2ndModuleViewSet,
+    GradeSemesterViewSet,
+    LecturerBulkGradesViewSet,
+    LecturerCourseGradesViewSet,
 )
 
+router = DefaultRouter()
+router.register(
+    r"grade-1st-modules", Grade1stModuleViewSet, basename="grade-1st-modules"
+)
+router.register(
+    r"grade-2nd-modules", Grade2ndModuleViewSet, basename="grade-2nd-modules"
+)
+router.register(r"grade-semesters", GradeSemesterViewSet, basename="grade-semesters")
+router.register(
+    r"lecturer/bulk-grades", LecturerBulkGradesViewSet, basename="lecturer-bulk-grades"
+)
+router.register(
+    r"lecturer/course-grades",
+    LecturerCourseGradesViewSet,
+    basename="lecturer-course-grades",
+)
 
 urlpatterns = [
-    path("manage-score/", add_score, name="add_score"),
-    path("manage-score/<int:id>/", add_score_for, name="add_score_for"),
-    path("grade/", grade_result, name="grade_results"),
-    path("assessment/", assessment_result, name="ass_results"),
-    path("result/print/<int:id>/", result_sheet_pdf_view, name="result_sheet_pdf_view"),
-    path(
-        "registration/form/", course_registration_form, name="course_registration_form"
-    ),
+    path("api/", include(router.urls)),
 ]

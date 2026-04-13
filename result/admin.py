@@ -1,23 +1,7 @@
 from django.contrib import admin
-from django.contrib.auth.models import Group
 
-from .models import TakenCourse, Result
+from .models import Grade_1st_module, Grade_2nd_module, Grade_semester
 
-
-class ScoreAdmin(admin.ModelAdmin):
-    list_display = [
-        "student",
-        "course",
-        "assignment",
-        "mid_exam",
-        "quiz",
-        "attendance",
-        "final_exam",
-        "total",
-        "grade",
-        "comment",
-    ]
-
-
-admin.site.register(TakenCourse, ScoreAdmin)
-admin.site.register(Result)
+admin.site.register(Grade_1st_module)
+admin.site.register(Grade_2nd_module)
+admin.site.register(Grade_semester)

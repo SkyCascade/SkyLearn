@@ -1,413 +1,379 @@
-from django.contrib import messages
-from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import get_template, render_to_string
-from django.utils.decorators import method_decorator
-from django.views.generic import CreateView
-from django_filters.views import FilterView
-from xhtml2pdf import pisa
+from rest_framework import generics, status
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from accounts.decorators import admin_required
-from accounts.filters import LecturerFilter, StudentFilter
-from accounts.forms import (
-    ParentAddForm,
-    ProfileUpdateForm,
-    ProgramUpdateForm,
-    StaffAddForm,
-    StudentAddForm,
+from attendance.permissions import IsLecturer
+from config import settings
+
+from .models import Group, Lecturer, Parent, Student
+from .serializers import (
+    GroupListSerializer,
+    GroupWriteSerializer,
+    LecturerListSerializer,
+    LecturerUpdateSerializer,
+    LecturerWriteSerializer,
+    ParentListSerializer,
+    ParentUpdateSerializer,
+    ParentWriteSerializer,
+    StudentListByGroupSerializer,
+    StudentListSerializer,
+    StudentUpdateSerializer,
+    StudentWriteSerializer,
+    UserSerializer,
 )
-from accounts.models import Parent, Student, User
-from core.models import Semester, Session
-from course.models import Course
-from result.models import TakenCourse
 
-# ########################################################
-# Utility Functions
-# ########################################################
+# ============================================================================
+# LECTURER VIEWS
+# ============================================================================
 
 
-def render_to_pdf(template_name, context):
-    """Render a given template to PDF format."""
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'filename="profile.pdf"'
-    template = render_to_string(template_name, context)
-    pdf = pisa.CreatePDF(template, dest=response)
-    if pdf.err:
-        return HttpResponse("We had some problems generating the PDF")
-    return response
+class LecturerCreateView(generics.CreateAPIView):
+    serializer_class = LecturerWriteSerializer
+    permission_classes = [IsAdminUser]
 
-
-# ########################################################
-# Authentication and Registration
-# ########################################################
-
-
-def validate_username(request):
-    username = request.GET.get("username", None)
-    data = {"is_taken": User.objects.filter(username__iexact=username).exists()}
-    return JsonResponse(data)
-
-
-def register(request):
-    if request.method == "POST":
-        form = StudentAddForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Account created successfully.")
-            return redirect("login")
-        messages.error(
-            request, "Something is not correct, please fill all fields correctly."
-        )
-    else:
-        form = StudentAddForm()
-    return render(request, "registration/register.html", {"form": form})
-
-
-# ########################################################
-# Profile Views
-# ########################################################
-
-
-@login_required
-def profile(request):
-    """Show profile of the current user."""
-    current_session = Session.objects.filter(is_current_session=True).first()
-    current_semester = Semester.objects.filter(
-        is_current_semester=True, session=current_session
-    ).first()
-
-    context = {
-        "title": request.user.get_full_name,
-        "current_session": current_session,
-        "current_semester": current_semester,
-    }
-
-    if request.user.is_lecturer:
-        courses = Course.objects.filter(
-            allocated_course__lecturer__pk=request.user.id, semester=current_semester
-        )
-        context["courses"] = courses
-        return render(request, "accounts/profile.html", context)
-
-    if request.user.is_student:
-        student = get_object_or_404(Student, student__pk=request.user.id)
-        parent = Parent.objects.filter(student=student).first()
-        courses = TakenCourse.objects.filter(
-            student__student__id=request.user.id, course__level=student.level
-        )
-        context.update(
-            {
-                "parent": parent,
-                "courses": courses,
-                "level": student.level,
-            }
-        )
-        return render(request, "accounts/profile.html", context)
-
-    # For superuser or other staff
-    staff = User.objects.filter(is_lecturer=True)
-    context["staff"] = staff
-    return render(request, "accounts/profile.html", context)
-
-
-@login_required
-@admin_required
-def profile_single(request, user_id):
-    """Show profile of any selected user."""
-    if request.user.id == user_id:
-        return redirect("profile")
-
-    current_session = Session.objects.filter(is_current_session=True).first()
-    current_semester = Semester.objects.filter(
-        is_current_semester=True, session=current_session
-    ).first()
-    user = get_object_or_404(User, pk=user_id)
-
-    context = {
-        "title": user.get_full_name,
-        "user": user,
-        "current_session": current_session,
-        "current_semester": current_semester,
-    }
-
-    if user.is_lecturer:
-        courses = Course.objects.filter(
-            allocated_course__lecturer__pk=user_id, semester=current_semester
-        )
-        context.update(
-            {
-                "user_type": "Lecturer",
-                "courses": courses,
-            }
-        )
-    elif user.is_student:
-        student = get_object_or_404(Student, student__pk=user_id)
-        courses = TakenCourse.objects.filter(
-            student__student__id=user_id, course__level=student.level
-        )
-        context.update(
-            {
-                "user_type": "Student",
-                "courses": courses,
-                "student": student,
-            }
-        )
-    else:
-        context["user_type"] = "Superuser"
-
-    if request.GET.get("download_pdf"):
-        return render_to_pdf("pdf/profile_single.html", context)
-
-    return render(request, "accounts/profile_single.html", context)
-
-
-@login_required
-@admin_required
-def admin_panel(request):
-    return render(request, "setting/admin_panel.html", {"title": "Admin Panel"})
-
-
-# ########################################################
-# Settings Views
-# ########################################################
-
-
-@login_required
-def profile_update(request):
-    if request.method == "POST":
-        form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Your profile has been updated successfully.")
-            return redirect("profile")
-        messages.error(request, "Please correct the error(s) below.")
-    else:
-        form = ProfileUpdateForm(instance=request.user)
-    return render(request, "setting/profile_info_change.html", {"form": form})
-
-
-@login_required
-def change_password(request):
-    if request.method == "POST":
-        form = PasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)
-            messages.success(request, "Your password was successfully updated!")
-            return redirect("profile")
-        messages.error(request, "Please correct the error(s) below.")
-    else:
-        form = PasswordChangeForm(request.user)
-    return render(request, "setting/password_change.html", {"form": form})
-
-
-# ########################################################
-# Staff (Lecturer) Views
-# ########################################################
-
-
-@login_required
-@admin_required
-def staff_add_view(request):
-    if request.method == "POST":
-        form = StaffAddForm(request.POST)
-        if form.is_valid():
-            lecturer = form.save()
-            full_name = lecturer.get_full_name
-            email = lecturer.email
-            messages.success(
-                request,
-                f"Account for lecturer {full_name} has been created. "
-                f"An email with account credentials will be sent to {email} within a minute.",
-            )
-            return redirect("lecturer_list")
-    else:
-        form = StaffAddForm()
-    return render(
-        request, "accounts/add_staff.html", {"title": "Add Lecturer", "form": form}
-    )
-
-
-@login_required
-@admin_required
-def edit_staff(request, pk):
-    lecturer = get_object_or_404(User, is_lecturer=True, pk=pk)
-    if request.method == "POST":
-        form = ProfileUpdateForm(request.POST, request.FILES, instance=lecturer)
-        if form.is_valid():
-            form.save()
-            full_name = lecturer.get_full_name
-            messages.success(request, f"Lecturer {full_name} has been updated.")
-            return redirect("lecturer_list")
-        messages.error(request, "Please correct the error below.")
-    else:
-        form = ProfileUpdateForm(instance=lecturer)
-    return render(
-        request, "accounts/edit_lecturer.html", {"title": "Edit Lecturer", "form": form}
-    )
-
-
-@method_decorator([login_required, admin_required], name="dispatch")
-class LecturerFilterView(FilterView):
-    filterset_class = LecturerFilter
-    queryset = User.objects.filter(is_lecturer=True)
-    template_name = "accounts/lecturer_list.html"
-    paginate_by = 10
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Lecturers"
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
         return context
 
 
-@login_required
-@admin_required
-def render_lecturer_pdf_list(request):
-    lecturers = User.objects.filter(is_lecturer=True)
-    template_path = "pdf/lecturer_list.html"
-    context = {"lecturers": lecturers}
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'filename="lecturers_list.pdf"'
-    template = get_template(template_path)
-    html = template.render(context)
-    pisa_status = pisa.CreatePDF(html, dest=response)
-    if pisa_status.err:
-        return HttpResponse(f"We had some errors <pre>{html}</pre>")
-    return response
+class LecturerListAPIView(generics.ListAPIView):
+    serializer_class = LecturerListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Lecturer.objects.filter(admin=self.request.user)
 
 
-@login_required
-@admin_required
-def delete_staff(request, pk):
-    lecturer = get_object_or_404(User, is_lecturer=True, pk=pk)
-    full_name = lecturer.get_full_name
-    lecturer.delete()
-    messages.success(request, f"Lecturer {full_name} has been deleted.")
-    return redirect("lecturer_list")
+class LecturerRetrieveDestroyView(generics.RetrieveDestroyAPIView):
+    serializer_class = LecturerListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Lecturer.objects.filter(admin=self.request.user)
 
 
-# ########################################################
-# Student Views
-# ########################################################
+class LecturerUpdateView(generics.UpdateAPIView):
+    serializer_class = LecturerUpdateSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Lecturer.objects.filter(admin=self.request.user)
 
 
-@login_required
-@admin_required
-def student_add_view(request):
-    if request.method == "POST":
-        form = StudentAddForm(request.POST)
-        if form.is_valid():
-            student = form.save()
-            full_name = student.get_full_name
-            email = student.email
-            messages.success(
-                request,
-                f"Account for {full_name} has been created. "
-                f"An email with account credentials will be sent to {email} within a minute.",
-            )
-            return redirect("student_list")
-        messages.error(request, "Correct the error(s) below.")
-    else:
-        form = StudentAddForm()
-    return render(
-        request, "accounts/add_student.html", {"title": "Add Student", "form": form}
-    )
+# ============================================================================
+# STUDENT VIEWS
+# ============================================================================
 
 
-@login_required
-@admin_required
-def edit_student(request, pk):
-    student_user = get_object_or_404(User, is_student=True, pk=pk)
-    if request.method == "POST":
-        form = ProfileUpdateForm(request.POST, request.FILES, instance=student_user)
-        if form.is_valid():
-            form.save()
-            full_name = student_user.get_full_name
-            messages.success(request, f"Student {full_name} has been updated.")
-            return redirect("student_list")
-        messages.error(request, "Please correct the error below.")
-    else:
-        form = ProfileUpdateForm(instance=student_user)
-    return render(
-        request, "accounts/edit_student.html", {"title": "Edit Student", "form": form}
-    )
+class StudentListGroupAPIView(generics.ListAPIView):
+    serializer_class = StudentListByGroupSerializer
+    permission_classes = [IsLecturer]
+
+    def get_queryset(self):
+        group_id = self.kwargs.get("group_id")
+        return Student.objects.filter(group_id=group_id)
 
 
-@method_decorator([login_required, admin_required], name="dispatch")
-class StudentListView(FilterView):
-    queryset = Student.objects.all()
-    filterset_class = StudentFilter
-    template_name = "accounts/student_list.html"
-    paginate_by = 10
+class StudentCreateView(generics.CreateAPIView):
+    serializer_class = StudentWriteSerializer
+    permission_classes = [IsAdminUser]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Students"
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
         return context
 
 
-@login_required
-@admin_required
-def render_student_pdf_list(request):
-    students = Student.objects.all()
-    template_path = "pdf/student_list.html"
-    context = {"students": students}
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'filename="students_list.pdf"'
-    template = get_template(template_path)
-    html = template.render(context)
-    pisa_status = pisa.CreatePDF(html, dest=response)
-    if pisa_status.err:
-        return HttpResponse(f"We had some errors <pre>{html}</pre>")
-    return response
+class StudentListAPIView(generics.ListAPIView):
+    serializer_class = StudentListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Student.objects.filter(admin=self.request.user)
 
 
-@login_required
-@admin_required
-def delete_student(request, pk):
-    student = get_object_or_404(Student, pk=pk)
-    full_name = student.student.get_full_name
-    student.delete()
-    messages.success(request, f"Student {full_name} has been deleted.")
-    return redirect("student_list")
+class StudentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = StudentListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Student.objects.filter(admin=self.request.user)
 
 
-@login_required
-@admin_required
-def edit_student_program(request, pk):
-    student = get_object_or_404(Student, student_id=pk)
-    user = get_object_or_404(User, pk=pk)
-    if request.method == "POST":
-        form = ProgramUpdateForm(request.POST, request.FILES, instance=student)
-        if form.is_valid():
-            form.save()
-            full_name = user.get_full_name
-            messages.success(request, f"{full_name}'s program has been updated.")
-            return redirect("profile_single", user_id=pk)
-        messages.error(request, "Please correct the error(s) below.")
-    else:
-        form = ProgramUpdateForm(instance=student)
-    return render(
-        request,
-        "accounts/edit_student_program.html",
-        {"title": "Edit Program", "form": form, "student": student},
-    )
+class StudentUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = StudentUpdateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Разрешаем обновлять только своих студентов или все в зависимости от прав
+        if self.request.user.is_superuser or self.request.user.is_dep_head:
+            return Student.objects.all()
+        # Для преподавателей - только студентов их групп
+        elif self.request.user.is_lecturer:
+            return Student.objects.filter(
+                group__in=self.request.user.lecturer_groups.all()
+            )
+        else:
+            return Student.objects.none()
 
 
-# ########################################################
-# Parent Views
-# ########################################################
+# ============================================================================
+# GROUP VIEWS
+# ============================================================================
 
 
-@method_decorator([login_required, admin_required], name="dispatch")
-class ParentAdd(CreateView):
-    model = Parent
-    form_class = ParentAddForm
-    template_name = "accounts/parent_form.html"
+class GroupCreateView(generics.CreateAPIView):
+    serializer_class = GroupWriteSerializer
+    permission_classes = [IsAdminUser]
 
-    def form_valid(self, form):
-        messages.success(self.request, "Parent added successfully.")
-        return super().form_valid(form)
+    def perform_create(self, serializer):
+        serializer.save(admin=self.request.user)
+
+
+class GroupListAPIView(generics.ListAPIView):
+    serializer_class = GroupListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Group.objects.filter(admin=self.request.user)
+
+
+class GroupRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = GroupWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Group.objects.filter(admin=self.request.user)
+
+
+# ============================================================================
+# PARENT VIEWS
+# ============================================================================
+
+
+class ParentCreateView(generics.CreateAPIView):
+    serializer_class = ParentWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
+        return context
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+
+class ParentListAPIView(generics.ListAPIView):
+    serializer_class = ParentListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Parent.objects.filter(admin=self.request.user)
+
+
+class ParentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ParentWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Parent.objects.filter(admin=self.request.user)
+
+
+class ParentUpdateView(generics.UpdateAPIView):
+    serializer_class = ParentUpdateSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        return Parent.objects.all(admin=user)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+
+# ============================================================================
+# Token views
+# ============================================================================
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Добавляем кастомные поля в токен
+        token["username"] = user.username
+        token["email"] = user.email
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        # Добавляем информацию о пользователе в ответ
+        data["user"] = UserSerializer(self.user).data
+        return data
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        """
+        Secure login that sets tokens in httpOnly cookies
+        """
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            return Response(
+                {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # Get tokens
+        access_token = serializer.validated_data.get("access")
+        refresh_token = serializer.validated_data.get("refresh")
+        user_data = serializer.validated_data.get("user")
+
+        # Create response
+        response = Response(
+            {
+                "user": user_data,
+                "access": access_token,
+                "refresh": refresh_token,
+                "message": "Login successful",
+            },
+            status=status.HTTP_200_OK,
+        )
+
+        # Set httpOnly cookies
+        # Access token (short-lived)
+        response.set_cookie(
+            key=settings.SIMPLE_JWT.get("AUTH_COOKIE", "access_token"),
+            value=access_token,
+            max_age=settings.SIMPLE_JWT.get("ACCESS_TOKEN_LIFETIME").total_seconds(),
+            httponly=True,
+            secure=not settings.DEBUG,  # True in production (HTTPS)
+            samesite="Lax",  # Protection against CSRF
+            domain=settings.SIMPLE_JWT.get("AUTH_COOKIE_DOMAIN"),
+            path="/",
+        )
+
+        # Refresh token (long-lived)
+        response.set_cookie(
+            key=settings.SIMPLE_JWT.get("AUTH_COOKIE_REFRESH", "refresh_token"),
+            value=refresh_token,
+            max_age=settings.SIMPLE_JWT.get("REFRESH_TOKEN_LIFETIME").total_seconds(),
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite="Lax",
+            domain=settings.SIMPLE_JWT.get("AUTH_COOKIE_DOMAIN"),
+            path="/",
+        )
+
+        return response
+
+
+class SecureTokenRefreshView(TokenRefreshView):
+    """
+    Secure token refresh that uses httpOnly cookies
+    """
+
+    def post(self, request, *args, **kwargs):
+        # Get refresh token from cookie
+        refresh_token = request.COOKIES.get(
+            settings.SIMPLE_JWT.get("AUTH_COOKIE_REFRESH", "refresh_token")
+        )
+
+        if not refresh_token:
+            return Response(
+                {"error": "Refresh token not found"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        try:
+            # Validate and refresh
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+
+            # If rotation is enabled, get new refresh token
+            if settings.SIMPLE_JWT.get("ROTATE_REFRESH_TOKENS", False):
+                refresh.set_jti()
+                refresh.set_exp()
+                new_refresh_token = str(refresh)
+            else:
+                new_refresh_token = refresh_token
+
+            response = Response(
+                {
+                    "message": "Token refreshed successfully",
+                    "access": access_token,
+                    "refresh": new_refresh_token
+                    if settings.SIMPLE_JWT.get("ROTATE_REFRESH_TOKENS", False)
+                    else new_refresh_token,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+            # Set new access token cookie
+            response.set_cookie(
+                key=settings.SIMPLE_JWT.get("AUTH_COOKIE", "access_token"),
+                value=access_token,
+                max_age=settings.SIMPLE_JWT.get(
+                    "ACCESS_TOKEN_LIFETIME"
+                ).total_seconds(),
+                httponly=True,
+                secure=not settings.DEBUG,
+                samesite="Lax",
+                domain=settings.SIMPLE_JWT.get("AUTH_COOKIE_DOMAIN"),
+                path="/",
+            )
+
+            # Set new refresh token cookie if rotation is enabled
+            if settings.SIMPLE_JWT.get("ROTATE_REFRESH_TOKENS", False):
+                response.set_cookie(
+                    key=settings.SIMPLE_JWT.get("AUTH_COOKIE_REFRESH", "refresh_token"),
+                    value=new_refresh_token,
+                    max_age=settings.SIMPLE_JWT.get(
+                        "REFRESH_TOKEN_LIFETIME"
+                    ).total_seconds(),
+                    httponly=True,
+                    secure=not settings.DEBUG,
+                    samesite="Lax",
+                    domain=settings.SIMPLE_JWT.get("AUTH_COOKIE_DOMAIN"),
+                    path="/",
+                )
+
+            return response
+
+        except (TokenError, InvalidToken) as e:
+            return Response(
+                {"error": "Invalid or expired refresh token"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+
+class UserProfileView(APIView):
+    """
+    Возвращает профиль текущего пользователя
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        data = serializer.data
+
+        # Если это студент, добавляем данные студента
+        if request.user.is_student and hasattr(request.user, "student_profile"):
+            student = request.user.student_profile
+            student_serializer = StudentListSerializer(student)
+            data["student_data"] = student_serializer.data
+
+        return Response(data)

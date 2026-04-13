@@ -1,209 +1,304 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
+from rest_framework import generics
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
-from accounts.decorators import admin_required, lecturer_required
-from accounts.models import User, Student
-from .forms import SessionForm, SemesterForm, NewsAndEventsForm
-from .models import NewsAndEvents, ActivityLog, Session, Semester
+from .models import AcademicYear, Course, CourseAllocation, Module, Program, Semester
+from .permissions import IsLecturer
+from .serializers import (
+    AcademicYearListSerializer,
+    AcademicYearWriteSerializer,
+    CourseAllocationListSerializer,
+    CourseAllocationWriteSerializer,
+    CourseListSerializer,
+    CourseWriteSerializer,
+    ModuleListSerializer,
+    ModuleWriteSerializer,
+    ProgramListSerializer,
+    ProgramWriteSerializer,
+    SemesterDetailSerializer,
+    SemesterListSerializer,
+    SemesterWriteSerializer,
+)
 
-
-# ########################################################
-# News & Events
-# ########################################################
-@login_required
-def home_view(request):
-    items = NewsAndEvents.objects.all().order_by("-updated_date")
-    context = {
-        "title": "News & Events",
-        "items": items,
-    }
-    return render(request, "core/index.html", context)
-
-
-@login_required
-@admin_required
-def dashboard_view(request):
-    logs = ActivityLog.objects.all().order_by("-created_at")[:10]
-    gender_count = Student.get_gender_count()
-    context = {
-        "student_count": User.objects.get_student_count(),
-        "lecturer_count": User.objects.get_lecturer_count(),
-        "superuser_count": User.objects.get_superuser_count(),
-        "males_count": gender_count["M"],
-        "females_count": gender_count["F"],
-        "logs": logs,
-    }
-    return render(request, "core/dashboard.html", context)
+User = get_user_model()
 
 
-@login_required
-def post_add(request):
-    if request.method == "POST":
-        form = NewsAndEventsForm(request.POST)
-        title = form.cleaned_data.get("title", "Post") if form.is_valid() else None
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"{title} has been uploaded.")
-            return redirect("home")
-        messages.error(request, "Please correct the error(s) below.")
-    else:
-        form = NewsAndEventsForm()
-    return render(request, "core/post_add.html", {"title": "Add Post", "form": form})
+### semester views
 
 
-@login_required
-@lecturer_required
-def edit_post(request, pk):
-    instance = get_object_or_404(NewsAndEvents, pk=pk)
-    if request.method == "POST":
-        form = NewsAndEventsForm(request.POST, instance=instance)
-        title = form.cleaned_data.get("title", "Post") if form.is_valid() else None
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"{title} has been updated.")
-            return redirect("home")
-        messages.error(request, "Please correct the error(s) below.")
-    else:
-        form = NewsAndEventsForm(instance=instance)
-    return render(request, "core/post_add.html", {"title": "Edit Post", "form": form})
+class SemesterListAPIView(generics.ListAPIView):
+    serializer_class = SemesterListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return Semester.objects.filter(admin=user).order_by("-is_current", "-name")
+        else:
+            raise PermissionDenied("Only superusers can access this view.")
 
 
-@login_required
-@lecturer_required
-def delete_post(request, pk):
-    post = get_object_or_404(NewsAndEvents, pk=pk)
-    post_title = post.title
-    post.delete()
-    messages.success(request, f"{post_title} has been deleted.")
-    return redirect("home")
+class SemesterCreateAPIView(generics.CreateAPIView):
+    serializer_class = SemesterWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_serializer_context(self):
+        """giving admin to serializer context"""
+        context = super().get_serializer_context()
+        if self.request.user.is_superuser:
+            context["admin"] = self.request.user
+        else:
+            raise PermissionDenied("only admins can access this view")
+        return context
 
 
-# ########################################################
-# Session
-# ########################################################
-@login_required
-@lecturer_required
-def session_list_view(request):
-    """Show list of all sessions"""
-    sessions = Session.objects.all().order_by("-is_current_session", "-session")
-    return render(request, "core/session_list.html", {"sessions": sessions})
+class SemesterUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = SemesterWriteSerializer
+    permission_classes = [IsAdminUser]
+    queryset = Semester.objects.all()
+
+    def get_serializer_context(self):
+        """giving admin to serializer context"""
+        if self.request.user.is_superuser:
+            admin = self.request.user
+        else:
+            raise PermissionDenied("only admins can access this view")
+        context = super().get_serializer_context()
+        context["admin"] = admin
+        return context
 
 
-@login_required
-@lecturer_required
-def session_add_view(request):
-    """Add a new session"""
-    if request.method == "POST":
-        form = SessionForm(request.POST)
-        if form.is_valid():
-            if form.cleaned_data.get("is_current_session"):
-                unset_current_session()
-            form.save()
-            messages.success(request, "Session added successfully.")
-            return redirect("session_list")
-    else:
-        form = SessionForm()
-    return render(request, "core/session_update.html", {"form": form})
+class SemesterRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = SemesterDetailSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Semester.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
 
 
-@login_required
-@lecturer_required
-def session_update_view(request, pk):
-    session = get_object_or_404(Session, pk=pk)
-    if request.method == "POST":
-        form = SessionForm(request.POST, instance=session)
-        if form.is_valid():
-            if form.cleaned_data.get("is_current_session"):
-                unset_current_session()
-            form.save()
-            messages.success(request, "Session updated successfully.")
-            return redirect("session_list")
-    else:
-        form = SessionForm(instance=session)
-    return render(request, "core/session_update.html", {"form": form})
+### program views
 
 
-@login_required
-@lecturer_required
-def session_delete_view(request, pk):
-    session = get_object_or_404(Session, pk=pk)
-    if session.is_current_session:
-        messages.error(request, "You cannot delete the current session.")
-    else:
-        session.delete()
-        messages.success(request, "Session successfully deleted.")
-    return redirect("session_list")
+class ProgramCreateAPIView(generics.CreateAPIView):
+    serializer_class = ProgramWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def perform_create(self, serializer):
+        serializer.save(admin=self.request.user)
 
 
-def unset_current_session():
-    """Unset current session"""
-    current_session = Session.objects.filter(is_current_session=True).first()
-    if current_session:
-        current_session.is_current_session = False
-        current_session.save()
+class ProgramUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = ProgramWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Program.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
 
 
-# ########################################################
-# Semester
-# ########################################################
-@login_required
-@lecturer_required
-def semester_list_view(request):
-    semesters = Semester.objects.all().order_by("-is_current_semester", "-semester")
-    return render(request, "core/semester_list.html", {"semesters": semesters})
+class ProgramRetrieveDestroyAPIView(generics.DestroyAPIView):
+    serializer_class = ProgramWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Program.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
 
 
-@login_required
-@lecturer_required
-def semester_add_view(request):
-    if request.method == "POST":
-        form = SemesterForm(request.POST)
-        if form.is_valid():
-            if form.cleaned_data.get("is_current_semester"):
-                unset_current_semester()
-                unset_current_session()
-            form.save()
-            messages.success(request, "Semester added successfully.")
-            return redirect("semester_list")
-    else:
-        form = SemesterForm()
-    return render(request, "core/semester_update.html", {"form": form})
+class ProgramListAPIView(generics.ListAPIView):
+    serializer_class = ProgramListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Program.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["language"] = self.request.query_params.get("lang", "ru")
+        return context
 
 
-@login_required
-@lecturer_required
-def semester_update_view(request, pk):
-    semester = get_object_or_404(Semester, pk=pk)
-    if request.method == "POST":
-        form = SemesterForm(request.POST, instance=semester)
-        if form.is_valid():
-            if form.cleaned_data.get("is_current_semester"):
-                unset_current_semester()
-                unset_current_session()
-            form.save()
-            messages.success(request, "Semester updated successfully!")
-            return redirect("semester_list")
-    else:
-        form = SemesterForm(instance=semester)
-    return render(request, "core/semester_update.html", {"form": form})
+### academic year views
 
 
-@login_required
-@lecturer_required
-def semester_delete_view(request, pk):
-    semester = get_object_or_404(Semester, pk=pk)
-    if semester.is_current_semester:
-        messages.error(request, "You cannot delete the current semester.")
-    else:
-        semester.delete()
-        messages.success(request, "Semester successfully deleted.")
-    return redirect("semester_list")
+class AcademicYearCreateAPIView(generics.CreateAPIView):
+    serializer_class = AcademicYearWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def perform_create(self, serializer):
+        serializer.save(admin=self.request.user)
 
 
-def unset_current_semester():
-    """Unset current semester"""
-    current_semester = Semester.objects.filter(is_current_semester=True).first()
-    if current_semester:
-        current_semester.is_current_semester = False
-        current_semester.save()
+class AcademicYearUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = AcademicYearWriteSerializer
+    permission_classes = [IsAdminUser]
+    queryset = AcademicYear.objects.all()
+
+
+class AcademicYearRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = AcademicYearWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return AcademicYear.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
+
+
+class AcademicYearListAPIView(generics.ListAPIView):
+    serializer_class = AcademicYearListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return AcademicYear.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
+
+
+### module views
+
+
+class ModuleCreateAPIView(generics.CreateAPIView):
+    serializer_class = ModuleWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def perform_create(self, serializer):
+        serializer.save(admin=self.request.user)
+
+
+class ModuleUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = ModuleWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return Module.objects.filter(admin=self.request.user)
+
+
+class ModuleListAPIView(generics.ListAPIView):
+    serializer_class = ModuleListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Module.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
+
+
+class ModuleRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = ModuleListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Module.objects.filter(admin=self.request.user)
+        raise PermissionDenied("Only admins can access this view.")
+
+
+### course views
+
+
+class CourseListAPIView(generics.ListAPIView):
+    serializer_class = CourseListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return Course.objects.filter(admin=user).order_by("name")
+        else:
+            raise PermissionDenied("Only superusers can access this view.")
+
+
+class CourseCreateAPIView(generics.CreateAPIView):
+    serializer_class = CourseWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
+        return context
+
+    def perform_create(self, serializer):
+        serializer.save(admin=self.request.user)
+
+
+class CourseRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminUser]
+    queryset = Course.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return CourseWriteSerializer
+        return CourseListSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
+        return context
+
+
+### course allocation views
+
+
+class CourseAllocationListAPIView(generics.ListAPIView):
+    serializer_class = CourseAllocationListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return CourseAllocation.objects.filter(admin=self.request.user)
+
+
+class CourseAllocationListByGroupAPIView(generics.ListAPIView):
+    serializer_class = CourseAllocationListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        group_id = self.kwargs.get("group_id")
+        return CourseAllocation.objects.filter(group_id=group_id)
+
+
+class CourseAllocationCreateAPIView(generics.CreateAPIView):
+    serializer_class = CourseAllocationWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
+        return context
+
+    def perform_create(self, serializer):
+        serializer.save(admin=self.request.user)
+
+
+class CourseAllocationRetrieveUpdateDestroyAPIView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+    permission_classes = [IsAdminUser]
+    queryset = CourseAllocation.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return CourseAllocationWriteSerializer
+        return CourseAllocationListSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["admin"] = self.request.user
+        return context
+
+
+class TeacherCourseAllocations(generics.ListAPIView):
+    serializer_class = CourseAllocationListSerializer
+    permission_classes = [IsLecturer]
+
+    def get_queryset(self):
+        user = self.request.user
+        return CourseAllocation.objects.filter(lecturer=user)
+        raise PermissionDenied("Only lecturers can access this view.")

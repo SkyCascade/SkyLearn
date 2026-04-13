@@ -1,10 +1,11 @@
 import random
 import string
-from django.utils.text import slugify
+
+from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from django.conf import settings
+from django.utils.text import slugify
 
 
 def send_email(user, subject, msg):

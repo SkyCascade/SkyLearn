@@ -1,12 +1,10 @@
 from django.contrib import admin
-from modeltranslation.admin import TranslationAdmin
-from .models import Session, Semester, NewsAndEvents
 
-
-class NewsAndEventsAdmin(TranslationAdmin):
-    pass
-
+from .models import AcademicYear, Course, CourseAllocation, Module, Program, Semester
 
 admin.site.register(Semester)
-admin.site.register(Session)
-admin.site.register(NewsAndEvents, NewsAndEventsAdmin)
+admin.site.register(Program)
+admin.site.register(AcademicYear)
+admin.site.register(Module)
+admin.site.register(Course)
+admin.site.register(CourseAllocation)

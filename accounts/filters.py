@@ -1,6 +1,7 @@
-from django.db.models import Q
 import django_filters
-from .models import User, Student
+from django.db.models import Q
+
+from .models import Student, User
 
 
 class LecturerFilter(django_filters.FilterSet):
