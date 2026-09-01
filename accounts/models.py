@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models 
 from django.urls import reverse
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.conf import settings
@@ -11,14 +11,14 @@ from .validators import ASCIIUsernameValidator
 
 
 # LEVEL_COURSE = "Level course"
-BACHELOR_DEGREE = _("Bachelor")
-MASTER_DEGREE = _("Master")
+# BACHELOR_DEGREE = _("Bachelor")
+# MASTER_DEGREE = _("Master")
 
-LEVEL = (
-    # (LEVEL_COURSE, "Level course"),
-    (BACHELOR_DEGREE, _("Bachelor Degree")),
-    (MASTER_DEGREE, _("Master Degree")),
-)
+# LEVEL = (
+#     # (LEVEL_COURSE, "Level course"),
+#     (BACHELOR_DEGREE, _("Bachelor Degree")),
+#     (MASTER_DEGREE, _("Master Degree")),
+# )
 
 FATHER = _("Father")
 MOTHER = _("Mother")
@@ -151,7 +151,7 @@ class StudentManager(models.Manager):
 class Student(models.Model):
     student = models.OneToOneField(User, on_delete=models.CASCADE)
     # id_number = models.CharField(max_length=20, unique=True, blank=True)
-    level = models.CharField(max_length=25, choices=LEVEL, null=True)
+    level = models.CharField(max_length=25, choices=settings.LEVEL_CHOICES, null=True)
     program = models.ForeignKey(Program, on_delete=models.CASCADE, null=True)
 
     objects = StudentManager()

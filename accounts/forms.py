@@ -7,6 +7,7 @@ from django.contrib.auth.forms import (
 from django.contrib.auth.forms import PasswordResetForm
 from course.models import Program
 from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS
+from django.conf import settings
 
 
 class StaffAddForm(UserCreationForm):
@@ -193,7 +194,7 @@ class StudentAddForm(UserCreationForm):
 
     level = forms.CharField(
         widget=forms.Select(
-            choices=LEVEL,
+            choices=settings.LEVEL_CHOICES,
             attrs={
                 "class": "browser-default custom-select form-control",
             },

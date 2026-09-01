@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 
 NEWS = _("News")
@@ -11,15 +12,15 @@ POST = (
     (EVENTS, _("Event")),
 )
 
-FIRST = _("First")
-SECOND = _("Second")
-THIRD = _("Third")
+# FIRST = _("First")
+# SECOND = _("Second")
+# THIRD = _("Third")
 
-SEMESTER = (
-    (FIRST, _("First")),
-    (SECOND, _("Second")),
-    (THIRD, _("Third")),
-)
+# SEMESTER = (
+#     (FIRST, _("First")),
+#     (SECOND, _("Second")),
+#     (THIRD, _("Third")),
+# )
 
 
 class NewsAndEventsQuerySet(models.query.QuerySet):
@@ -74,7 +75,7 @@ class Session(models.Model):
 
 
 class Semester(models.Model):
-    semester = models.CharField(max_length=10, choices=SEMESTER, blank=True)
+    semester = models.CharField(max_length=10, choices=settings.SEMESTER_CHOICES, blank=True)
     is_current_semester = models.BooleanField(default=False, blank=True, null=True)
     session = models.ForeignKey(
         Session, on_delete=models.CASCADE, blank=True, null=True

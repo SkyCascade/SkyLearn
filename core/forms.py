@@ -1,5 +1,6 @@
 from django import forms
 from .models import NewsAndEvents, Session, Semester, SEMESTER
+from django.conf import settings
 
 
 # news and events
@@ -37,7 +38,7 @@ class SessionForm(forms.ModelForm):
 class SemesterForm(forms.ModelForm):
     semester = forms.CharField(
         widget=forms.Select(
-            choices=SEMESTER,
+            choices=settings.SEMESTER_CHOICES,
             attrs={
                 "class": "browser-default custom-select",
             },
