@@ -5,9 +5,10 @@ from django.contrib.auth.forms import (
     UserChangeForm,
 )
 from django.contrib.auth.forms import PasswordResetForm
-from course.models import Program
+from course.models import Program, Course, CourseAllocation
 from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS
-
+from result.models import TakenCourse
+from core.models import Semester
 
 class StaffAddForm(UserCreationForm):
     username = forms.CharField(
@@ -19,7 +20,7 @@ class StaffAddForm(UserCreationForm):
             }
         ),
         label="Username",
-        required=False,
+        required=True,
     )
 
     first_name = forms.CharField(
@@ -95,7 +96,7 @@ class StaffAddForm(UserCreationForm):
             }
         ),
         label="Password",
-        required=False,
+        required=True,
     )
 
     password2 = forms.CharField(
@@ -107,7 +108,7 @@ class StaffAddForm(UserCreationForm):
             }
         ),
         label="Password Confirmation",
-        required=False,
+        required=True,
     )
 
     class Meta(UserCreationForm.Meta):
@@ -133,11 +134,16 @@ class StudentAddForm(UserCreationForm):
     username = forms.CharField(
         max_length=30,
         widget=forms.TextInput(
-            attrs={"type": "text", "class": "form-control", "id": "username_id"}
+            attrs={
+                "type": "text",
+                "class": "form-control",
+                "id": "username_id",
+            }
         ),
         label="Username",
-        required=False,
+        required=True,
     )
+
     address = forms.CharField(
         max_length=30,
         widget=forms.TextInput(
@@ -203,10 +209,14 @@ class StudentAddForm(UserCreationForm):
     program = forms.ModelChoiceField(
         queryset=Program.objects.all(),
         widget=forms.Select(
-            attrs={"class": "browser-default custom-select form-control"}
+            attrs={
+                "class": "browser-default custom-select form-control"
+            }
         ),
         label="Program",
     )
+
+    
 
     email = forms.EmailField(
         widget=forms.TextInput(
@@ -220,32 +230,25 @@ class StudentAddForm(UserCreationForm):
 
     password1 = forms.CharField(
         max_length=30,
-        widget=forms.TextInput(
+        widget=forms.PasswordInput(
             attrs={
-                "type": "password",
                 "class": "form-control",
             }
         ),
         label="Password",
-        required=False,
+        required=True,
     )
 
     password2 = forms.CharField(
         max_length=30,
-        widget=forms.TextInput(
+        widget=forms.PasswordInput(
             attrs={
-                "type": "password",
                 "class": "form-control",
             }
         ),
         label="Password Confirmation",
-        required=False,
+        required=True,
     )
-
-    # def validate_email(self):
-    #     email = self.cleaned_data['email']
-    #     if User.objects.filter(email__iexact=email, is_active=True).exists():
-    #         raise forms.ValidationError("Email has taken, try another email address. ")
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -253,22 +256,39 @@ class StudentAddForm(UserCreationForm):
     @transaction.atomic()
     def save(self, commit=True):
         user = super().save(commit=False)
+
         user.is_student = True
         user.first_name = self.cleaned_data.get("first_name")
         user.last_name = self.cleaned_data.get("last_name")
         user.gender = self.cleaned_data.get("gender")
         user.address = self.cleaned_data.get("address")
         user.phone = self.cleaned_data.get("phone")
-        user.address = self.cleaned_data.get("address")
         user.email = self.cleaned_data.get("email")
 
         if commit:
             user.save()
-            Student.objects.create(
-                student=user,
-                level=self.cleaned_data.get("level"),
-                program=self.cleaned_data.get("program"),
-            )
+
+        student = Student.objects.create(
+            student=user,
+            level=self.cleaned_data.get("level"),
+            program=self.cleaned_data.get("program"),
+        )
+
+        courses = Course.objects.filter(
+            program=student.program
+        )
+
+        for course in courses:
+            allocation = CourseAllocation.objects.filter(
+            courses=course,
+            session__is_current_session=True,
+        ).select_related("lecturer").first()
+
+        TakenCourse.objects.create(
+            student=student,
+            course=course,
+            lecturer=allocation.lecturer if allocation else None,
+        )
 
         return user
 
@@ -481,20 +501,48 @@ class ParentAddForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
 
-    @transaction.atomic()
-    def save(self):
-        user = super().save(commit=False)
-        user.is_parent = True
-        user.first_name = self.cleaned_data.get("first_name")
-        user.last_name = self.cleaned_data.get("last_name")
-        user.address = self.cleaned_data.get("address")
-        user.phone = self.cleaned_data.get("phone")
-        user.email = self.cleaned_data.get("email")
+@transaction.atomic()
+def save(self, commit=True):
+    user = super().save(commit=False)
+
+    user.is_student = True
+    user.first_name = self.cleaned_data.get("first_name")
+    user.last_name = self.cleaned_data.get("last_name")
+    user.gender = self.cleaned_data.get("gender")
+    user.address = self.cleaned_data.get("address")
+    user.phone = self.cleaned_data.get("phone")
+    user.email = self.cleaned_data.get("email")
+
+    if commit:
         user.save()
-        parent = Parent.objects.create(
-            user=user,
-            student=self.cleaned_data.get("student"),
-            relation_ship=self.cleaned_data.get("relation_ship"),
+
+        student = Student.objects.create(
+            student=user,
+            level=self.cleaned_data.get("level"),
+            program=self.cleaned_data.get("program"),
         )
-        parent.save()
-        return user
+
+        current_semester = Semester.objects.filter(
+            is_current_semester=True
+        ).first()
+
+        if current_semester:
+            courses = Course.objects.filter(
+                program=student.program,
+                level=student.level,
+                semester=current_semester.semester,
+            )
+
+            for course in courses:
+                allocation = CourseAllocation.objects.filter(
+                    courses=course,
+                    session__is_current_session=True,
+                ).select_related("lecturer").first()
+
+                TakenCourse.objects.create(
+                    student=student,
+                    course=course,
+                    lecturer=allocation.lecturer if allocation else None,
+                )
+
+    return user

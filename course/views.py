@@ -194,6 +194,23 @@ def course_delete(request, slug):
 # ########################################################
 
 
+def _unassign_lecturer_from_dropped_courses(lecturer, dropped_course_ids):
+    """
+    When a lecturer is no longer allocated a course (courses removed from
+    their CourseAllocation, or the whole allocation is deleted), any
+    TakenCourse rows still pointing that lecturer at one of those courses
+    are now stale: the teacher a student sees, and the course list a
+    lecturer sees, would otherwise silently disagree with what admin just
+    set up. We clear (not delete) the lecturer on those rows so the
+    enrollment/grades stay intact but no longer show the wrong teacher.
+    """
+    if not dropped_course_ids:
+        return 0
+    return TakenCourse.objects.filter(
+        lecturer=lecturer, course_id__in=dropped_course_ids
+    ).update(lecturer=None)
+
+
 @method_decorator([login_required, lecturer_required], name="dispatch")
 class CourseAllocationFormView(CreateView):
     form_class = CourseAllocationForm
@@ -203,7 +220,14 @@ class CourseAllocationFormView(CreateView):
         lecturer = form.cleaned_data["lecturer"]
         selected_courses = form.cleaned_data["courses"]
         allocation, created = CourseAllocation.objects.get_or_create(lecturer=lecturer)
+
+        previous_course_ids = set(allocation.courses.values_list("id", flat=True))
+        new_course_ids = {c.id for c in selected_courses}
+        dropped_course_ids = previous_course_ids - new_course_ids
+
         allocation.courses.set(selected_courses)
+        _unassign_lecturer_from_dropped_courses(lecturer, dropped_course_ids)
+
         messages.success(
             self.request, f"Courses allocated to {lecturer.get_full_name} successfully."
         )
@@ -231,9 +255,15 @@ class CourseAllocationFilterView(FilterView):
 def edit_allocated_course(request, pk):
     allocation = get_object_or_404(CourseAllocation, pk=pk)
     if request.method == "POST":
+        previous_course_ids = set(allocation.courses.values_list("id", flat=True))
         form = EditCourseAllocationForm(request.POST, instance=allocation)
         if form.is_valid():
             form.save()
+            new_course_ids = set(allocation.courses.values_list("id", flat=True))
+            dropped_course_ids = previous_course_ids - new_course_ids
+            _unassign_lecturer_from_dropped_courses(
+                allocation.lecturer, dropped_course_ids
+            )
             messages.success(request, "Course allocation has been updated.")
             return redirect("course_allocation_view")
         messages.error(request, "Correct the error(s) below.")
@@ -250,7 +280,10 @@ def edit_allocated_course(request, pk):
 @lecturer_required
 def deallocate_course(request, pk):
     allocation = get_object_or_404(CourseAllocation, pk=pk)
+    course_ids = list(allocation.courses.values_list("id", flat=True))
+    lecturer = allocation.lecturer
     allocation.delete()
+    _unassign_lecturer_from_dropped_courses(lecturer, course_ids)
     messages.success(request, "Successfully deallocated courses.")
     return redirect("course_allocation_view")
 

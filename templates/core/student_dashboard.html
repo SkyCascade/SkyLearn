@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}
+    {% trans 'Student Dashboard' %} | SkyLearn
+{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'home' %}">
+                {% trans 'Home' %}
+            </a>
+        </li>
+
+        <li class="breadcrumb-item active">
+            {% trans 'Dashboard' %}
+        </li>
+    </ol>
+</nav>
+
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h1 class="title-1">
+        {% trans 'Student Dashboard' %}
+    </h1>
+
+</div>
+
+
+<!-- Welcome -->
+
+<div class="alert alert-info mb-4">
+
+    {% trans 'Welcome' %},
+    {{ request.user.get_full_name }}!
+
+</div>
+
+
+<!-- Statistics -->
+
+<div class="row users-count px-3">
+
+
+    <!-- Courses -->
+
+    <div class="col-6 col-md-3 mb-3 px-2">
+
+        <div class="card-count p-3">
+
+            <h3>
+                <i class="fas fa-book bg-light-aqua"></i>
+            </h3>
+
+            <div class="text-right">
+
+                {% trans 'My Courses' %}
+
+                <h2>
+                    {{ course_count }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Completed -->
+
+    <div class="col-6 col-md-3 mb-3 px-2">
+
+        <div class="card-count p-3">
+
+            <h3>
+                <i class="fas fa-check-circle bg-light-orange"></i>
+            </h3>
+
+            <div class="text-right">
+
+                {% trans 'Completed' %}
+
+                <h2>
+                    {{ completed_count }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Average -->
+
+    <div class="col-6 col-md-3 mb-3 px-2">
+
+        <div class="card-count p-3">
+
+            <h3>
+                <i class="fas fa-chart-line bg-light-purple"></i>
+            </h3>
+
+            <div class="text-right">
+
+                {% trans 'Average Score' %}
+
+                <h2>
+                    {{ average_score }}%
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Quizzes -->
+
+    <div class="col-6 col-md-3 mb-3 px-2">
+
+        <div class="card-count p-3">
+
+            <h3>
+                <i class="fas fa-tasks bg-light-red"></i>
+            </h3>
+
+            <div class="text-right">
+
+                {% trans 'Quizzes' %}
+
+                <h2>
+                    {{ quiz_count }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- GPA -->
+
+<div class="row px-2">
+
+
+    <div class="col-md-6 p-2">
+
+        <div class="card p-4 text-center">
+
+            <h5>
+                {% trans 'Current GPA' %}
+            </h5>
+
+            <h1>
+                {{ gpa }}
+            </h1>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-md-6 p-2">
+
+        <div class="card p-4 text-center">
+
+            <h5>
+                {% trans 'Overall CGPA' %}
+            </h5>
+
+            <h1>
+                {{ cgpa }}
+            </h1>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Performance Chart -->
+
+<div class="row px-2 mt-2">
+
+    <div class="col-md-12 p-2">
+
+        <div class="chart-wrap">
+
+            <i class="fas fa-expand-alt"></i>
+
+            <canvas id="coursePerformance"></canvas>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- My Courses -->
+
+<div class="card mt-3 p-3">
+
+    <h5 class="border-bottom pb-2">
+
+        {% trans 'My Courses' %}
+
+    </h5>
+
+
+    <div class="table-responsive">
+
+        <table class="table table-hover">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        {% trans 'Course Code' %}
+                    </th>
+
+                    <th>
+                        {% trans 'Course' %}
+                    </th>
+
+                    <th>
+                        {% trans 'Score' %}
+                    </th>
+
+                    <th>
+                        {% trans 'Grade' %}
+                    </th>
+
+                    <th>
+                        {% trans 'Status' %}
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for item in taken_courses %}
+
+                <tr>
+
+                    <td>
+                        {{ item.course.code }}
+                    </td>
+
+                    <td>
+                        {{ item.course.title }}
+                    </td>
+
+                    <td>
+                        {{ item.total }}
+                    </td>
+
+                    <td>
+                        {{ item.grade }}
+                    </td>
+
+                    <td>
+
+                        {% if item.comment == "PASS" %}
+
+                            <span class="badge bg-success">
+                                {% trans 'PASS' %}
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge bg-secondary">
+                                {% trans 'IN PROGRESS' %}
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="5"
+                        class="text-center text-muted">
+
+                        {% trans 'You are not enrolled in any courses yet.' %}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+{% endblock content %}
+
+
+{% block js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const performanceLabels = [
+
+    {% for item in course_performance %}
+
+        "{{ item.name|escapejs }}",
+
+    {% endfor %}
+
+];
+
+
+const performanceValues = [
+
+    {% for item in course_performance %}
+
+        {{ item.score }},
+
+    {% endfor %}
+
+];
+
+
+new Chart(
+
+    document.getElementById("coursePerformance"),
+
+    {
+
+        type: "bar",
+
+        data: {
+
+            labels: performanceLabels,
+
+            datasets: [{
+
+                label: "Score",
+
+                data: performanceValues,
+
+                backgroundColor: "rgba(86, 224, 224, 0.5)",
+
+                borderColor: "rgb(86, 224, 224)",
+
+                borderWidth: 1
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            scales: {
+
+                y: {
+
+                    beginAtZero: true,
+
+                    max: 100
+
+                }
+
+            },
+
+            plugins: {
+
+                title: {
+
+                    display: true,
+
+                    text: "My Course Performance",
+
+                    padding: 15
+
+                }
+
+            }
+
+        }
+
+    }
+
+);
+
+</script>
+
+{% endblock js %}

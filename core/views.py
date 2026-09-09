@@ -1,9 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Avg, Count
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
-from accounts.decorators import admin_required, lecturer_required
+from accounts.decorators import (
+    admin_required,
+    lecturer_required,
+    student_required,
+)
 from accounts.models import User, Student
+
+from course.models import Course, CourseAllocation, Upload, UploadVideo
+from result.models import TakenCourse
+from quiz.models import Quiz
 from .forms import SessionForm, SemesterForm, NewsAndEventsForm
 from .models import NewsAndEvents, ActivityLog, Session, Semester
 
@@ -36,6 +45,207 @@ def dashboard_view(request):
     }
     return render(request, "core/dashboard.html", context)
 
+@login_required
+@lecturer_required
+def lecturer_dashboard_view(request):
+    lecturer = request.user
+
+    # Courses assigned to this lecturer
+    courses = Course.objects.filter(
+        allocated_course__lecturer=lecturer
+    ).distinct()
+
+    # Programs associated with the lecturer's courses
+    programs = courses.values_list(
+        "program",
+        flat=True
+    ).distinct()
+
+    # Students belonging to those programs
+    students = Student.objects.filter(
+        program__in=programs
+    ).select_related(
+        "student",
+        "program"
+    ).distinct()
+
+    student_count = students.count()
+
+    # Materials uploaded to lecturer's courses
+    material_count = Upload.objects.filter(
+        course__in=courses
+    ).count()
+
+    video_count = UploadVideo.objects.filter(
+        course__in=courses
+    ).count()
+
+    total_materials = material_count + video_count
+
+    # Quizzes/assessments belonging to lecturer's courses
+    assessment_count = Quiz.objects.filter(
+        course__in=courses
+    ).count()
+
+    # Course enrollment data for chart
+    course_enrollment = []
+
+    for course in courses:
+        enrollment = TakenCourse.objects.filter(
+            course=course
+        ).count()
+
+        course_enrollment.append({
+            "name": course.code,
+            "students": enrollment,
+        })
+
+    # Average performance per course
+    course_performance = []
+
+    for course in courses:
+        average = TakenCourse.objects.filter(
+            course=course
+        ).aggregate(
+            avg=Avg("total")
+        )["avg"]
+
+        course_performance.append({
+            "name": course.code,
+            "average": round(float(average), 2) if average else 0,
+        })
+
+    # --------------------------------------------------
+    # Student progress
+    # --------------------------------------------------
+
+    student_progress = []
+
+    for student in students:
+
+        taken_courses = TakenCourse.objects.filter(
+            student=student,
+            course__in=courses
+        ).select_related("course")
+
+        progress_data = []
+
+        for taken in taken_courses:
+            progress_data.append({
+                "course": taken.course,
+                "assignment": taken.assignment,
+                "mid_exam": taken.mid_exam,
+                "quiz": taken.quiz,
+                "attendance": taken.attendance,
+                "final_exam": taken.final_exam,
+                "total": taken.total,
+                "grade": taken.grade,
+            })
+
+        student_progress.append({
+            "student": student,
+            "courses": progress_data,
+        })
+
+    context = {
+        "title": "Lecturer Dashboard",
+        "lecturer": lecturer,
+        "courses": courses,
+
+        # Statistics
+        "course_count": courses.count(),
+        "student_count": student_count,
+        "material_count": total_materials,
+        "assessment_count": assessment_count,
+
+        # Charts
+        "course_enrollment": course_enrollment,
+        "course_performance": course_performance,
+
+        # Students and progress
+        "students": students,
+        "student_progress": student_progress,
+    }
+
+    return render(
+        request,
+        "core/lecturer_dashboard.html",
+        context,
+    )
+
+
+@login_required
+@student_required
+def student_dashboard_view(request):
+    student = request.user.student
+
+    # Courses registered by the student
+    taken_courses = TakenCourse.objects.filter(
+        student=student
+    ).select_related("course")
+
+    # Basic statistics
+    course_count = taken_courses.count()
+
+    completed_count = taken_courses.filter(
+        total__gt=0
+    ).count()
+
+    pending_count = taken_courses.filter(
+        total=0
+    ).count()
+
+    # Average marks
+    average_score = taken_courses.aggregate(
+        average=Avg("total")
+    )["average"]
+
+    average_score = round(
+        float(average_score), 2
+    ) if average_score is not None else 0
+
+    # GPA / CGPA
+    gpa = 0
+    cgpa = 0
+
+    if taken_courses.exists():
+        first_course = taken_courses.first()
+        gpa = first_course.calculate_gpa()
+        cgpa = first_course.calculate_cgpa()
+
+    # Course performance
+    course_performance = []
+
+    for taken_course in taken_courses:
+        course_performance.append({
+            "name": taken_course.course.code,
+            "score": float(taken_course.total),
+        })
+
+    # Student's quizzes
+    quiz_count = Quiz.objects.filter(
+        course__in=taken_courses.values("course")
+    ).count()
+
+    context = {
+        "title": "Student Dashboard",
+        "student": student,
+        "taken_courses": taken_courses,
+        "course_count": course_count,
+        "completed_count": completed_count,
+        "pending_count": pending_count,
+        "average_score": average_score,
+        "gpa": gpa,
+        "cgpa": cgpa,
+        "quiz_count": quiz_count,
+        "course_performance": course_performance,
+    }
+
+    return render(
+        request,
+        "core/student_dashboard.html",
+        context,
+    )
 
 @login_required
 def post_add(request):
