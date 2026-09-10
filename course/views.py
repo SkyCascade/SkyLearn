@@ -1,9 +1,15 @@
+from django.http import JsonResponse
 from django.conf import settings
 from django.contrib import messages
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
+
+import os
+import xml.etree.ElementTree as ET
+import zipfile
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView
 from django_filters.views import FilterView
@@ -19,6 +25,7 @@ from course.forms import (
     ProgramForm,
     UploadFormFile,
     UploadFormVideo,
+    SCORMUploadForm,
 )
 from course.models import (
     Course,
@@ -26,6 +33,8 @@ from course.models import (
     Program,
     Upload,
     UploadVideo,
+    VideoProgress,
+    SCORMPackage,
 )
 from result.models import TakenCourse
 
@@ -115,13 +124,14 @@ def program_delete(request, pk):
 # Course Views
 # ########################################################
 
-
 @login_required
 def course_single(request, slug):
     course = get_object_or_404(Course, slug=slug)
     files = Upload.objects.filter(course__slug=slug)
     videos = UploadVideo.objects.filter(course__slug=slug)
+    scorm_packages = SCORMPackage.objects.filter(course=course)
     lecturers = CourseAllocation.objects.filter(courses__pk=course.id)
+
     return render(
         request,
         "course/course_single.html",
@@ -130,6 +140,7 @@ def course_single(request, slug):
             "course": course,
             "files": files,
             "videos": videos,
+            "scorm_packages": scorm_packages,
             "lecturers": lecturers,
             "media_url": settings.MEDIA_URL,
         },
@@ -194,6 +205,23 @@ def course_delete(request, slug):
 # ########################################################
 
 
+def _unassign_lecturer_from_dropped_courses(lecturer, dropped_course_ids):
+    """
+    When a lecturer is no longer allocated a course (courses removed from
+    their CourseAllocation, or the whole allocation is deleted), any
+    TakenCourse rows still pointing that lecturer at one of those courses
+    are now stale: the teacher a student sees, and the course list a
+    lecturer sees, would otherwise silently disagree with what admin just
+    set up. We clear (not delete) the lecturer on those rows so the
+    enrollment/grades stay intact but no longer show the wrong teacher.
+    """
+    if not dropped_course_ids:
+        return 0
+    return TakenCourse.objects.filter(
+        lecturer=lecturer, course_id__in=dropped_course_ids
+    ).update(lecturer=None)
+
+
 @method_decorator([login_required, lecturer_required], name="dispatch")
 class CourseAllocationFormView(CreateView):
     form_class = CourseAllocationForm
@@ -203,7 +231,14 @@ class CourseAllocationFormView(CreateView):
         lecturer = form.cleaned_data["lecturer"]
         selected_courses = form.cleaned_data["courses"]
         allocation, created = CourseAllocation.objects.get_or_create(lecturer=lecturer)
+
+        previous_course_ids = set(allocation.courses.values_list("id", flat=True))
+        new_course_ids = {c.id for c in selected_courses}
+        dropped_course_ids = previous_course_ids - new_course_ids
+
         allocation.courses.set(selected_courses)
+        _unassign_lecturer_from_dropped_courses(lecturer, dropped_course_ids)
+
         messages.success(
             self.request, f"Courses allocated to {lecturer.get_full_name} successfully."
         )
@@ -231,9 +266,15 @@ class CourseAllocationFilterView(FilterView):
 def edit_allocated_course(request, pk):
     allocation = get_object_or_404(CourseAllocation, pk=pk)
     if request.method == "POST":
+        previous_course_ids = set(allocation.courses.values_list("id", flat=True))
         form = EditCourseAllocationForm(request.POST, instance=allocation)
         if form.is_valid():
             form.save()
+            new_course_ids = set(allocation.courses.values_list("id", flat=True))
+            dropped_course_ids = previous_course_ids - new_course_ids
+            _unassign_lecturer_from_dropped_courses(
+                allocation.lecturer, dropped_course_ids
+            )
             messages.success(request, "Course allocation has been updated.")
             return redirect("course_allocation_view")
         messages.error(request, "Correct the error(s) below.")
@@ -250,7 +291,10 @@ def edit_allocated_course(request, pk):
 @lecturer_required
 def deallocate_course(request, pk):
     allocation = get_object_or_404(CourseAllocation, pk=pk)
+    course_ids = list(allocation.courses.values_list("id", flat=True))
+    lecturer = allocation.lecturer
     allocation.delete()
+    _unassign_lecturer_from_dropped_courses(lecturer, course_ids)
     messages.success(request, "Successfully deallocated courses.")
     return redirect("course_allocation_view")
 
@@ -279,6 +323,185 @@ def handle_file_upload(request, slug):
         request,
         "upload/upload_file_form.html",
         {"title": "File Upload", "form": form, "course": course},
+    )
+
+@login_required
+@lecturer_required
+def handle_scorm_upload(request, slug):
+    course = get_object_or_404(Course, slug=slug)
+
+    if request.method == "POST":
+        form = SCORMUploadForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            scorm = form.save(commit=False)
+            scorm.course = course
+
+            uploaded_file = request.FILES["package"]
+
+            # Check that the uploaded file is a ZIP file
+            if not uploaded_file.name.lower().endswith(".zip"):
+                messages.error(request, "Please upload a SCORM ZIP file.")
+                return render(
+                    request,
+                    "scorm/scorm_upload.html",
+                    {
+                        "title": "Upload SCORM Package",
+                        "form": form,
+                        "course": course,
+                    },
+                )
+
+            # Save the uploaded ZIP
+            scorm.save()
+
+            # Extract SCORM package
+            package_dir = os.path.join(
+                settings.MEDIA_ROOT,
+                "scorm",
+                str(scorm.id),
+            )
+
+            os.makedirs(package_dir, exist_ok=True)
+
+            with zipfile.ZipFile(scorm.package.path, "r") as zip_ref:
+                zip_ref.extractall(package_dir)
+
+            # Find imsmanifest.xml
+            manifest_path = None
+
+            for root, dirs, files in os.walk(package_dir):
+                if "imsmanifest.xml" in files:
+                    manifest_path = os.path.join(
+                        root,
+                        "imsmanifest.xml",
+                    )
+                    break
+
+            if not manifest_path:
+                scorm.package.delete(save=False)
+                scorm.delete()
+
+                messages.error(
+                    request,
+                    "Invalid SCORM package. imsmanifest.xml was not found.",
+                )
+
+                return render(
+                    request,
+                    "scorm/scorm_upload.html",
+                    {
+                        "title": "Upload SCORM Package",
+                        "form": form,
+                        "course": course,
+                    },
+                )
+
+                       # Find the actual SCORM launch file from imsmanifest.xml
+            tree = ET.parse(manifest_path)
+            root_element = tree.getroot()
+
+
+            for resource in root_element.iter():
+                if resource.tag.endswith("resource"):
+                    scorm_type = resource.attrib.get(
+                        "{http://www.adlnet.org/xsd/adlcp_rootv1p2}scormtype"
+                    )
+
+                    href = resource.attrib.get("href")
+
+                    if scorm_type == "sco" and href:
+                        launch_file = href
+                        break
+
+            if not launch_file:
+
+                scorm.package.delete(save=False)
+                scorm.delete()
+
+                messages.error(
+                    request,
+                    "Invalid SCORM package. Launch file was not found in imsmanifest.xml.",
+                )
+
+                return render(
+                    request,
+                    "scorm/scorm_upload.html",
+                    {
+                        "title": "Upload SCORM Package",
+                        "form": form,
+                        "course": course,
+                    },
+                )
+            if not launch_file:
+                scorm.package.delete(save=False)
+                scorm.delete()
+
+                messages.error(
+                    request,
+                    "Invalid SCORM package. Launch file was not found in imsmanifest.xml.",
+                )
+
+                return render(
+                    request,
+                    "scorm/scorm_upload.html",
+                    {
+                        "title": "Upload SCORM Package",
+                        "form": form,
+                        "course": course,
+                    },
+                )
+
+            # Manifest may be inside a subfolder.
+            manifest_dir = os.path.dirname(manifest_path)
+
+            relative_launch_path = os.path.relpath(
+                os.path.join(manifest_dir, launch_file),
+                package_dir,
+            ).replace("\\", "/")
+
+            scorm.launch_file = relative_launch_path
+            scorm.save(update_fields=["launch_file"])
+
+            messages.success(
+                request,
+                f"{scorm.title} has been uploaded successfully.",
+            )
+
+            return redirect("course_detail", slug=slug)
+
+        messages.error(request, "Correct the error(s) below.")
+
+    else:
+        form = SCORMUploadForm()
+
+    return render(
+        request,
+        "scorm/scorm_upload.html",
+        {
+            "title": "Upload SCORM Package",
+            "form": form,
+            "course": course,
+        },
+    )
+@login_required
+def launch_scorm(request, slug, scorm_id):
+    course = get_object_or_404(Course, slug=slug)
+
+    scorm = get_object_or_404(
+        SCORMPackage,
+        id=scorm_id,
+        course=course,
+    )
+
+    return render(
+        request,
+        "scorm/scorm_player.html",
+        {
+            "title": scorm.title,
+            "course": course,
+            "scorm": scorm,
+        },
     )
 
 
@@ -317,70 +540,398 @@ def handle_file_delete(request, slug, file_id):
 # Video Upload Views
 # ########################################################
 
+@login_required
+def handle_video_single(request, slug, video_slug):
+    course = get_object_or_404(
+        Course,
+        slug=slug,
+    )
+
+    video = get_object_or_404(
+        UploadVideo,
+        slug=video_slug,
+        course=course,
+    )
+
+    progress = None
+
+    if request.user.is_student:
+        progress = VideoProgress.objects.filter(
+            student=request.user,
+            video=video,
+        ).first()
+
+    return render(
+        request,
+        "upload/video_single.html",
+        {
+            "video": video,
+            "course": course,
+            "progress": progress,
+        },
+    )
+
+@login_required
+@student_required
+def save_video_progress(request, slug, video_slug):
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "POST request required.",
+            },
+            status=405,
+        )
+
+    course = get_object_or_404(
+        Course,
+        slug=slug,
+    )
+
+    video = get_object_or_404(
+        UploadVideo,
+        slug=video_slug,
+        course=course,
+    )
+
+    try:
+        import json
+
+        data = json.loads(request.body)
+
+        watched_seconds = float(
+            data.get("watched_seconds", 0)
+        )
+
+        duration_seconds = float(
+            data.get("duration_seconds", 0)
+        )
+
+        last_position = float(
+            data.get("last_position", 0)
+        )
+
+        completed = bool(
+            data.get("completed", False)
+        )
+
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Invalid progress data.",
+            },
+            status=400,
+        )
+
+    if duration_seconds > 0:
+        progress_percent = (
+            watched_seconds / duration_seconds
+        ) * 100
+    else:
+        progress_percent = 0
+
+    progress_percent = max(
+        0,
+        min(progress_percent, 100),
+    )
+
+    if progress_percent >= 100:
+        progress_percent = 100
+        completed = True
+
+    progress, created = VideoProgress.objects.get_or_create(
+        student=request.user,
+        video=video,
+    )
+
+    # Keep the highest actual watched coverage.
+    if watched_seconds >= progress.watched_seconds:
+        progress.watched_seconds = watched_seconds
+
+    if duration_seconds > 0:
+        progress.duration_seconds = duration_seconds
+
+    progress.last_position = max(
+        0,
+        last_position,
+    )
+
+    progress.progress_percent = progress_percent
+
+    if completed:
+        progress.completed = True
+
+    progress.save()
+
+    return JsonResponse(
+        {
+            "success": True,
+            "progress_percent": round(
+                progress.progress_percent,
+                2,
+            ),
+            "completed": progress.completed,
+            "last_position": progress.last_position,
+        }
+    )
+
+
+# ########################################################
+# Video Upload Views
+# ########################################################
+
 
 @login_required
 @lecturer_required
 def handle_video_upload(request, slug):
     course = get_object_or_404(Course, slug=slug)
+
     if request.method == "POST":
         form = UploadFormVideo(request.POST, request.FILES)
+
         if form.is_valid():
             video = form.save(commit=False)
             video.course = course
             video.save()
-            messages.success(request, f"{video.title} has been uploaded.")
+
+            messages.success(
+                request,
+                f"{video.title} has been added successfully."
+            )
+
             return redirect("course_detail", slug=slug)
+
         messages.error(request, "Correct the error(s) below.")
+
     else:
         form = UploadFormVideo()
+
     return render(
         request,
         "upload/upload_video_form.html",
-        {"title": "Video Upload", "form": form, "course": course},
+        {
+            "title": "Video Upload",
+            "form": form,
+            "course": course,
+        },
     )
 
 
 @login_required
 def handle_video_single(request, slug, video_slug):
-    course = get_object_or_404(Course, slug=slug)
-    video = get_object_or_404(UploadVideo, slug=video_slug)
+    course = get_object_or_404(
+        Course,
+        slug=slug,
+    )
+
+    video = get_object_or_404(
+        UploadVideo,
+        slug=video_slug,
+        course=course,
+    )
+
+    progress = None
+
+    if request.user.is_student:
+        progress = VideoProgress.objects.filter(
+            student=request.user,
+            video=video,
+        ).first()
+
     return render(
         request,
         "upload/video_single.html",
-        {"video": video, "course": course},
+        {
+            "video": video,
+            "course": course,
+            "progress": progress,
+        },
+    )
+
+
+@login_required
+@student_required
+def save_video_progress(request, slug, video_slug):
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "POST request required.",
+            },
+            status=405,
+        )
+
+    course = get_object_or_404(
+        Course,
+        slug=slug,
+    )
+
+    video = get_object_or_404(
+        UploadVideo,
+        slug=video_slug,
+        course=course,
+    )
+
+    try:
+        import json
+
+        data = json.loads(request.body)
+
+        watched_seconds = float(
+            data.get("watched_seconds", 0)
+        )
+
+        duration_seconds = float(
+            data.get("duration_seconds", 0)
+        )
+
+        last_position = float(
+            data.get("last_position", 0)
+        )
+
+        completed = bool(
+            data.get("completed", False)
+        )
+
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Invalid progress data.",
+            },
+            status=400,
+        )
+
+    if duration_seconds > 0:
+        progress_percent = (
+            watched_seconds / duration_seconds
+        ) * 100
+    else:
+        progress_percent = 0
+
+    progress_percent = max(
+        0,
+        min(progress_percent, 100),
+    )
+
+    if progress_percent >= 100:
+        progress_percent = 100
+        completed = True
+
+    progress, created = VideoProgress.objects.get_or_create(
+        student=request.user,
+        video=video,
+    )
+
+    if watched_seconds >= progress.watched_seconds:
+        progress.watched_seconds = watched_seconds
+
+    if duration_seconds > 0:
+        progress.duration_seconds = duration_seconds
+
+    progress.last_position = max(
+        0,
+        last_position,
+    )
+
+    progress.progress_percent = progress_percent
+
+    if completed:
+        progress.completed = True
+
+    progress.save()
+
+    return JsonResponse(
+        {
+            "success": True,
+            "progress_percent": round(
+                progress.progress_percent,
+                2,
+            ),
+            "completed": progress.completed,
+            "last_position": progress.last_position,
+        }
     )
 
 
 @login_required
 @lecturer_required
 def handle_video_edit(request, slug, video_slug):
-    course = get_object_or_404(Course, slug=slug)
-    video = get_object_or_404(UploadVideo, slug=video_slug)
+    course = get_object_or_404(
+        Course,
+        slug=slug,
+    )
+
+    video = get_object_or_404(
+        UploadVideo,
+        slug=video_slug,
+        course=course,
+    )
+
     if request.method == "POST":
-        form = UploadFormVideo(request.POST, request.FILES, instance=video)
+        form = UploadFormVideo(
+            request.POST,
+            request.FILES,
+            instance=video,
+        )
+
         if form.is_valid():
             video = form.save()
-            messages.success(request, f"{video.title} has been updated.")
-            return redirect("course_detail", slug=slug)
-        messages.error(request, "Correct the error(s) below.")
+
+            messages.success(
+                request,
+                f"{video.title} has been updated.",
+            )
+
+            return redirect(
+                "course_detail",
+                slug=slug,
+            )
+
+        messages.error(
+            request,
+            "Correct the error(s) below.",
+        )
+
     else:
-        form = UploadFormVideo(instance=video)
+        form = UploadFormVideo(
+            instance=video,
+        )
+
     return render(
         request,
         "upload/upload_video_form.html",
-        {"title": "Edit Video", "form": form, "course": course},
+        {
+            "title": "Edit Video",
+            "form": form,
+            "course": course,
+        },
     )
 
 
 @login_required
 @lecturer_required
 def handle_video_delete(request, slug, video_slug):
-    video = get_object_or_404(UploadVideo, slug=video_slug)
-    title = video.title
-    video.delete()
-    messages.success(request, f"{title} has been deleted.")
-    return redirect("course_detail", slug=slug)
+    video = get_object_or_404(
+        UploadVideo,
+        slug=video_slug,
+        course__slug=slug,
+    )
 
+    title = video.title
+
+    video.delete()
+
+    messages.success(
+        request,
+        f"{title} has been deleted.",
+    )
+
+    return redirect(
+        "course_detail",
+        slug=slug,
+    )
 
 # ########################################################
 # Course Registration Views

@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
 from django.contrib.auth.forms import PasswordChangeForm
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,6 +12,8 @@ from django.views.generic import CreateView
 from django_filters.views import FilterView
 from xhtml2pdf import pisa
 
+from django.http import JsonResponse
+from course.models import CourseAllocation
 from accounts.decorators import admin_required
 from accounts.filters import LecturerFilter, StudentFilter
 from accounts.forms import (
@@ -19,6 +23,7 @@ from accounts.forms import (
     StaffAddForm,
     StudentAddForm,
 )
+
 from accounts.models import Parent, Student, User
 from core.models import Semester, Session
 from course.models import Course
@@ -27,6 +32,96 @@ from result.models import TakenCourse
 # ########################################################
 # Utility Functions
 # ########################################################
+
+@admin_required
+def get_course_lecturers(request):
+    # Not using @login_required here on purpose: it redirects anonymous/
+    # session-expired requests to the login page (an HTML response), which
+    # breaks the calling fetch()'s response.json() and fails silently.
+    # admin_required already covers "must be an authenticated superuser"
+    # and (per accounts/decorators.py) returns JSON for AJAX requests.
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"error": "Your session has expired. Please log in again."}, status=401
+        )
+
+    course_id = request.GET.get("course_id")
+
+    if not course_id:
+        return JsonResponse({"lecturers": []})
+
+    lecturers = User.objects.filter(
+        allocated_lecturer__courses__id=course_id,
+        is_lecturer=True,
+    ).distinct()
+
+    data = [
+        {
+            "id": lecturer.id,
+            "name": lecturer.get_full_name,
+        }
+        for lecturer in lecturers
+    ]
+
+    return JsonResponse({"lecturers": data})
+
+
+@admin_required
+def get_program_courses(request):
+    # Same AJAX-safe pattern as get_course_lecturers above: no @login_required
+    # on top, so an expired session returns JSON instead of a silent HTML
+    # redirect that breaks the calling fetch()'s response.json().
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"error": "Your session has expired. Please log in again."}, status=401
+        )
+
+    program_id = request.GET.get("program_id")
+    level = request.GET.get("level")
+
+    if not program_id or not level:
+        return JsonResponse({"courses": []})
+
+    courses = Course.objects.filter(program_id=program_id, level=level)
+
+    data = [
+        {
+            "id": course.id,
+            "name": str(course),
+        }
+        for course in courses
+    ]
+
+    return JsonResponse({"lecturers": data})
+
+
+@admin_required
+def get_program_courses(request):
+    # Same AJAX-safe pattern as get_course_lecturers above: no @login_required
+    # on top, so an expired session returns JSON instead of a silent HTML
+    # redirect that breaks the calling fetch()'s response.json().
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"error": "Your session has expired. Please log in again."}, status=401
+        )
+
+    program_id = request.GET.get("program_id")
+    level = request.GET.get("level")
+
+    if not program_id or not level:
+        return JsonResponse({"courses": []})
+
+    courses = Course.objects.filter(program_id=program_id, level=level)
+
+    data = [
+        {
+            "id": course.id,
+            "name": str(course),
+        }
+        for course in courses
+    ]
+
+    return JsonResponse({"courses": data})
 
 
 def render_to_pdf(template_name, context):
@@ -44,6 +139,36 @@ def render_to_pdf(template_name, context):
 # Authentication and Registration
 # ########################################################
 
+def role_login(request):
+    if request.user.is_authenticated:
+        return redirect_user_by_role(request.user)
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect_user_by_role(user)
+
+        messages.error(request, "Invalid username or password.")
+
+    return render(request, "registration/login.html")
+
+
+def redirect_user_by_role(user):
+    if user.is_superuser:
+        return redirect("dashboard")
+
+    if user.is_lecturer:
+        return redirect("lecturer_dashboard")
+
+    if user.is_student:
+        return redirect("student_dashboard")
+
+    return redirect("home")
 
 def validate_username(request):
     username = request.GET.get("username", None)
@@ -219,10 +344,9 @@ def staff_add_view(request):
             full_name = lecturer.get_full_name
             email = lecturer.email
             messages.success(
-                request,
-                f"Account for lecturer {full_name} has been created. "
-                f"An email with account credentials will be sent to {email} within a minute.",
-            )
+    request,
+    f"Lecturer account for {full_name} has been created successfully.",
+)
             return redirect("lecturer_list")
     else:
         form = StaffAddForm()
@@ -298,22 +422,31 @@ def delete_staff(request, pk):
 @admin_required
 def student_add_view(request):
     if request.method == "POST":
+        print("POST DATA:", request.POST)
+
         form = StudentAddForm(request.POST)
+
+        print("FORM VALID:", form.is_valid())
+        print("FORM ERRORS:", form.errors)
+
         if form.is_valid():
-            student = form.save()
-            full_name = student.get_full_name
-            email = student.email
+            user = form.save()
+            full_name = user.get_full_name()
+
             messages.success(
                 request,
-                f"Account for {full_name} has been created. "
-                f"An email with account credentials will be sent to {email} within a minute.",
+                f"Student account for {full_name} has been created successfully.",
             )
-            return redirect("student_list")
+        return redirect("student_list")
+
         messages.error(request, "Correct the error(s) below.")
     else:
         form = StudentAddForm()
+
     return render(
-        request, "accounts/add_student.html", {"title": "Add Student", "form": form}
+        request,
+        "accounts/add_student.html",
+        {"title": "Add Student", "form": form},
     )
 
 

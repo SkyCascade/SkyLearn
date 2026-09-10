@@ -1,4 +1,19 @@
+from django.http import JsonResponse
 from django.shortcuts import redirect
+
+
+def _is_ajax(request):
+    """
+    Returns True if this looks like a fetch()/XHR call rather than a normal
+    full-page navigation. Used so permission failures on AJAX endpoints
+    return JSON (which the calling JS can detect and show a message for)
+    instead of an HTML redirect (which fetch() will fail to json()-parse
+    and silently swallow in a .catch()).
+    """
+    return (
+        request.headers.get("x-requested-with") == "XMLHttpRequest"
+        or "application/json" in request.headers.get("accept", "")
+    )
 
 
 def admin_required(
@@ -19,6 +34,11 @@ def admin_required(
         if test_func(request.user):
             # Call the original function if the user passes the test
             return function(request, *args, **kwargs) if function else None
+        if _is_ajax(request):
+            return JsonResponse(
+                {"error": "You do not have permission to perform this action."},
+                status=403,
+            )
         # Redirect to the specified URL if the user fails the test
         return redirect(redirect_to)
 
