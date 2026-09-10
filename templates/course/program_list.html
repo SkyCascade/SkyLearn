@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% trans 'Programs' %}</li>
+    </ol>
+</nav>
+
+{% if request.user.is_superuser %}
+<div class="manage-wrap">
+    <a class="btn btn-primary" href="{% url 'add_program' %}"><i class="fas fa-plus"></i>{% trans 'Add Program' %}</a>
+</div>
+{% endif %}
+
+<div class="title-1"><i class="fas fa-book-open"></i>{% trans 'Program List' %}</div>
+<br><br>
+
+{% include 'snippets/messages.html' %}
+{% include 'snippets/filter_form.html' %}
+
+<div class="table-responsive table-shadow table-light table-striped m-0 mt-4">
+    <div class="table-shadow">
+        <table class="table table-light">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>{% trans 'Program Name' %}</th>
+                    <th>{% trans 'Summary' %}</th>
+                    {% if request.user.is_superuser %}
+                    <th>{% trans 'Action' %}</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for program in filter.qs %}
+                <tr>
+                    <td>{{ forloop.counter }}.</td>
+                    <td>
+                        <a class="a-list" href="{{ program.get_absolute_url }}">
+                            {{ program.title}}
+                        </a>
+                    </td>
+                    <td>{{ program.summary }} </td>
+                    {% if request.user.is_superuser %}
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                              <li><a class="dropdown-item" href="{% url 'edit_program' pk=program.pk %}"><i class="unstyled me-2 fas fa-edit"></i>{% trans 'Update' %}</a></li>
+                              <li><a class="dropdown-item text-danger" href="{% url 'program_delete' pk=program.pk %}"><i class="unstyled me-2 fas fa-trash-alt"></i>{% trans 'Delete' %}</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>
+                  <span class="text-danger">
+                    {% trans 'No program.' %}
+                    {% if request.user.is_superuser %}
+                    <a href="{% url 'add_program' %}">
+                    <i class="primary" style="font-size: 22px;">
+                        {% trans 'Add program now.' %}
+                    </i>
+                    {% endif %}
+                    </a>
+                  </span>
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock content %}

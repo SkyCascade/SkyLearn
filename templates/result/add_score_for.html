@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% load static %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item"><a href="{{ course.get_absolute_url }}">{{ course }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% trans 'Manage Score' %}</li>
+    </ol>
+</nav>
+
+<div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        {{ course }}
+    </button>
+    <div class="dropdown-menu">
+        {% for course in courses %}
+            <a class="dropdown-item" href="{% url 'add_score_for' course.id %}" title="{{ course.code }}">{{ course.title }}</a>
+        {% empty %}
+            <p class="dropdown-item">{% trans 'No course.' %}</p>
+        {% endfor %}
+    </div>
+</div>
+
+<br>
+<h4 class="title-1">{% trans 'Students result form' %} | {{ course|truncatechars:15 }}</h4>
+<p>{{ course.summary }}</p>
+
+{% include 'snippets/messages.html' %}
+
+<form action="" method="POST">
+    {% csrf_token %}
+    <div class="btn-flex">
+        <button title="Save Score" type="submit" class="btn btn-primary">{% trans 'Save' %}</button>
+        <a target="_blank" href="{% url 'result_sheet_pdf_view' id=course.id %}">
+            <span data-toggle="tooltip" title="Print Result sheet" class="btn btn-warning">
+                <i class="far fa-file-pdf"></i> {% trans 'Grade report' %}
+            </span>
+        </a>
+    </div>
+
+    <h4 class="mt-3">{{ current_semester }} {% trans 'Semester' %} <i class="text-light px-2 rounded small bg-danger">{{ current_session }}</i></h4>
+    <div class="table-responsive">
+        <table class="table table-light">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>{% trans 'Student' %}</th>
+                    <th>{% trans 'Assignment' %}</th>
+                    <th>{% trans 'Mid exam' %}</th>
+                    <th>{% trans 'Quiz' %}</th>
+                    <th>{% trans 'Attendance' %}</th>
+                    <th>{% trans 'Final exam' %}</th>
+                    <th>{% trans 'Total' %}</th>
+                    <th>{% trans 'Point' %}</th>
+                    <th>{% trans 'Grade' %}</th>
+                    <th>{% trans 'Comment' %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td><a href="{{ student.student.student.get_absolute_url }}">{{ student.student.student.username }}</a></td>
+                    <td>
+                        <input id="assignment" type="number" name="{{ student.id }}" value="{{ student.assignment }}" width="20px">
+                    </td>
+                    <td>
+                        <input id="mid_exam" type="number" name="{{ student.id }}" value="{{ student.mid_exam }}">
+                    </td>
+                    <td>
+                        <input id="quiz" type="number" name="{{ student.id }}" value="{{ student.quiz }}">
+                    </td>
+                    <td>
+                        <input id="attendance" type="number" name="{{ student.id }}" value="{{ student.attendance }}">
+                    </td>
+                    <td>
+                        <input id="final_exam" type="number" name="{{ student.id }}" value="{{ student.final_exam }}">
+                    </td>
+                    <td>{{ student.total }}</td>
+
+                    <td>{{ student.point }}</td>
+                    <td class="{% if student.grade == 'F' %}text-danger{% else %}text-success{% endif %}">{{ student.grade }}</td>
+                    {% if student.comment == 'PASS' %}
+                    <td class="text-success">&check; {{ student.comment }}</td>
+                    {% elif student.comment == 'FAIL' %}
+                    <td class="text-danger">&xotime; {{ student.comment }}</td>
+                    {% else %}<td></td>
+                    {% endif %}
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <span class="text-danger">
+                            {% trans 'No Student.' %}
+                        </span>
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</form>
+
+{% endblock content %}

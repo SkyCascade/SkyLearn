@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% trans 'Allocation list' %}</li>
+    </ol>
+</nav>
+
+{% if request.user.is_superuser %}
+<div class="manage-wrap">
+    <a class="btn btn-primary" href="{% url 'course_allocation' %}"><i class="fas fa-plus"></i>{% trans 'Allocate Now' %}</a>
+</div>
+{% endif %}
+
+<div class="title-1"><i class="fas fa-tasks"></i>{% trans 'Course Allocations' %}</div>
+<br>
+<br>
+
+{% include 'snippets/messages.html' %}
+{% include 'snippets/filter_form.html' %}
+
+<div class="table-responsive table-shadow p-0 mt-4">
+    <table class="table table-light table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>{% trans 'Lecturer' %}</th>
+                <th>{% trans 'Courses' %}</th>
+                {% if request.user.is_superuser %}
+                <th>{% trans 'Action' %}</th>
+                {% endif %}
+            </tr>
+        </thead>
+        {% for course in filter.qs %}
+        <tbody>
+            <tr>
+                <td> {{ forloop.counter }}.</td>
+                <td><a href="{{ course.lecturer.get_absolute_url }}">{{ course.lecturer.get_full_name }}</a></td>
+                <td><div class="flex">{% for i in course.courses.all %}
+                        <div class="flex"><a class="edit-btn" href="{{ i.get_absolute_url }}">{{ i }}</a></div>
+                    {% endfor %}</div>
+                </td>
+                {% if request.user.is_superuser %}
+                <td><div class="update-delete">
+                    <a href="{% url 'edit_allocated_course' pk=course.pk %}" class="update" title="{% trans 'Edit or Update' %}">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'course_deallocate' pk=course.pk %}" class="delete" title="{% trans 'Deallocate' %}">
+                        <i class="fas fa-trash-alt"></i>
+                    </a>
+                    </div>
+                </td>
+                {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td></td>
+              <td></td>
+              <td>
+                <span class="text-danger">{% trans 'No Course Allocated.' %}
+                    {% if request.user.is_superuser %}
+                    <a href="{% url 'course_allocation' %}">
+                    <i class="primary" style="font-size: 22px;">
+                        {% trans 'Allocate now' %}
+                    </i>
+                    {% endif %}
+                    </a>
+                </span>
+                </td>
+              <td></td>
+            </tr>
+
+        </tbody>
+        {% endfor %}
+    </table>
+</div>
+{% endblock content %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans 'Assesment Results' %}</li>
+  </ol>
+</nav>
+
+{% include 'snippets/messages.html' %}
+
+<div class="title-1"><i class="fa fa-spell-check"></i>{% trans 'Assesment Results' %}</div>
+<p>{{ student.level }} {% trans 'Result' %}</p>
+
+<div class="table-responsive p-0 px-2 mt-3">
+  <div class="table-title"><u>{% trans 'First Semester:' %}</u></div>
+  <table class="table table-light">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>{% trans 'Course Title' %}</th>
+        <th>{% trans 'Course Code' %}</th>
+        <th>{% trans 'Cr.Hr(s)' %}</th>
+        <th>{% trans 'Assignment' %}</th>
+        <th>{% trans 'Mid exam' %}</th>
+        <th>{% trans 'Quiz' %}</th>
+        <th>{% trans 'Attendance' %}</th>
+        <th>{% trans 'Final exam' %}</th>
+        <th>{% trans 'Total' %}</th>
+      </tr>
+    </thead>
+    {% for course in courses %}
+    {% if course.course.semester == "First" %}
+    <tbody>
+      <tr class="{% if forloop.counter|divisibleby:2 %}bg-gray{% endif %}">
+        <th scope="row">{{ forloop.counter }}</th>
+        <td><a href="{{ course.course.get_absolute_url }}">{{ course.course.title }}</a></td>
+        <td>{{ course.course.code }}</td>
+        <td>{{ course.course.credit }}</td>
+        <td>{{ course.assignment }}</td>
+        <td>{{ course.mid_exam }}</td>
+        <td>{{ course.quiz }}</td>
+        <td>{{ course.attendance }}</td>
+        <td>{{ course.final_exam }}</td>
+        {% if course.total >= 45 %}
+        <td class="success"><i class="fas fa-check-circle"></i> {{ course.total }}</td>
+        {% else %}
+        <td class="danger"><i class="fas fa-exclamation-circle"></i> {{ course.total }}</td>
+        {% endif %}
+      </tr>
+    </tbody>
+    {% endif %}
+    {% endfor %}
+  </table>
+  </div>
+
+  <div class="table-responsive p-3 mt-3">
+    <div class="table-title"><u>{% trans 'Second Semester:' %}</u></div>
+    <table class="table table-light">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>{% trans 'Course Title' %}</th>
+        <th>{% trans 'Course Code' %}</th>
+        <th>{% trans 'Cr.Hr(s)' %}</th>
+        <th>{% trans 'Assignment' %}</th>
+        <th>{% trans 'Mid exam' %}</th>
+        <th>{% trans 'Quiz' %}</th>
+        <th>{% trans 'Attendance' %}</th>
+        <th>{% trans 'Final exam' %}</th>
+        <th>{% trans 'Total' %}</th>
+      </tr>
+    </thead>
+    {% for course in courses %}
+    {% if course.course.semester == "Second" %}
+    <tbody>
+      <tr>
+        <th scope="row">{{ forloop.counter }}</th>
+        <td><a href="{{ course.course.get_absolute_url }}">{{ course.course.title }}</a></td>
+        <td>{{ course.course.code }}</td>
+        <td>{{ course.course.credit }}</td>
+        <td>{{ course.assignment }}</td>
+        <td>{{ course.mid_exam }}</td>
+        <td>{{ course.quiz }}</td>
+        <td>{{ course.attendance }}</td>
+        <td>{{ course.final_exam }}</td>
+        {% if course.total >= 45 %}
+        <td class="success"><i class="fas fa-check-circle"></i> {{ course.total }}</td>
+        {% else %}
+        <td class="danger"><i class="fas fa-exclamation-circle"></i> {{ course.total }}</td>
+        {% endif %}
+      </tr>
+    </tbody>
+    {% endif %}
+    {% endfor %}
+  </table>
+</div>
+
+<br>
+{% endblock %}

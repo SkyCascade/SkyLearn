@@ -1,0 +1,222 @@
+/* =====================================================================
+   SkyLearn — Motion & Depth Layer
+   Purely additive: no existing selectors are overridden, no layout is
+   changed. This file only adds transitions, transforms and small
+   decorative elements injected by animations.js.
+   ===================================================================== */
+
+:root {
+  --sl-primary: var(--primary, #f8d270);
+  --sl-purple: #7c6fe0;
+  --sl-aqua: #5ec8d8;
+  --sl-ease: cubic-bezier(.22, .8, .32, 1);
+}
+
+/* ---------- Respect reduced-motion users first ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Smooth page fade-in ----------
+   Pure-CSS keyframe so the page always becomes visible even if JS is
+   blocked or slow — animations.js only adds the .sl-loaded class as
+   a (non-required) early trigger. */
+body {
+  animation: sl-body-in .5s var(--sl-ease) both;
+}
+@keyframes sl-body-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ---------- Top loading progress bar ---------- */
+#sl-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--sl-aqua), var(--sl-primary), var(--sl-purple));
+  z-index: 3000;
+  transition: width .35s ease, opacity .3s ease;
+  box-shadow: 0 0 8px rgba(0,0,0,.25);
+}
+
+/* ---------- Scroll reveal ---------- */
+.sl-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity .6s var(--sl-ease), transform .6s var(--sl-ease);
+}
+.sl-reveal.sl-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- 3D tilt targets ---------- */
+.card,
+.card-count,
+.bg-white.border {
+  transition: transform .35s var(--sl-ease), box-shadow .35s var(--sl-ease);
+  will-change: transform;
+}
+.card:hover,
+.card-count:hover,
+.bg-white.border:hover {
+  box-shadow: 0 18px 34px -14px rgba(0, 0, 0, .28);
+}
+
+/* ---------- Buttons: lift + ripple ---------- */
+.btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s var(--sl-ease), box-shadow .2s var(--sl-ease);
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px -10px rgba(0, 0, 0, .35);
+}
+.btn:active {
+  transform: translateY(0) scale(.97);
+}
+.sl-ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  background: rgba(255, 255, 255, .55);
+  pointer-events: none;
+  animation: sl-ripple-anim .6s ease-out;
+}
+@keyframes sl-ripple-anim {
+  to { transform: scale(3); opacity: 0; }
+}
+
+/* ---------- Stat counter cards (dashboard) ---------- */
+.card-count h3 i {
+  transition: transform .35s var(--sl-ease);
+}
+.card-count:hover h3 i {
+  transform: translateZ(20px) scale(1.12) rotate(-6deg);
+}
+
+/* ---------- Sidebar polish ---------- */
+#side-nav ul li a {
+  position: relative;
+  transition: transform .25s var(--sl-ease), padding-left .25s var(--sl-ease), color .25s var(--sl-ease);
+}
+#side-nav ul li a:hover {
+  transform: translateX(6px);
+}
+#side-nav ul li a i {
+  display: inline-block;
+  transition: transform .3s var(--sl-ease);
+}
+#side-nav ul li a:hover i {
+  transform: scale(1.2) rotate(-8deg);
+}
+#side-nav ul li.active > a i {
+  transform: scale(1.1);
+}
+#side-nav ul li {
+  opacity: 0;
+  animation: sl-slide-in .45s var(--sl-ease) forwards;
+}
+#side-nav ul li:nth-child(n) { animation-delay: calc(var(--sl-i, 0) * 35ms); }
+@keyframes sl-slide-in {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.top-side { perspective: 700px; }
+.top-side a img {
+  transition: transform .4s var(--sl-ease);
+}
+.top-side a:hover img {
+  transform: rotateY(12deg) scale(1.05);
+}
+
+/* ---------- Top navbar ---------- */
+#top-navbar {
+  transition: box-shadow .3s var(--sl-ease), background-color .3s var(--sl-ease);
+}
+#top-navbar.sl-scrolled {
+  box-shadow: 0 6px 18px -12px rgba(0, 0, 0, .35);
+}
+.avatar {
+  transition: transform .3s var(--sl-ease), box-shadow .3s var(--sl-ease);
+}
+.avatar:hover {
+  transform: scale(1.08) rotate(3deg);
+}
+#primary-search {
+  transition: box-shadow .3s var(--sl-ease);
+}
+#primary-search:focus {
+  box-shadow: 0 0 0 .2rem rgba(248, 210, 112, .45);
+}
+
+/* ---------- Floating decorative blobs (login/register) ---------- */
+.sl-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  opacity: .35;
+  z-index: 0;
+  pointer-events: none;
+  animation: sl-float 9s ease-in-out infinite;
+}
+@keyframes sl-float {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  33%      { transform: translate(14px, -18px) rotate(8deg) scale(1.06); }
+  66%      { transform: translate(-12px, 10px) rotate(-6deg) scale(.96); }
+}
+.sl-auth-card-wrap { position: relative; overflow: visible; }
+.sl-auth-card-wrap .card { position: relative; z-index: 1; }
+
+/* ---------- Buttons inside auth forms get a subtle 3D press ---------- */
+#login-btn {
+  transform-style: preserve-3d;
+}
+
+/* ---------- Scroll-to-top FAB ---------- */
+#sl-to-top {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: var(--sl-primary);
+  color: #000;
+  box-shadow: 0 10px 22px -8px rgba(0, 0, 0, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2500;
+  opacity: 0;
+  transform: translateY(16px) scale(.8);
+  transition: opacity .3s var(--sl-ease), transform .3s var(--sl-ease);
+}
+#sl-to-top.sl-show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+#sl-to-top:hover {
+  transform: translateY(-4px) scale(1.08) rotate(-8deg);
+}
+
+/* ---------- Breadcrumb + title entrance ---------- */
+.title-1,
+.breadcrumb {
+  animation: sl-fade-down .5s var(--sl-ease);
+}
+@keyframes sl-fade-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

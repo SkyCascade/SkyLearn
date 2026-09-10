@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'programs' %}">{% trans 'Programs' %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'program_detail' course.program.id %}">{{ course.program }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ course.get_absolute_url }}">{{ course }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'quiz_index' course.slug %}">{% trans 'Quizzes' %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% trans 'Quiz Form' %}</li>
+    </ol>
+</nav>
+
+<div class="title-1">{% trans 'Quiz form for' %} {{ course|truncatechars:15 }}</div>
+<br><br>
+
+<div class="container">
+
+    <form action="" method="POST">{% csrf_token %}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- <div class="container"> -->
+                            <div hidden>
+                                <label for="course">{{ form.course.label }}</label><br> {{ form.course }}
+                                <span class="danger">{{ form.course.errors }}</span>
+                                <span class="danger">{{ form.course.errors }}</span>
+                            </div>                    
+                            {{ form.category|as_crispy_field }}                    
+                            {{ form.title|as_crispy_field }}
+                            <!-- <div class="mb-2">
+                                <label for="max_questions">{{ form.max_questions.label }}</label>
+                                <input class="form-control" type="number" name="max_questions" min="0" id="id_max_questions">
+                                <span class="danger">{{ form.max_questions.errors }}</span>
+                                <small class="d-block text-muted">Number of questions to be answered on each attempt.</small>
+                            </div> -->
+                            {{ form.pass_mark|as_crispy_field }}
+                            {{ form.description|as_crispy_field }}
+                        <!-- </div> -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- <div class="container"> -->
+                        <div hidden>
+                            <label for="questions">{{ form.questions.label }}</label><br> {{ form.questions }}
+                            <span class="danger">{{ form.questions.errors }}</span>
+                            <small class="d-block text-muted">{% trans 'Hold down' %} "Control", {% trans 'or' %} "Command" {% trans 'on a Mac, to select more than one.' %}</small>
+                        </div>
+                        {{ form.random_order|as_crispy_field }}                    
+                        {{ form.answers_at_end|as_crispy_field }}                    
+                        {{ form.exam_paper|as_crispy_field }}                    
+                        {{ form.single_attempt|as_crispy_field }}                    
+                        {{ form.draft|as_crispy_field }}             
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-primary my-4" id="{% if form.is_valid %}btn-transition{% endif %}" type="submit">{% trans 'Save' %} &amp; {% trans 'Continue' %}</button>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+    const transitionButton = document.getElementById('btn-transition');
+    transitionButton.addEventListener('click', () => {
+        document.getElementById('card-transition').style.animation = 'card-transition 5s ease-in-out forwards';
+    })
+</script>
+{% endblock js %}

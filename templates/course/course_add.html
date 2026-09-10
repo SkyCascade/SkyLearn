@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'programs' %}">{% trans 'Programs' %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% trans 'Course Form' %}</li>
+    </ol>
+</nav>
+
+<div class="title-1">{% trans 'Course Form' %}</div>
+<br>
+<br>
+
+{% include 'snippets/messages.html' %}
+
+<form action="" method="POST">{% csrf_token %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <p class="form-title">{% trans 'Course Detail' %}</p>
+                <div class="p-3">
+                    {{ form.title|as_crispy_field }}
+                    {{ form.code|as_crispy_field }}
+                    {{ form.summary|as_crispy_field }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <p class="form-title">{% trans 'Other Info' %}</p>
+                <div class="p-3">
+                    {{ form.program|as_crispy_field }}
+                    {{ form.credit|as_crispy_field }}
+                    {{ form.year|as_crispy_field }}
+                    {{ form.semester|as_crispy_field }}
+                    {{ form.level|as_crispy_field }}
+                    {{ form.is_elective|as_crispy_field }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <input class="btn btn-primary mt-3" type="submit" value="{% trans 'Save' %}">
+</form>
+
+{% endblock content %}

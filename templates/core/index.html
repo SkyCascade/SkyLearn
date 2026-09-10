@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% load static %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item active" aria-current="page">{% trans 'Home' %}</li>
+    </ol>
+</nav>
+
+{% if request.user.is_superuser %}
+<div class="manage-wrap">
+    <a class="btn btn-primary" href="{% url 'add_item' %}"><i class="fas fa-plus"></i>{% trans 'Add New Post' %}</a>
+</div>
+{% endif %}
+
+{% include 'snippets/messages.html' %}
+
+<div>
+    <div class="title-1">{% trans 'News' %} &amp; {% trans 'Events' %}</div>
+</div>
+
+<div class="col-md-2 ms-auto d-flex">
+    <div class="me-3">
+        <span class="color-indicator bg-primary"></span> {% trans 'News' %}
+    </div>
+    <div>
+        <span class="color-indicator bg-purple"></span> {% trans 'Events' %}
+    </div>
+</div>
+
+<div class="container-fluid">
+    {% if items %}
+    <div class="row">
+        {% for item in items %}
+        <div class="col-md-4 mb-4">
+            <div class="bg-white border">
+                <div class="card-header-ne {% if item.posted_as == 'News' %}{% trans 'news' %}{% else %}{% trans 'events' %}{% endif %} p-2">
+                    <span class="p-0">
+                        {{ item.title|title }}
+                    </span>
+                    {% if request.user.is_superuser %}
+                    <div class="dropstart">
+                        <button class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v text-white"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'edit_post' pk=item.id %}"><i
+                                    class="unstyled me-2 fas fa-pencil-alt"></i>{% trans 'Edit' %}</a>
+                            <a class="dropdown-item" href="{% url 'delete_post' pk=item.id %}"><i
+                                    class="unstyled me-2 fas fa-trash-alt"></i>{% trans 'Delete' %}</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="p-2 my-2" style="min-height: 120px;">{{ item.summary }}</div>
+
+                <div class="bg-light p-1 small text-secondary text-end pe-3">
+                    <i class="fa fa-calendar small unstyled"></i>
+                    {{ item.updated_date|timesince }} {% trans 'ago' %}
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <h4 class="text-center mt-5 py-5 text-muted">
+        <i class="fa-regular fa-folder-open me-2"></i>{% trans 'School news and events will appear here.' %}
+    </h4>
+
+    {% endif %}
+
+</div>
+
+{% endblock content %}

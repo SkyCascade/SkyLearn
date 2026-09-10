@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {{ title }} | {% trans 'Learning management system' %}
+{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item">
+            <a href="/">
+                {% trans 'Home' %}
+            </a>
+        </li>
+
+        <li class="breadcrumb-item">
+            <a href="{% url 'programs' %}">
+                {% trans 'Programs' %}
+            </a>
+        </li>
+
+        <li class="breadcrumb-item">
+            <a href="{% url 'program_detail' course.program.id %}">
+                {{ course.program }}
+            </a>
+        </li>
+
+        <li class="breadcrumb-item">
+            <a href="{% url 'course_detail' course.slug %}">
+                {{ course }}
+            </a>
+        </li>
+
+        <li class="breadcrumb-item active" aria-current="page">
+            {% trans 'Video upload' %}
+        </li>
+
+    </ol>
+</nav>
+
+
+<p class="title-1">
+    {% trans 'Video upload for' %}
+    {{ course|truncatechars:25 }}
+</p>
+
+<div class="title-line"></div>
+<br>
+
+
+{% include 'snippets/messages.html' %}
+
+
+<div class="row">
+
+    <div class="col-md-8 mx-auto">
+
+        <div class="card">
+
+            <p class="form-title">
+                {% trans 'Video Upload Form' %}
+            </p>
+
+
+            <div class="card-body">
+
+                <form
+                    action=""
+                    method="POST"
+                    enctype="multipart/form-data"
+                    id="videoUploadForm"
+                >
+
+                    {% csrf_token %}
+
+
+                    <!-- VIDEO TITLE -->
+                    <div class="mb-3">
+
+                        <label for="{{ form.title.id_for_label }}"
+                               class="form-label">
+
+                            Video Title
+
+                        </label>
+
+                        {{ form.title }}
+
+                    </div>
+
+
+                    <!-- VIDEO TYPE -->
+                    <div class="mb-3">
+
+                        <label for="{{ form.video_type.id_for_label }}"
+                               class="form-label">
+
+                            Video Type
+
+                        </label>
+
+                        {{ form.video_type }}
+
+                    </div>
+
+
+                    <!-- UPLOAD VIDEO FILE -->
+                    <div
+                        class="mb-3"
+                        id="videoFileContainer"
+                    >
+
+                        <label for="{{ form.video.id_for_label }}"
+                               class="form-label">
+
+                            Upload Video File
+
+                        </label>
+
+                        {{ form.video }}
+
+                        <small class="text-muted">
+                            Upload MP4 or another supported video file.
+                        </small>
+
+                    </div>
+
+
+                    <!-- YOUTUBE URL -->
+                    <div
+                        class="mb-3"
+                        id="youtubeUrlContainer"
+                    >
+
+                        <label for="{{ form.youtube_url.id_for_label }}"
+                               class="form-label">
+
+                            YouTube Video URL
+
+                        </label>
+
+                        {{ form.youtube_url }}
+
+                        <small class="text-muted">
+                            Example:
+                            https://www.youtube.com/watch?v=XXXXXXXXXXX
+                        </small>
+
+                    </div>
+
+
+                    <!-- DESCRIPTION -->
+                    <div class="mb-3">
+
+                        <label for="{{ form.summary.id_for_label }}"
+                               class="form-label">
+
+                            Description
+                        </label>
+
+                        {{ form.summary }}
+
+                    </div>
+
+
+                    <!-- BUTTONS -->
+                    <div class="form-group">
+
+                        <button
+                            class="btn btn-primary"
+                            type="submit"
+                        >
+                            {% trans 'Save Video' %}
+                        </button>
+
+
+                        <a
+                            class="btn btn-danger"
+                            href="{% url 'course_detail' course.slug %}"
+                            style="float: right;"
+                        >
+                            {% trans 'Cancel' %}
+                        </a>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================================================== -->
+<!-- SHOW ONLY THE RELEVANT VIDEO INPUT                 -->
+<!-- ================================================== -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const videoType = document.getElementById("id_video_type");
+
+    const videoFileContainer =
+        document.getElementById("videoFileContainer");
+
+    const youtubeUrlContainer =
+        document.getElementById("youtubeUrlContainer");
+
+    const videoFile =
+        document.getElementById("id_video");
+
+    const youtubeUrl =
+        document.getElementById("id_youtube_url");
+
+
+    function updateVideoFields() {
+
+        if (!videoType) {
+            return;
+        }
+
+
+        if (videoType.value === "youtube") {
+
+            // Show YouTube field
+            youtubeUrlContainer.style.display = "block";
+
+            // Hide file field
+            videoFileContainer.style.display = "none";
+
+
+            // Disable file input
+            if (videoFile) {
+                videoFile.disabled = true;
+            }
+
+            // Enable YouTube input
+            if (youtubeUrl) {
+                youtubeUrl.disabled = false;
+            }
+
+        } else {
+
+            // Show file field
+            videoFileContainer.style.display = "block";
+
+            // Hide YouTube field
+            youtubeUrlContainer.style.display = "none";
+
+
+            // Enable file input
+            if (videoFile) {
+                videoFile.disabled = false;
+            }
+
+            // Disable YouTube input
+            if (youtubeUrl) {
+                youtubeUrl.disabled = true;
+            }
+
+        }
+    }
+
+
+    // Run on page load
+    updateVideoFields();
+
+
+    // Run whenever teacher changes video type
+    if (videoType) {
+
+        videoType.addEventListener(
+            "change",
+            updateVideoFields
+        );
+
+    }
+
+});
+
+</script>
+
+{% endblock content %}

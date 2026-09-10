@@ -1,0 +1,7 @@
+-r base.txt
+
+# Code quality
+# ------------------------------------------------------------------------------
+black==22.12.0  # https://github.com/psf/black
+factory-boy==3.3.1
+django-extensions==3.2.3

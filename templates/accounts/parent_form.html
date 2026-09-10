@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load i18n %}
+	{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+
+<form method="POST">{% csrf_token %}
+	{{ form.as_p }}
+	<input type="submit" name="" value="{% trans 'Save' %}">
+</form>
+
+{% endblock %}

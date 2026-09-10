@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'programs' %}">{% trans 'Programs' %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'program_detail' course.program.id %}">{{ course.program }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ course.get_absolute_url }}">{{ course }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'quiz_index' course.slug %}">{% trans 'Quizzes' %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% trans 'MC Question Form' %}</li>
+    </ol>
+</nav>
+
+<div class="title-1 mb-3">{% trans 'Add questions' %} [{{ quiz_obj|truncatechars:15 }}]</div>
+
+{% if formset.non_form_errors %}
+<div class="alert alert-danger">
+    <ul class="mb-0">
+    {% for e in formset.non_form_errors %}
+    <li>{{ e }}</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="container">
+    <div class="mb-3 bg-secondary text-light py-1 px-3">{{ quiz_questions_count }} {% trans 'question added' %}</div>
+
+    <form action="#" method="POST">{% csrf_token %}
+        {% if form.errors %}<p class="alert alert-danger">{% trans 'Correct the error(s) below.' %}</p>{% endif %}
+        <div class="row">
+            <div class="col mx-3 py-4 border bg-white">
+                <div class="mb-2" hidden>
+                    {{ form.quiz }}
+                </div>
+                {{ form.content|as_crispy_field }}
+                {{ form.figure|as_crispy_field }}
+                {{ form.explanation|as_crispy_field }}
+            </div>
+            <div class="col mx-3 py-4 border bg-white">
+                {{ form.choice_order|as_crispy_field }}
+                <div class="border p-2">
+                    <label class="lead">{% trans 'Choices' %}</label>
+                {{ formset.management_form }}
+                {% for fs in formset %}
+                    <label for="username">{{ fs.label }}</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">{{ fs.correct }} <small class="ms-1">{% trans 'Correct' %}</small></span>
+                        </div>
+                        {{ fs.choice_text }}
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">{{ fs.DELETE }} <small class="ms-1">{% trans 'Delete' %}</small></span>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+        <button type="submit" formnovalidate name="another" class="btn btn-outline-primary">
+            Save and add another
+        </button>
+        <button class="btn btn-primary my-4" type="submit">{% trans 'Save' %}</button>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% trans 'Account setting' %}</li>
+    </ol>
+</nav>
+
+<p class="title-1"><i class="fas fa-user-edit"></i>{% trans 'Account Settings' %}</p>
+
+{% include 'snippets/messages.html' %}
+
+<form action="" method="POST" enctype="multipart/form-data">{% csrf_token %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="form-title">{% trans 'Email' %} &amp; {% trans 'Personal Info' %}</div>
+                <div class="card-body">
+                    {{ form.email|as_crispy_field }}
+                    {{ form.first_name|as_crispy_field }}
+                    {{ form.last_name|as_crispy_field }}
+                    {{ form.gender|as_crispy_field }}
+                    {{ form.phone|as_crispy_field }}
+                    {{ form.address|as_crispy_field }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <p class="form-title">{% trans 'Others' %}</p>
+                <div class="card-body">
+                    {{ form.picture|as_crispy_field }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="btn btn-primary" type="submit">{% trans 'Update Profile' %}</button>
+</form>
+{% endblock content %}

@@ -1,0 +1,32 @@
+{% load i18n %}
+{% if previous.answers %}
+  <table class="table table-striped table-bordered">
+    <tbody>
+  	  {% for answer in previous.answers %}
+        {% if answer.correct %}
+  	    <tr class="success">
+  		  <td>{{ answer }}</td>
+  		  <td class="text-success"><strong>{% trans "This is the correct answer" %}</strong></td>
+		</tr>
+        {% else %}
+  		<tr>
+      	  <td>{{ answer }}</td>
+  		  <td>
+  			{% if previous.question_type.MCQuestion %}
+  			  {% if answer.id|add:"0" == previous.previous_answer|add:"0" %}
+  			    {% trans "This was your answer." %}
+  			  {% endif %}
+  			{% endif %}
+  		  </td>
+		</tr>
+  	  {% endif %}
+  	{% endfor %}
+    </tbody>
+  </table>
+
+  {% if user_was_incorrect %}
+    <div class="text-danger">
+  	  <strong>{% trans "You answered the above question incorrectly" %}</strong>
+    </div>
+  {% endif %}
+{% endif %}

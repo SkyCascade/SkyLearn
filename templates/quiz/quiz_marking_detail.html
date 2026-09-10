@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}
+{% trans "Result of" %} {{ sitting.quiz.title }} {% trans "for" %} {{ sitting.user }} | {% trans 'Learning management system' %}
+{% endblock %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+	<ol class="breadcrumb">
+		<li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+		<li class="breadcrumb-item"><a href="{% url 'quiz_marking' %}">{% trans 'Completed Exams' %}</a></li>
+		<li class="breadcrumb-item active" aria-current="page">{% trans 'Marking' %}</li>
+	</ol>
+</nav>
+
+<div class="row col-12 justify-content-between">
+	<div class="header-title-md">{% trans "Quiz title" %}: {{ sitting.quiz.title }}</div>
+	<em class="info-text title-danger">{% trans "Category" %}: {{ sitting.quiz.category }}</em>
+</div>
+
+<p>{{ sitting.quiz.description }}</p>
+<hr>
+<p><b>{% trans "User" %}:</b> {{ sitting.user }}</p>
+<p><b>{% trans "Completed" %}:</b> {{ sitting.end|date }}</p>
+<p><b>{% trans "Score" %}:</b> {{ sitting.get_percent_correct }}%</p>
+<!-- <p><b>{% trans "Start" %}:</b> {{ sitting.start }}</p>
+<p><b>{% trans "End" %}:</b> {{ sitting.end }}</p> -->
+
+<table class="table table-bordered table-striped">
+
+  <thead>
+	<tr>
+	  <th>{% trans "Question" %}</th>
+	  <th>{% trans "User answer" %}</th>
+	  <th></th>
+	  <th></th>
+	</tr>
+  </thead>
+
+  <tbody>
+{% for question in questions %}
+
+	<tr>
+      <td>
+        {{ question.content }}
+        {% if question.figure %}
+        <div style="max-width: 100px;"><img src="{{ question.figure.url }}" alt="{{ question.figure }}" width="100px"/></div>
+        {% endif %}
+      </td>
+	  <td>{{ question }}</td>
+	  <td>
+		{% if question.id in sitting.get_incorrect_questions %}
+		  <p>{% trans "incorrect" %}</p>
+		{% else %}
+		  <p>{% trans "Correct" %}</p>
+		{% endif %}
+	  </td>
+	  <td>
+		<form action="" method="POST">{% csrf_token %}
+		  <input type="hidden" name="qid" value="{{ question.id }}">
+		  <button type="submit" class="btn btn-sm btn-secondary">{% trans "Toggle whether correct" %}</button>
+		</form>
+	  </td>
+	</tr>
+
+{% endfor %}
+
+  </tbody>
+
+</table>
+{% endblock %}

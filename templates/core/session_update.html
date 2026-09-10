@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'session_list' %}">{% trans 'Session List' %}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans 'Session Form' %}</li>
+    </ol>
+</nav>
+
+{% include 'snippets/messages.html' %}
+
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card pb-3">
+            <p class="form-title">{% trans 'Session Add & update Form' %}</p>
+            <div class="container"><br>
+                <form action="" method="POST">{% csrf_token %}
+                    {{ form|crispy }}
+                    <input class="btn btn-primary" type="submit" value="{% trans 'Save' %}">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

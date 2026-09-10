@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %} {% trans "Progress Page" %} | {% trans 'Learning management system' %} {% endblock %}
+{% block description %} {% trans "User Progress Page" %} {% endblock %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% trans 'Progress Page' %}</li>
+    </ol>
+</nav>
+
+<p class="title-1"><i class="fas fa-record-vinyl"></i>{% trans 'Quiz Progress Rec' %}</p>
+
+  {% if cat_scores %}
+
+  <div class="header-title text-center">{% trans "Question Category Scores" %}</div>
+  <div class="title-line"></div>
+
+  <table class="table table-bordered table-striped">
+
+	<thead>
+	  <tr>
+		<th>{% trans "Category" %}</th>
+		<th>{% trans "Correctly answererd" %}</th>
+		<th>{% trans "Incorrect" %}</th>
+		<th>%</th>
+	  </tr>
+	</thead>
+
+	<tbody>
+
+
+	  {% for cat, value in cat_scores.items %}
+	  <tr>
+		<td>{{ cat }}</td>
+		<td>{{ value.0 }}</td>
+		<td>{{ value.1 }}</td>
+		<td>{{ value.2 }}</td>
+	  </tr>
+
+	  {% endfor %}
+
+	</tbody>
+
+  </table>
+
+
+  {% endif %}
+
+  {% if exams %}
+
+  <div class="header-title-xl">{% trans "Previous exam papers" %}</div>
+  <p class="lead fw-bold">
+	{% if request.user.is_superuser %}
+	{% trans "Student exam results" %}
+	{% else %}
+	{% trans "Below are the results of exams that you have sat" %}
+	{% endif %}
+  </p>
+  <div class="text-light bg-secondary mb-2 p-1">{% trans 'Total complete exams:' %} {{ exams_counter }}</div>
+<div class="table-responsive">
+  <table class="table table-bordered table-striped">
+
+	<thead>
+	  <tr>
+		<th>#</th>
+		<th>{% trans "Quiz Title" %}</th>
+		<th>{% trans "Score" %}</th>
+		<th>{% trans "Possible Score" %}</th>
+		<th>{% trans 'Out of 100%' %}</th>
+	  </tr>
+	</thead>
+
+	<tbody>
+
+	  {% for exam in exams %}
+
+	  <tr>
+		<td>{{ forloop.counter }}</td>
+		<td>{{ exam.quiz.title }}</td>
+		<td>{{ exam.current_score }}</td>
+		<td>{{ exam.get_max_score }}</td>
+		<td>{{ exam.get_percent_correct }}%</td>
+	  </tr>
+
+	  {% endfor %}
+
+	</tbody>
+
+  </table>
+</div>
+  {% endif %}
+  {% if not cat_scores and not exams %}
+  <h4 class="text-center mt-5 py-5 text-muted">
+	  <i class="fa-regular fa-folder-open me-2"></i>{% trans 'Progress records will appear here' %}
+  </h4>
+  {% endif %}
+
+{% endblock %}

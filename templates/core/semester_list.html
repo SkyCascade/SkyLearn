@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Learning management system' %} {% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans 'Semester list' %}</li>
+    </ol>
+</nav>
+
+{% if request.user.is_superuser %}
+<div class="manage-wrap">
+    <a class="btn btn-primary" href="{% url 'add_semester' %}"><i class="fas fa-plus"></i>{% trans 'Add New Semester' %}</a>
+</div>
+{% endif %}
+
+<div class="title-1"><i class="fas fa-calendar-alt"></i>{% trans 'Semester List' %}</div>
+
+{% include 'snippets/messages.html' %}
+
+<div class="table-responsive table-shadow p-0 mt-5">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th> {% trans 'Semester' %} </th>
+                <th> {% trans 'Is Current semester' %} </th>
+                <th> {% trans 'Session' %} </th>
+                <th> {% trans 'Next Semester Begins' %} </th>
+                {% if request.user.is_superuser %}
+                <th> {% trans 'Actions' %} </th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for semester in semesters %}
+            <tr>
+                <td> {{ forloop.counter }}.</td>
+                <td>{{ semester.semester }}</td>
+                <th>
+                    {% if semester.is_current_semester == False %}
+                    <i class="fas fa-times-circle fa-1-5x danger"></i>
+                    {% else %}
+                    <i class="fas fa-check-circle fa-1-5x"></i>
+                    <i class="icon-times-circle"></i>
+                    {% endif %}
+                </th>
+                <td>{{ semester.session }}</td>
+                <td>{{ semester.next_semester_begins }}</td>
+
+                {% if request.user.is_superuser %}
+                <td>
+                    <div class="update-delete">
+                        <a href="{% url 'edit_semester' pk=semester.pk %}" class="update" title="{% trans 'Edit' %}"><i
+                                class="fas fa-pencil-alt"></i></a>
+                        <a href="{% url 'delete_semester' pk=semester.pk %}" class="delete" title="{% trans 'Delete' %}"><i
+                                class="fas fa-trash-alt"></i></a>
+                    </div>
+                </td>
+                {% endif %}
+
+                {% empty %}
+            <tr>
+                <td></td>
+                <td></td>
+                <td>
+                    <span class="text-danger">
+                        {% trans 'No Semester.' %}
+                        {% if request.user.is_superuser %}
+                        <a href="{% url 'add_semester' %}">
+                            <i class="primary" style="font-size: 22px;">
+                                {% trans 'Add Semester Now.' %}
+                            </i>
+                            {% endif %}
+                        </a>
+                    </span>
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}
