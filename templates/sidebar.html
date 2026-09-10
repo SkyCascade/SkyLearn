@@ -18,7 +18,11 @@
 				</mark>
 			</p>
 		</div>
-		{% url 'home' as hom %} {% url 'dashboard' as dash %} {% url 'profile' as prof %}
+		{% url 'home' as hom %}
+{% url 'dashboard' as dash %}
+{% url 'lecturer_dashboard' as lec_dash %}
+{% url 'student_dashboard' as stu_dash %}
+{% url 'profile' as prof %}
 		{% url 'lecturer_list' as lec %}
 		{% url 'student_list' as stu %} {% url 'course_allocation_view' as cav %}
 		{% url 'programs' as pro %} {% url 'session_list' as sess %} {% url 'semester_list' as sem %}
@@ -31,10 +35,26 @@
 
 		<ul>
 			{% if request.user.is_superuser %}
-			<li class="{% if request.path == dash %}active{% endif %}">
-				<a href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt"></i>{% trans 'Dashboard' %}</a>
-			</li>
-			{% endif %}
+<li class="{% if request.path == dash %}active{% endif %}">
+    <a href="{% url 'dashboard' %}">
+        <i class="fas fa-tachometer-alt"></i>{% trans 'Dashboard' %}
+    </a>
+</li>
+
+{% elif request.user.is_lecturer %}
+<li class="{% if request.path == lec_dash %}active{% endif %}">
+    <a href="{% url 'lecturer_dashboard' %}">
+        <i class="fas fa-tachometer-alt"></i>{% trans 'Dashboard' %}
+    </a>
+</li>
+
+{% elif request.user.is_student %}
+<li class="{% if request.path == stu_dash %}active{% endif %}">
+    <a href="{% url 'student_dashboard' %}">
+        <i class="fas fa-tachometer-alt"></i>{% trans 'Dashboard' %}
+    </a>
+</li>
+{% endif %}
 			<li class="{% if request.path == hom %}active{% endif %}">
 				<a href="{% url 'home' %}"><i class="fas fa-home"></i>{% trans 'Home' %}</a>
 			</li>
@@ -68,7 +88,7 @@
 
 			{% if request.user.is_superuser or request.user.is_lecturer %}
 			<li class="{% if request.path == qce %}active{% endif %}">
-				<a href="{% url 'quiz_marking' %}"><i class="fas fa-check-double"></i>{% trans 'Complete Exams' %}</a>
+				<a href="{% url 'quiz_marking' %}"><i class="fas fa-check-double"></i>{% trans 'Manage Quiz & Results' %}</a>
 			</li>
 			{% endif %}
 

@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}
+    {% trans 'Lecturer Dashboard' %} | SkyLearn
+{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'home' %}">{% trans 'Home' %}</a>
+        </li>
+        <li class="breadcrumb-item active">
+            {% trans 'Dashboard' %}
+        </li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="title-1">
+        {% trans 'Lecturer Dashboard' %}
+    </h1>
+</div>
+
+<!-- Welcome -->
+<div class="alert alert-info mb-4">
+    {% trans 'Welcome' %}, {{ lecturer.get_full_name }}!
+</div>
+
+<!-- Statistics -->
+<div class="row users-count px-3">
+
+    <!-- Courses -->
+    <div class="col-6 col-md-3 mb-3 px-2">
+        <div class="card-count p-3">
+            <h3>
+                <i class="fas fa-book bg-light-aqua"></i>
+            </h3>
+            <div class="text-right">
+                {% trans 'My Courses' %}
+                <h2>{{ course_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students -->
+    <div class="col-6 col-md-3 mb-3 px-2">
+        <div class="card-count p-3">
+            <h3>
+                <i class="fas fa-users bg-light-orange"></i>
+            </h3>
+            <div class="text-right">
+                {% trans 'Students' %}
+                <h2>{{ student_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Materials -->
+    <div class="col-6 col-md-3 mb-3 px-2">
+        <div class="card-count p-3">
+            <h3>
+                <i class="fas fa-file-alt bg-light-purple"></i>
+            </h3>
+            <div class="text-right">
+                {% trans 'Materials' %}
+                <h2>{{ material_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assessments -->
+    <div class="col-6 col-md-3 mb-3 px-2">
+        <div class="card-count p-3">
+            <h3>
+                <i class="fas fa-tasks bg-light-red"></i>
+            </h3>
+            <div class="text-right">
+                {% trans 'Assessments' %}
+                <h2>{{ assessment_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- Charts -->
+<div class="row px-2">
+
+    <!-- Enrollment -->
+    <div class="col-md-6 p-2">
+        <div class="chart-wrap">
+            <i class="fas fa-expand-alt"></i>
+            <canvas id="courseEnrollment"></canvas>
+        </div>
+    </div>
+
+    <!-- Performance -->
+    <div class="col-md-6 p-2">
+        <div class="chart-wrap">
+            <i class="fas fa-expand-alt"></i>
+            <canvas id="coursePerformance"></canvas>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- My Courses -->
+<div class="card mt-3 p-3">
+
+    <h5 class="border-bottom pb-2">
+        {% trans 'My Courses' %}
+    </h5>
+
+    <div class="table-responsive">
+
+        <table class="table table-hover">
+
+            <thead>
+                <tr>
+                    <th>{% trans 'Course Code' %}</th>
+                    <th>{% trans 'Course' %}</th>
+                    <th>{% trans 'Students' %}</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for course in courses %}
+
+                <tr>
+                    <td>{{ course.code }}</td>
+
+                    <td>
+                        {{ course.title }}
+                    </td>
+
+                    <td>
+                        {{ course.taken_courses.count }}
+                    </td>
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="3" class="text-center text-muted">
+                        {% trans 'No courses have been assigned to you yet.' %}
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock content %}
+
+
+{% block js %}
+
+<script src="{% url 'javascript-catalog' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const enrollmentLabels = [
+    {% for item in course_enrollment %}
+        "{{ item.name|escapejs }}",
+    {% endfor %}
+];
+
+const enrollmentValues = [
+    {% for item in course_enrollment %}
+        {{ item.students }},
+    {% endfor %}
+];
+
+
+const performanceLabels = [
+    {% for item in course_performance %}
+        "{{ item.name|escapejs }}",
+    {% endfor %}
+];
+
+const performanceValues = [
+    {% for item in course_performance %}
+        {{ item.average }},
+    {% endfor %}
+];
+
+
+// Course Enrollment Chart
+
+new Chart(
+    document.getElementById("courseEnrollment"),
+    {
+        type: "bar",
+
+        data: {
+            labels: enrollmentLabels,
+
+            datasets: [{
+                label: gettext("Students"),
+
+                data: enrollmentValues,
+
+                backgroundColor: "rgba(86, 224, 224, 0.5)",
+
+                borderColor: "rgb(86, 224, 224)",
+
+                hoverBorderWidth: 3
+            }]
+        },
+
+        options: {
+            responsive: true,
+
+            plugins: {
+                title: {
+                    display: true,
+                    text: gettext("Student Enrollment per Course"),
+                    padding: 15
+                }
+            }
+        }
+    }
+);
+
+
+// Course Performance Chart
+
+new Chart(
+    document.getElementById("coursePerformance"),
+    {
+        type: "line",
+
+        data: {
+            labels: performanceLabels,
+
+            datasets: [{
+                label: gettext("Average Score"),
+
+                data: performanceValues,
+
+                backgroundColor: "rgba(203, 31, 255, 0.5)",
+
+                borderColor: "rgb(203, 31, 255)",
+
+                hoverBorderWidth: 3,
+
+                tension: 0.3
+            }]
+        },
+
+        options: {
+            responsive: true,
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+
+            plugins: {
+                title: {
+                    display: true,
+                    text: gettext("Student Performance"),
+                    padding: 15
+                }
+            }
+        }
+    }
+);
+
+
+// Chart expand button
+
+$('.fa-expand-alt').click(function () {
+
+    if ($(this).parent('.chart-wrap').parent('.col-md-6').hasClass('expand')) {
+
+        $('.col-md-6.expand').removeClass('expand');
+
+    } else {
+
+        $('.col-md-6.expand').removeClass('expand');
+
+        $(this)
+            .parent('.chart-wrap')
+            .parent('.col-md-6')
+            .addClass('expand');
+    }
+
+});
+
+</script>
+
+{% endblock js %}

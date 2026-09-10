@@ -13,6 +13,7 @@ from django.views.generic import (
 )
 
 from accounts.decorators import lecturer_required
+from course.models import CourseAllocation
 from .forms import (
     EssayForm,
     MCQuestionForm,
@@ -36,8 +37,39 @@ from .models import (
 # ########################################################
 
 
+def _lecturer_can_manage_course(user, course):
+    """
+    A superuser can manage quizzes for any course. A lecturer may only
+    manage quizzes for a course they have actually been allocated
+    (course/views.py CourseAllocation) - being "a lecturer" in general is
+    not enough, otherwise any teacher could create/edit/delete quizzes on
+    a colleague's course just by changing the URL slug.
+    """
+    if user.is_superuser:
+        return True
+    return CourseAllocation.objects.filter(lecturer=user, courses=course).exists()
+
+
+class CourseAllocationRequiredMixin:
+    """
+    Mixin for course-scoped quiz views (identified by a `slug` URL kwarg
+    pointing at a Course). Blocks the request unless the logged-in user is
+    a superuser or is allocated that specific course.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        course = get_object_or_404(Course, slug=kwargs["slug"])
+        if not _lecturer_can_manage_course(request.user, course):
+            messages.error(
+                request,
+                "You are not allocated to this course, so you can't manage its quizzes.",
+            )
+            return redirect("quiz_index", slug=course.slug)
+        return super().dispatch(request, *args, **kwargs)
+
+
 @method_decorator([login_required, lecturer_required], name="dispatch")
-class QuizCreateView(CreateView):
+class QuizCreateView(CourseAllocationRequiredMixin, CreateView):
     model = Quiz
     form_class = QuizAddForm
     template_name = "quiz/quiz_form.html"
@@ -63,7 +95,7 @@ class QuizCreateView(CreateView):
 
 
 @method_decorator([login_required, lecturer_required], name="dispatch")
-class QuizUpdateView(UpdateView):
+class QuizUpdateView(CourseAllocationRequiredMixin, UpdateView):
     model = Quiz
     form_class = QuizAddForm
     template_name = "quiz/quiz_form.html"
@@ -86,6 +118,13 @@ class QuizUpdateView(UpdateView):
 @lecturer_required
 def quiz_delete(request, slug, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
+    course = get_object_or_404(Course, slug=slug)
+    if not _lecturer_can_manage_course(request.user, course):
+        messages.error(
+            request,
+            "You are not allocated to this course, so you can't delete its quizzes.",
+        )
+        return redirect("quiz_index", slug=slug)
     quiz.delete()
     messages.success(request, "Quiz successfully deleted.")
     return redirect("quiz_index", slug=slug)
