@@ -193,16 +193,41 @@ def log_upload_delete(sender, instance, **kwargs):
 
 
 class UploadVideo(models.Model):
+    VIDEO_TYPE_CHOICES = (
+        ("file", "Uploaded Video"),
+        ("youtube", "YouTube Video"),
+    )
+
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
+
     video = models.FileField(
         upload_to="course_videos/",
-        help_text=_("Valid video formats: mp4, mkv, wmv, 3gp, f4v, avi, mp3"),
+        blank=True,
+        null=True,
+        help_text=_(
+            "Valid video formats: mp4, mkv, wmv, 3gp, f4v, avi, mp3"
+        ),
         validators=[
-            FileExtensionValidator(["mp4", "mkv", "wmv", "3gp", "f4v", "avi", "mp3"])
+            FileExtensionValidator(
+                ["mp4", "mkv", "wmv", "3gp", "f4v", "avi", "mp3"]
+            )
         ],
     )
+
+    youtube_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text=_("Paste the YouTube video URL"),
+    )
+
+    video_type = models.CharField(
+        max_length=20,
+        choices=VIDEO_TYPE_CHOICES,
+        default="file",
+    )
+
     summary = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -211,14 +236,51 @@ class UploadVideo(models.Model):
 
     def get_absolute_url(self):
         return reverse(
-            "video_single", kwargs={"slug": self.course.slug, "video_slug": self.slug}
+            "video_single",
+            kwargs={
+                "slug": self.course.slug,
+                "video_slug": self.slug,
+            },
         )
 
     def delete(self, *args, **kwargs):
-        self.video.delete(save=False)
+        if self.video:
+            self.video.delete(save=False)
+
         super().delete(*args, **kwargs)
 
+class VideoProgress(models.Model):
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="video_progress",
+    )
 
+    video = models.ForeignKey(
+        UploadVideo,
+        on_delete=models.CASCADE,
+        related_name="progress_records",
+    )
+
+    watched_seconds = models.FloatField(default=0)
+    duration_seconds = models.FloatField(default=0)
+    progress_percent = models.FloatField(default=0)
+
+    last_position = models.FloatField(default=0)
+
+    completed = models.BooleanField(default=False)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("student", "video")
+
+    def __str__(self):
+        return (
+            f"{self.student} - "
+            f"{self.video} - "
+            f"{self.progress_percent:.1f}%"
+        )
 @receiver(pre_save, sender=UploadVideo)
 def video_pre_save_receiver(sender, instance, **kwargs):
     if not instance.slug:
@@ -254,3 +316,17 @@ class CourseOffer(models.Model):
 
     def __str__(self):
         return str(self.dep_head)
+    
+class SCORMPackage(models.Model):
+    title = models.CharField(max_length=200)
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="scorm_packages"
+    )
+    package = models.FileField(upload_to="scorm/packages/")
+    launch_file = models.CharField(max_length=500, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.course.title}"

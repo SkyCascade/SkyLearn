@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Upload SCORM Package{% endblock title %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h4>Upload SCORM Package</h4>
+        </div>
+
+        <div class="card-body">
+
+            <p>
+                Course:
+                <strong>{{ course.title }}</strong>
+            </p>
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {{ form|crispy }}
+
+                <button type="submit" class="btn btn-primary">
+                    Upload SCORM
+                </button>
+
+                <a href="{% url 'course_detail' course.slug %}"
+                   class="btn btn-secondary">
+                    Cancel
+                </a>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ scorm.title }}{% endblock title %}
+
+{% block content %}
+
+<div class="container-fluid mt-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div>
+            <h3>{{ scorm.title }}</h3>
+            <p class="text-muted mb-0">
+                Course: {{ course.title }}
+            </p>
+        </div>
+
+        <a href="{% url 'course_detail' course.slug %}"
+           class="btn btn-secondary">
+            Back to Course
+        </a>
+
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+
+            <iframe
+                src="/media/scorm/{{ scorm.id }}/{{ scorm.launch_file }}"
+                width="100%"
+                height="750"
+                frameborder="0"
+                allowfullscreen>
+            </iframe>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock content %}
