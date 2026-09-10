@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ video.title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% load static %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'programs' %}">{% trans 'Programs' %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'program_detail' video.course.program.id %}">{{ video.course.program }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'course_detail' video.course.slug %}">{{ video.course }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ video.title }}</li>
+    </ol>
+</nav>
+    
+<p class="title-1">{{ video.title }}</p>
+<br><br>
+
+<div class="col-md-10 mx-auto d-block">
+    <div class=""><video src="{{ video.video.url }}" controls ></video></div>
+    <p><i class="fas fa-calendar"></i> {{ video.timestamp|timesince }} {% trans 'ago' %}</p>
+    {% if video.summary %}
+    <p class="text-orange text-center">{{ video.summary }}</p>
+    {% else %}
+    {% trans 'No video description set.' %}
+    {% endif %}
+</div>
+
+{% endblock content %}

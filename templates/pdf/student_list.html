@@ -1,0 +1,38 @@
+{% block content %}
+{% load i18n %}
+
+<p class="title-1">{% trans 'Students' %}</p>
+
+<div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{% trans 'ID No.' %}</th>
+        <th>{% trans 'Full Name' %}</th>
+        <th>{% trans 'Email' %}</th>
+        <th>{% trans 'Mob No.' %}</th>
+        <th>{% trans 'Program' %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for student in students %}
+      <tr>
+        <td> {{ forloop.counter }}.</td>
+        <td>{{ student.student.username }}</td>
+        <td><a href="{% url 'profile_single' student.id %}">{{ student.student.get_full_name }}</a></td>
+        <td>{{ student.student.email }}</td>
+        <td>{{ student.program }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td>
+          <span class="text-danger">
+            {% trans 'No Lecturer(s).' %}
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock content %}

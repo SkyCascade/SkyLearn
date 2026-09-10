@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load i18n%}
+
+
+{% block title %} {{ quiz.title }} | {% trans 'Learning management system' %} {% endblock %}
+{% block description %} {{ quiz.title }} - {{ quiz.description }} {% endblock %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+	<ol class="breadcrumb">
+		<li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+		<li class="breadcrumb-item"><a href="{% url 'programs' %}">Programs</a></li>
+		<li class="breadcrumb-item"><a href="{% url 'program_detail' course.program.id %}">{{ course.program }}</a></li>
+		<li class="breadcrumb-item"><a href="{{ course.get_absolute_url }}">{{ course }}</a></li>
+		<li class="breadcrumb-item"><a href="{% url 'quiz_index' course.slug %}">{% trans 'Quizzes' %}</a></li>
+		<li class="breadcrumb-item active" aria-current="page">{{ quiz.title|title }}</li>
+	</ol>
+</nav>
+
+<div class="title-1">{{ quiz.title|title|truncatechars:25 }}</div>
+<br>
+
+<div class="container">
+
+	{% if previous.answers %}
+
+	<p class="muted"><small>{% trans "The previous question" %}:</small></p>
+	<p>{{ previous.previous_question }}</p>
+
+	{% if previous.previous_outcome %}
+		<div class="alert alert-success">
+	{% else %}
+		<div class="alert alert-warning">
+	{% endif %}
+		<p class="mb-0"><small>
+			{% trans "Your answer was" %} </small>
+			<strong>
+			{{ previous.previous_outcome|yesno:"correct,incorrect" }}
+			</strong>
+		</p>
+
+		</div>
+		
+        {% load i18n %}
+        {% if previous.answers %}
+          <table class="table table-striped table-bordered">
+            <tbody>
+              {% for answer in previous.answers %}
+                {% if answer.correct %}
+                  <tr class="success">
+                    <td>{{ answer }}</td>
+                  <td class="text-success"><strong>{% trans "This is the correct answer" %}</strong></td>
+				  </tr>
+                {% else %}
+                  <tr>
+                    <td>{{ answer }}</td>
+                    <td>
+                    {% if previous.question_type.MCQuestion %}
+                      {% if answer.id|add:"0" == previous.previous_answer|add:"0" %}
+                        {% trans "This was your answer." %}
+                      {% endif %}
+                    {% endif %}
+                    </td>
+                  {% endif %}
+                  </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          {% if user_was_incorrect %}
+            <div class="text-danger">
+              <strong>{% trans "You answered the above question incorrectly" %}</strong>
+            </div>
+          {% endif %}
+
+        {% endif %}
+		
+
+        <p><strong>{% trans "Explanation" %}:</strong></p>
+        <p class="p-2" style="background-color: #fcf8e3;">
+          {% if previous.previous_question.explanation %}
+            {{ previous.previous_question.explanation }}
+          {% else %}
+            {% trans "No explanation set to this question." %}
+          {% endif %}
+		</p>
+		
+		<!-- <p><strong>{% trans "Explanation" %}:</strong></p>
+		<div class="well " style="background-color: #fcf8e3;">
+		<p>{{ previous.previous_question.explanation }}</p>
+		</div> -->
+
+		<hr>
+
+	{% endif %}
+
+	<br />
+
+	{% if question %}
+
+	{% if progress.0|add:1 == 1 %}
+
+	<div class="modal fade show" id="instractionModal" tabindex="-1" aria-labelledby="instractionModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <h1 class="modal-title fs-5" id="instractionModalLabel">{% trans 'Quiz instractions' %}</h1>
+			  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				{% blocktrans %} 
+				You can't go back to the previous question after you submit it, 
+				so double check your answer before proceeding to the next one!
+				{% endblocktrans %}
+			</div>
+			<div class="modal-footer">
+			  <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{% trans 'Understood' %}</button>
+			</div>
+		  </div>
+		</div>
+	  </div>
+	{% endif %}
+
+	{% if progress %}
+	<div class="text-light rounded small px-2 bg-danger" style="float: right;">
+	{% trans "Question" %} {{ progress.0|add:1 }} {% trans "of" %} {{ progress.1 }}
+	</div>
+	{% endif %}
+
+	<p>
+		<small class="muted">{% trans "Quiz category" %}:</small>
+		<strong>{{ quiz.category }}</strong>
+	</p>
+
+	<div class="card">
+		<div class="lead p-2">{{ question.content }}</div>
+
+		{% if question.figure %}
+		<div class="col-md-8 mx-auto">
+			<img class="q-img" src="{{ question.figure.url }}" alt="{{ question.content }}" style="max-width: 100%;"/>
+		</div>
+		{% endif %}
+		<div class="card-subtitle p-4">
+			<form action="" method="POST">{% csrf_token %}
+				<input type="hidden" name="question_id" value="{{ question.id }}">
+
+				<ul class="list-group">
+
+					{% for answer in form.answers %}
+					<li class="list-group-item">
+						{{ answer }}
+					</li>
+					{% endfor %}
+
+				</ul>
+				<br>
+				<input type="submit" value="Check" class="btn btn-large btn-block btn-primary" />
+				<!-- <input type="submit" value={% trans "Previous" %} class="btn btn-large btn-block btn-outline-primary" > -->
+			</form>
+		</div>
+
+		{% endif %}
+	</div>
+
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+	const instractionModal = new bootstrap.Modal('#instractionModal', {
+		keyboard: false
+	})
+	instractionModal.show();
+</script>
+{% endblock js %}

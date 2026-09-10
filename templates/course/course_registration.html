@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% load static %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% trans 'Course Registration' %}</li>
+    </ol>
+</nav>
+
+<p class="title-1">{% trans 'Course Add' %} &amp; {% trans 'Drop' %}</p>
+
+{% include 'snippets/messages.html' %}
+
+{% if current_semester %}
+{% if is_calender_on == False %}
+
+<div class="alert bg-danger">
+    <h1 class="text-light text-center">{% trans 'Calender is off' %}</h1>
+    <h5 class="text-light text-center">{% trans 'Check the university calender' %}</h5>
+</div>
+
+{% else %}
+
+{% if not all_courses_are_registered %}
+
+<form action="{% url 'course_registration' %}" method="POST">{% csrf_token %}
+    <div class="col-md-12 p-0 bg-white">
+        <p class="form-title fw-bold">{% trans 'Course Add' %}</p>
+        <div class="container">
+            <div class="d-flex justify-content-between mb-3">
+                <button title="{% trans 'Save Score' %}" type="submit" class="btn btn-primary"><i class="fa fa-plus"></i> {% trans 'Add Selected' %}</button>
+            </div>
+
+            <div class="table-responsive p-0 px-2 mt-2">
+                <div class="table-title"><u>{% trans 'First Semester:' %}</u></div>
+                <div class="table-shadow">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>{% trans 'Mark' %}</th>
+                                <th>{% trans 'Course Code' %}</th>
+                                <th>{% trans 'Course Title' %}</th>
+                                <th>{% trans 'Cr.Hr(s)' %}</th>
+                                <th>{% trans 'Year' %}</th>
+                                <th>{% trans 'Classification' %}</th>
+                                <th>{% trans 'Elective Group' %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                            {% if course.semester == "First" %}
+                            <tr>
+                                <th scope="row">
+                                    <input name="{{ course.pk }}" value="{{ course.courseUnit }}" type="checkbox">
+                                </th>
+                                <td>{{ course.code }}</td>
+                                <td>{{ course.title }}</td>
+                                <td>{{ course.credit }}</td>
+                                <td>{{ course.year }}</td>
+                                {% if course.is_elective %}
+                                <td>{% trans 'Elective' %}</td>
+                                {% else %}
+                                <td>{% trans 'Core' %}</td>
+                                {% endif %}
+                                <th>-</th>
+                            </tr>
+                            {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>
+                                    <span class="text-danger">
+                                        {% trans 'No Course.' %}
+                                    </span>
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            {% endfor %}
+                            <tr>
+                                <th></th>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td><b>{% trans 'First semester Credit(s):' %}</b> {{ total_first_semester_credit }} </td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-responsive p-0 px-2 mt-2">
+                <div class="table-title"><u>{% trans 'Second Semester:' %}</u></div>
+                <div class="table-shadow">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>{% trans 'Mark' %}</th>
+                                <th>{% trans 'Course Code' %}</th>
+                                <th>{% trans 'Course Title' %}</th>
+                                <th>{% trans 'Cr.Hr(s)' %}</th>
+                                <th>{% trans 'Year' %}</th>
+                                <th>{% trans 'Classification' %}</th>
+                                <th>{% trans 'Elective Group' %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                            {% if course.semester == "Second" %}
+                            <tr>
+                                <th scope="row">
+                                    <input name="{{ course.pk }}" value="{{ course.courseUnit }}" type="checkbox">
+                                </th>
+                                <td>{{ course.code }}</td>
+                                <td>{{ course.title }}</td>
+                                <td>{{ course.credit }}</td>
+                                <td>{{ course.year }}</td>
+                                {% if course.is_elective %}
+                                <td>{% trans 'Elective' %}</td>
+                                {% else %}
+                                <td>{% trans 'Core' %}</td>
+                                {% endif %}
+                                <th>-</th>
+                            </tr>
+                            {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>
+                                    <span class="text-danger">
+                                        {% trans 'No Course.' %}
+                                    </span>
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            {% endfor %}
+                            <tr>
+                                <th></th>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td><b>{% trans 'Second semester credit(s):' %}</b> {{ total_sec_semester_credit }} </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"></th>
+                                <td><b>{% trans 'Registerd course credit(s):' %}' <a id="units">{{ total_registered_credit }}</a></b>
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td><b>{% trans 'Total credit(s):' %}</b> {{ total_sec_semester_credit|add:total_first_semester_credit }} </td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endif %}
+<br>
+<br>
+
+{% if not no_course_is_registered %}
+
+<div class="col-md-12 p-0 bg-white">
+    <p class="form-title"><b>{% trans 'Course Drop' %}</b></p>
+    <div class="container">
+        <p class="fw-bold">{{ student.level }}</p>
+        <form action="{% url 'course_drop' %}" method="POST">
+            {% csrf_token %}
+            <div class="d-flex justify-content-between mb-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-times"></i> {% trans 'Drop Selected' %}
+                </button>
+            </div>
+
+            <div class="table-responsive p-0 px-2 mt-2">
+                <div class="table-shadow">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>{% trans 'Mark' %}</th>
+                                <th>{% trans 'Course Code' %}</th>
+                                <th>{% trans 'Course Title' %}</th>
+                                <th>{% trans 'Cr.Hr(s)' %}</th>
+                                <th>{% trans 'Year' %}</th>
+                                <th>{% trans 'Classification' %}</th>
+                                <th>{% trans 'Elective Group' %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in registered_courses %}
+                            <tr>
+                                <th scope="row">
+                                    <input name="course_ids" value="{{ course.id }}" type="checkbox">
+                                </th>
+                                <td>{{ course.code }}</td>
+                                <td>{{ course.title }}</td>
+                                <td>{{ course.credit }}</td>
+                                <td>{{ course.year }}</td>
+                                {% if course.is_elective %}
+                                <td>{% trans 'Elective' %}</td>
+                                {% else %}
+                                <td>{% trans 'Core' %}</td>
+                                {% endif %}
+                                <th>-</th>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>
+                                    <span class="text-danger">
+                                        {% trans 'No Course.' %}
+                                    </span>
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            {% endfor %}
+                            <tr>
+                                <th></th>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td><b>{% trans 'Total credit(s):' %}</b> {{ total_registered_credit }} </td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<a class="btn btn-sm btn-secondary mt-3" href="{% url 'course_registration_form' %}" target="_blank" title="{% trans 'Print Registration Form' %}">
+    <i class="fas fa-print"></i> {% trans 'Print Registerd Courses' %}
+</a>
+
+{% endif %}
+{% endif %}
+{% endif %}
+
+{% endblock content %}

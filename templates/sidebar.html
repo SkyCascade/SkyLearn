@@ -1,0 +1,177 @@
+{% load static %}
+{% load i18n %}
+
+<div id="side-nav">
+	<div class="main-menu">
+		<div class="top-side text-center py-4" style="background-image: url({% static 'img/dotted.jpg' %});">
+			<div class="desktop-hide">
+				<div class="toggle-btn" onclick="toggleSidebar()">
+					<i class="fas fa-times"></i>
+				</div>
+			</div>
+			<a href="/">
+				<img src="{% static 'img/brand.svg' %}" width="210px" alt="SkyLearn">
+			</a>
+			<p class="mt-2 small">
+				<mark class="bg-secondary text-light" style="border-radius: 2px; padding: 2px 5px;">
+					{{ request.user.get_user_role }}
+				</mark>
+			</p>
+		</div>
+		{% url 'home' as hom %}
+{% url 'dashboard' as dash %}
+{% url 'lecturer_dashboard' as lec_dash %}
+{% url 'student_dashboard' as stu_dash %}
+{% url 'profile' as prof %}
+		{% url 'lecturer_list' as lec %}
+		{% url 'student_list' as stu %} {% url 'course_allocation_view' as cav %}
+		{% url 'programs' as pro %} {% url 'session_list' as sess %} {% url 'semester_list' as sem %}
+		{% url 'add_score' as ascore %} {% url 'grade_results' as vr %}{% url 'ass_results' as ar %}
+		{% url 'course_registration' as cr %} {% url 'edit_profile' as ep %} {% url 'change_password' as cp %}
+		{% url 'quiz_progress' as qpr %} {% url 'quiz_marking' as qce %} {% url 'user_course_list' as ucl %}
+		{% url 'admin_panel' as admin_p %}
+		
+
+
+		<ul>
+			{% if request.user.is_superuser %}
+<li class="{% if request.path == dash %}active{% endif %}">
+    <a href="{% url 'dashboard' %}">
+        <i class="fas fa-tachometer-alt"></i>{% trans 'Dashboard' %}
+    </a>
+</li>
+
+{% elif request.user.is_lecturer %}
+<li class="{% if request.path == lec_dash %}active{% endif %}">
+    <a href="{% url 'lecturer_dashboard' %}">
+        <i class="fas fa-tachometer-alt"></i>{% trans 'Dashboard' %}
+    </a>
+</li>
+
+{% elif request.user.is_student %}
+<li class="{% if request.path == stu_dash %}active{% endif %}">
+    <a href="{% url 'student_dashboard' %}">
+        <i class="fas fa-tachometer-alt"></i>{% trans 'Dashboard' %}
+    </a>
+</li>
+{% endif %}
+			<li class="{% if request.path == hom %}active{% endif %}">
+				<a href="{% url 'home' %}"><i class="fas fa-home"></i>{% trans 'Home' %}</a>
+			</li>
+			<li class="{% if request.path == prof %}active{% endif %}">
+				<a href="{% url 'profile' %}"><i class="fas fa-user"></i>{% trans 'Profile' %}</a>
+			</li>
+
+			{% if request.user.is_superuser %}
+			<li class="{% if request.path == admin_p %}active{% endif %}">
+				<a href="{% url 'admin_panel' %}"><i class="fas fa-user-tie"></i>{% trans 'Admin Panel' %}</a>
+			</li>
+			<li class="{% if request.path == lec %}active{% endif %}">
+				<a href="{% url 'lecturer_list' %}"><i class="fas fa-chalkboard-teacher"></i>{% trans 'Lecturers' %}</a>
+			</li>
+			<li class="{% if request.path == stu %}active{% endif %}">
+				<a href="{% url 'student_list' %}"><i class="fas fa-user-graduate"></i>{% trans 'Students' %}</a>
+			</li>
+			{% endif %}
+
+			{% if request.user.is_lecturer or request.user.is_student %}
+			<li class="{% if request.path == ucl %}active{% endif %}">
+				<a href="{% url 'user_course_list' %}"><i class="fas fa-book"></i>{% trans 'My Courses' %}</a>
+			</li>
+			{% endif %}
+
+			{% if request.user.is_superuser or request.user.is_lecturer %}
+			<li class="{% if request.path == pro %}active{% endif %}">
+				<a href="{% url 'programs' %}"><i class="fas fa-book-open"></i>{% trans 'Programs & Courses' %}</a>
+			</li>
+			{% endif %}
+
+			{% if request.user.is_superuser or request.user.is_lecturer %}
+			<li class="{% if request.path == qce %}active{% endif %}">
+				<a href="{% url 'quiz_marking' %}"><i class="fas fa-check-double"></i>{% trans 'Manage Quiz & Results' %}</a>
+			</li>
+			{% endif %}
+
+			{% if request.user.is_superuser %}
+			<li class="{% if request.path == qpr %}active{% endif %}">
+				<a href="{% url 'quiz_progress' %}"><i class="fas fa-record-vinyl"></i>{% trans 'Quiz Progress Rec' %}</a>
+			</li>
+			<li class="{% if request.path == cav %}active{% endif %}">
+				<a href="{% url 'course_allocation_view' %}"><i class="fas fa-tasks"></i>{% trans 'Course Allocation' %}</a>
+			</li>
+			<li class="{% if request.path == sess %}active{% endif %}">
+				<a href="{% url 'session_list' %}"><i class="fas fa-calendar-week"></i>{% trans 'Manage Session' %}</a>
+			</li>
+			<li class="{% if request.path == sem %}active{% endif %}">
+				<a href="{% url 'semester_list' %}"><i class="fas fa-calendar-alt"></i>{% trans 'Manage Semester' %}</a>
+			</li>
+			{% endif %}
+
+			{% if request.user.is_lecturer %}
+			<li class="{% if request.path == ascore %}active{% endif %}">
+				<a href="{% url 'add_score' %}"><i class="fas fa-table"></i>{% trans 'Manage Score' %}</a>
+			</li>
+			{% endif %}
+
+			{% if request.user.is_student %}
+			<li class="{% if request.path == qpr %}active{% endif %}">
+				<a href="{% url 'quiz_progress' %}"><i class="fas fa-record-vinyl"></i>{% trans 'Quiz Progress Rec' %}</a>
+			</li>
+			<li class="{% if request.path == vr %}active{% endif %}">
+				<a href="{% url 'grade_results' %}"><i class="fa fa-spell-check"></i>{% trans 'Grade Results' %}</a>
+			</li>
+			<li class="{% if request.path == ar %}active{% endif %}">
+				<a href="{% url 'ass_results' %}"><i class="fa fa-list-ol"></i> {% trans 'Assesment Results' %}</a>
+			</li>
+			<li class="{% if request.path == cr %}active{% endif %}">
+				<a href="{% url 'course_registration' %}"><i class="fas fa-plus"></i>{% trans 'Add' %} &amp; {% trans 'Drop Course' %}</a>
+			</li>
+			{% endif %}
+			<br />
+			<p class="ms-3 text-secondary">&RightArrow; Others</p>
+			<li class="{% if request.path == ep %}active{% endif %}">
+				<a href="{% url 'edit_profile' %}"><i class="fas fa-cogs"></i>{% trans 'Account Setting' %}</a>
+			</li>
+			<li class="{% if request.path == cp %}active{% endif %}">
+				<a href="{% url 'change_password' %}"><i class="fas fa-key"></i>{% trans 'Change Password' %}</a>
+			</li>
+		</ul>
+	</div>
+
+	<footer class="card-footer mt-5 pt-3 pb-5 px-2">
+		<div class="col-12">
+
+			<form action="{% url 'set_language' %}" method="post" id="lang-form">{% csrf_token %}
+				<input name="next" type="hidden" value="{{ redirect_to }}">
+				<select class="small" name="language" id="lang-select">
+					{% get_current_language as LANGUAGE_CODE %}
+					{% get_available_languages as LANGUAGES %}
+					{% get_language_info_list for LANGUAGES as languages %}
+					{% for language in languages %}
+						<option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+							{{ language.name_local }} ({{ language.code }})
+						</option>
+					{% endfor %}
+				</select>
+			</form>
+
+			<p class="small m-0">
+				{% trans 'Read our' %} <a href="#"> {% trans 'Privacy' %} </a> {% trans 'and' %} <a href="#"> {% trans 'Terms of use.' %} </a>
+				<br />SkyLearn &copy; <script>document.write(new Date().getFullYear());</script>
+				<br />
+			</p>
+			<a href="https://github.com/SkyCascade/SkyLearn" class="btn btn-sm btn-dark mx-auto" target="_blank">
+				{% trans '⭐️ Star This Project' %}
+			</a>
+		</div>
+	</footer>
+</div>
+
+{% block js %}
+<script>
+	document.getElementById("lang-select").addEventListener("change", function() {
+		console.log("Changed!")
+    	document.getElementById("lang-form").submit();  // Submit the form programmatically
+	});
+</script>
+{% endblock js %}

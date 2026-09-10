@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %} {{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+{% load static %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        {% if request.user.is_student %}
+        <li class="breadcrumb-item"><a href="{% url 'user_course_list' %}">{% trans 'My courses' %}</a></li>
+        {% else %}
+        <li class="breadcrumb-item"><a href="{% url 'programs' %}">{% trans 'Programs' %}</a></li>
+        {% endif %}
+        <li class="breadcrumb-item active" aria-current="page">{{ program.title }}</li>
+    </ol>
+</nav>
+
+{% if request.user.is_superuser %}
+<div class="manage-wrap">
+    <a class="btn btn-sm btn-primary" href="{% url 'course_add' pk=program.pk %}"><i class="fas fa-plus"></i>{% trans 'Add Course' %}</a>
+</div>
+{% endif %}
+
+
+{% if program %}
+<div class="title-1">{{ program.title }}</div>
+{% if program.summary %}
+<p>{{ program.summary }}</p>
+{% endif %}
+{% endif %}
+
+{% include 'snippets/messages.html' %}
+{% include 'snippets/filter_form.html' %}
+
+<div class="table-responsive p-0 px-2 mt-5">
+    <div class="table-shadow">
+        <table class="table table-light table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th> {% trans 'Course Name' %} </th>
+                    <th> {% trans 'Course Code' %} </th>
+                    <th> {% trans 'Cr.Hr' %} </th>
+                    <th> {% trans 'Level' %} </th>
+                    <th> {% trans 'Year' %} </th>
+                    <th> {% trans 'Semester' %} </th>
+                    <th> {% trans 'Current Semester' %} </th>
+                    {% if request.user.is_superuser %}
+                    <th>{% trans 'Action' %}</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in courses %}
+                <tr>
+                    <td>{{ forloop.counter }}.</td>
+                    <td><a href="{{ course.get_absolute_url }}">
+                            {{ course.title }}</a></td>
+                    <td>{{ course.code }}</td>
+                    <td>{{ course.credit }}</td>
+                    <td>{{ course.level }}</td>
+                    <td>{{ course.year }}</td>
+                    <td>{{ course.semester }}</td>
+                    <th>
+                        {% if course.is_current_semester == False %}
+                        <i class="fas fa-times-circle fa-1-5x danger"></i>
+                        {% elif course.is_current_semester == True %}
+                        <i class="fas fa-check-circle fa-1-5x"></i>
+                        {% endif %}
+                    </th>
+                    {% if request.user.is_superuser %}
+                    <td>
+                        <div class="dropstart">
+                            <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" 
+                            data-bs-boundary="window" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v m-0"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{% url 'edit_course' slug=course.slug %}">
+                                    <i class="unstyled me-2 fas fa-pencil-alt"></i> {% trans 'Edit' %}
+                                </a>
+                                <a class="dropdown-item" href="{% url 'delete_course' slug=course.slug %}">
+                                    <i class="unstyled me-2 fas fa-trash-alt"></i> {% trans 'Delete' %}
+                                </a>
+                            </div>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="9">
+                  <span class="text-danger">
+                    {% trans 'No course for this progrm.' %}
+                    {% if request.user.is_superuser %}
+                    <a href="{% url 'course_add' pk=program.pk %}" class="text-primary">
+                    <i class="primary" style="font-size: 22px;">
+                        {% trans 'Add one now.' %}
+                    </i>
+                    {% endif %}
+                    </a>
+                  </span>
+                </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if courses.paginator.page_range|length > 1 %}
+<div class="content-center">
+    <div class="pagination">
+        <a href="?page=1">&laquo;</a>
+        {% for i in courses.paginator.page_range %}
+        {% if i == courses.number %}
+        <a class="pagination-active" href="?page={{ i }}"><b>{{ i }}</b></a>
+        {% else %}
+        <a href="?page={{ i }}">{{ i }}</a>
+        {% endif %}
+        {% endfor %}
+        <a href="?page={{ courses.paginator.num_pages }}">&raquo;</a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock content %}
