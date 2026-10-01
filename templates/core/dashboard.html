@@ -179,8 +179,8 @@
 	})
 </script>
 <script>
-	const malesCount = {{ males_count }}
-const femalesCount = {{ females_count }}
+	const malesCount = parseInt('{{ males_count }}') || 0;
+	const femalesCount = parseInt('{{ females_count }}') || 0;
 
 $(document).ready(function () {
 

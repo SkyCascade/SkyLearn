@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Mark Attendance' %} | {{ course.code }} | SkyLearn{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'lecturer_dashboard' %}">{% trans 'Dashboard' %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'attendance_session_list' course.slug %}">{% trans 'Attendance' %}</a></li>
+        <li class="breadcrumb-item active">{{ session.date }}</li>
+    </ol>
+</nav>
+
+<h1 class="title-1 mb-4">
+    {% trans 'Mark Attendance' %} &middot; {{ course.title }} &middot; {{ session.date }}
+</h1>
+
+<div class="card p-3">
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="markAllPresent">
+                {% trans 'Mark all present' %}
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="markAllAbsent">
+                {% trans 'Mark all absent' %}
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>{% trans 'Student' %}</th>
+                        <th class="text-center">{% trans 'Present' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in roster %}
+                    <tr>
+                        <td>{{ row.student }}</td>
+                        <td class="text-center">
+                            <input
+                                type="checkbox"
+                                class="form-check-input present-checkbox"
+                                name="present"
+                                value="{{ row.student.id }}"
+                                {% if row.present %}checked{% endif %}
+                            >
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">
+                            {% trans 'No students enrolled in this course yet.' %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-2">{% trans 'Save Attendance' %}</button>
+
+    </form>
+
+</div>
+
+{% endblock content %}
+
+{% block js %}
+<script>
+document.getElementById('markAllPresent').addEventListener('click', function () {
+    document.querySelectorAll('.present-checkbox').forEach(function (cb) { cb.checked = true; });
+});
+document.getElementById('markAllAbsent').addEventListener('click', function () {
+    document.querySelectorAll('.present-checkbox').forEach(function (cb) { cb.checked = false; });
+});
+</script>
+{% endblock js %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Attendance' %} | {{ course.code }} | SkyLearn{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'lecturer_dashboard' %}">{% trans 'Dashboard' %}</a></li>
+        <li class="breadcrumb-item active">{% trans 'Attendance' %} &middot; {{ course.code }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="title-1">{% trans 'Attendance' %} &middot; {{ course.title }}</h1>
+    <a href="{% url 'attendance_session_create' course.slug %}" class="btn btn-primary">
+        {% trans 'New Session' %}
+    </a>
+</div>
+
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>{% trans 'Date' %}</th>
+                    <th>{% trans 'Slot' %}</th>
+                    <th>{% trans 'Topic' %}</th>
+                    <th>{% trans 'Marked' %}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in sessions %}
+                <tr>
+                    <td>{{ session.date }}</td>
+                    <td>{{ session.lecture_slot|default:"—" }}</td>
+                    <td>{{ session.topic|default:"—" }}</td>
+                    <td>{{ session.records.count }}</td>
+                    <td>
+                        <a href="{% url 'attendance_session_mark' course.slug session.id %}" class="btn btn-sm btn-outline-primary">
+                            {% trans 'Mark / Edit' %}
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">{% trans 'No sessions yet.' %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock content %}

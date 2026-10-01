@@ -1,5 +1,5 @@
 from django.urls import path, include
-
+from django.contrib.auth.views import LogoutView
 # from django.contrib.auth.views import (
 #     PasswordResetView,
 #     PasswordResetDoneView,
@@ -11,6 +11,7 @@ from django.urls import path, include
 from .views import (
     profile,
     profile_single,
+    role_login,
     admin_panel,
     profile_update,
     change_password,
@@ -25,7 +26,8 @@ from .views import (
     edit_student_program,
     ParentAdd,
     validate_username,
-    register,
+    get_course_lecturers,
+    get_program_courses,
     render_lecturer_pdf_list,  # new
     render_student_pdf_list,  # new
 )
@@ -34,7 +36,18 @@ from .views import (
 
 
 urlpatterns = [
-    path("", include("django.contrib.auth.urls")),
+    path("login/", role_login, name="login"),
+path("logout/", LogoutView.as_view(), name="logout"),
+path(
+    "course-lecturers/",
+    get_course_lecturers,
+    name="course_lecturers",
+),
+path(
+    "program-courses/",
+    get_program_courses,
+    name="program_courses",
+),
     path("admin_panel/", admin_panel, name="admin_panel"),
     path("profile/", profile, name="profile"),
     path("profile/<int:user_id>/detail/", profile_single, name="profile_single"),
@@ -55,7 +68,6 @@ urlpatterns = [
     ),
     path("parents/add/", ParentAdd.as_view(), name="add_parent"),
     path("ajax/validate-username/", validate_username, name="validate_username"),
-    path("register/", register, name="register"),
     # paths to pdf
     path(
         "create_lecturers_pdf_list/", render_lecturer_pdf_list, name="lecturer_list_pdf"

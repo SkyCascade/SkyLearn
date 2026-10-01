@@ -1,31 +1,817 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{{ video.title }} | {% trans 'Learning management system' %}{% endblock title %}
 {% load static %}
+
+{% block title %}
+    {{ video.title }} | {% trans 'Learning management system' %}
+{% endblock title %}
 
 {% block content %}
 
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'programs' %}">{% trans 'Programs' %}</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'program_detail' video.course.program.id %}">{{ video.course.program }}</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'course_detail' video.course.slug %}">{{ video.course }}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{ video.title }}</li>
+
+        <li class="breadcrumb-item">
+            <a href="/">
+                {% trans 'Home' %}
+            </a>
+        </li>
+
+        <li class="breadcrumb-item">
+            <a href="{% url 'programs' %}">
+                {% trans 'Programs' %}
+            </a>
+        </li>
+
+        <li class="breadcrumb-item">
+            <a href="{% url 'program_detail' video.course.program.id %}">
+                {{ video.course.program }}
+            </a>
+        </li>
+
+        <li class="breadcrumb-item">
+            <a href="{% url 'course_detail' video.course.slug %}">
+                {{ video.course }}
+            </a>
+        </li>
+
+        <li class="breadcrumb-item active" aria-current="page">
+            {{ video.title }}
+        </li>
+
     </ol>
 </nav>
-    
-<p class="title-1">{{ video.title }}</p>
-<br><br>
 
-<div class="col-md-10 mx-auto d-block">
-    <div class=""><video src="{{ video.video.url }}" controls ></video></div>
-    <p><i class="fas fa-calendar"></i> {{ video.timestamp|timesince }} {% trans 'ago' %}</p>
-    {% if video.summary %}
-    <p class="text-orange text-center">{{ video.summary }}</p>
-    {% else %}
-    {% trans 'No video description set.' %}
-    {% endif %}
+
+<div class="container">
+
+    <!-- ========================================= -->
+    <!-- VIDEO TITLE                               -->
+    <!-- ========================================= -->
+
+    <p class="title-1">
+        {{ video.title }}
+    </p>
+
+    <br>
+
+
+    <div class="col-md-10 mx-auto d-block">
+
+        <!-- ========================================= -->
+        <!-- VIDEO PLAYER CARD                         -->
+        <!-- ========================================= -->
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                {% if video.video_type == "youtube" and video.youtube_url %}
+
+                    <!-- ================================= -->
+                    <!-- YOUTUBE PLAYER                    -->
+                    <!-- ================================= -->
+
+                    <div
+                        id="youtubePlayerContainer"
+                        style="
+                            position: relative;
+                            width: 100%;
+                            padding-bottom: 56.25%;
+                            height: 0;
+                            overflow: hidden;
+                            background: #000;
+                            border-radius: 6px;
+                        "
+                    >
+
+                        <div
+                            id="youtubePlayer"
+                            style="
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                            "
+                        >
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="youtubeError"
+                        class="alert alert-danger mt-3"
+                        style="display: none;"
+                    >
+                        The YouTube video could not be loaded.
+                    </div>
+
+
+                {% elif video.video %}
+
+                    <!-- ================================= -->
+                    <!-- UPLOADED VIDEO PLAYER              -->
+                    <!-- ================================= -->
+
+                    <video
+                        id="html5Video"
+                        src="{{ video.video.url }}"
+                        controls
+                        playsinline
+                        preload="metadata"
+                        style="
+                            width: 100%;
+                            max-height: 650px;
+                            background: #000;
+                            border-radius: 6px;
+                        "
+                    >
+                    </video>
+
+
+                {% else %}
+
+                    <div class="alert alert-warning mb-0">
+                        {% trans "No playable video is available." %}
+                    </div>
+
+                {% endif %}
+
+
+                <!-- ================================= -->
+                <!-- PROGRESS SECTION                   -->
+                <!-- ================================= -->
+
+                <div class="mt-4">
+
+                    <div class="d-flex align-items-center">
+
+                        <!-- Circular Progress -->
+
+                        <div
+                            style="
+                                width: 90px;
+                                height: 90px;
+                                position: relative;
+                                flex-shrink: 0;
+                            "
+                        >
+
+                            <svg
+                                width="90"
+                                height="90"
+                                viewBox="0 0 90 90"
+                                style="
+                                    transform: rotate(-90deg);
+                                "
+                            >
+
+                                <!-- Background circle -->
+
+                                <circle
+                                    cx="45"
+                                    cy="45"
+                                    r="37"
+                                    fill="none"
+                                    stroke="#e9ecef"
+                                    stroke-width="8"
+                                >
+                                </circle>
+
+
+                                <!-- Progress circle -->
+
+                                <circle
+                                    id="progressCircleBar"
+                                    cx="45"
+                                    cy="45"
+                                    r="37"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="8"
+                                    stroke-linecap="round"
+                                    stroke-dasharray="232.48"
+                                    stroke-dashoffset="232.48"
+                                >
+                                </circle>
+
+                            </svg>
+
+
+                            <!-- Percentage text -->
+
+                            <div
+                                id="progressText"
+                                style="
+                                    position: absolute;
+                                    inset: 0;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-weight: 700;
+                                    font-size: 16px;
+                                "
+                            >
+                                0%
+                            </div>
+
+                        </div>
+
+
+                        <!-- Progress details -->
+
+                        <div class="ms-3">
+
+                            <h5 class="mb-1">
+                                Learning Progress
+                            </h5>
+
+                            <p
+                                id="progressStatus"
+                                class="text-muted mb-1"
+                            >
+
+                                {% if progress and progress.completed %}
+                                    Completed
+                                {% elif progress and progress.progress_percent > 0 %}
+                                    In Progress
+                                {% else %}
+                                    Not started
+                                {% endif %}
+
+                            </p>
+
+                            <small class="text-muted">
+                                Your progress is saved automatically.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ========================================= -->
+        <!-- VIDEO INFORMATION                         -->
+        <!-- ========================================= -->
+
+        <p class="mt-3">
+
+            <i class="fas fa-calendar"></i>
+
+            {{ video.timestamp|timesince }}
+
+            {% trans 'ago' %}
+
+        </p>
+
+
+        {% if video.summary %}
+
+            <p class="text-orange text-center">
+                {{ video.summary }}
+            </p>
+
+        {% else %}
+
+            <p class="text-muted">
+                {% trans 'No video description set.' %}
+            </p>
+
+        {% endif %}
+
+    </div>
+
 </div>
+
+
+<!-- ============================================== -->
+<!-- YOUTUBE IFRAME API                             -->
+<!-- ============================================== -->
+
+{% if video.video_type == "youtube" and video.youtube_url %}
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+{% endif %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* INITIAL PROGRESS DATA */
+    let watchedSeconds = 0;
+    let durationSeconds = 0;
+    let lastPosition = 0;
+    let completed = false;
+
+    {% if progress %}
+    watchedSeconds = Number("{{ progress.watched_seconds|default:0 }}");
+    durationSeconds = Number("{{ progress.duration_seconds|default:0 }}");
+    lastPosition = Number("{{ progress.last_position|default:0 }}");
+    completed = "{{ progress.completed|yesno:'true,false' }}" === "true";
+    {% endif %}
+
+    /* Declare html5Video FIRST — everything below references it */
+    const html5Video = document.getElementById("html5Video");
+
+    /* PROGRESS UI */
+    const progressText = document.getElementById("progressText");
+    const progressStatus = document.getElementById("progressStatus");
+    const progressCircleBar = document.getElementById("progressCircleBar");
+    const circleLength = 232.48;
+
+    function updateProgressUI(percent) {
+        if (!progressText || !progressCircleBar) return;
+        percent = Math.max(0, Math.min(percent, 100));
+        progressText.textContent = Math.round(percent) + "%";
+        const offset = circleLength - (circleLength * percent / 100);
+        progressCircleBar.style.strokeDashoffset = offset;
+
+        if (progressStatus) {
+            if (percent >= 100) {
+                progressStatus.textContent = "Completed";
+                progressStatus.classList.remove("text-muted");
+                progressStatus.classList.add("text-success");
+            } else if (percent > 0) {
+                progressStatus.textContent = "In Progress";
+                progressStatus.classList.remove("text-success");
+                progressStatus.classList.add("text-muted");
+            } else {
+                progressStatus.textContent = "Not started";
+                progressStatus.classList.remove("text-success");
+                progressStatus.classList.add("text-muted");
+            }
+        }
+    }
+
+    if (durationSeconds > 0) {
+        updateProgressUI((watchedSeconds / durationSeconds) * 100);
+    } else if (completed) {
+        updateProgressUI(100);
+    }
+
+    /* CSRF TOKEN */
+    function getCSRFToken() {
+        const cookie = document.cookie.split("; ").find(row => row.startsWith("csrftoken="));
+        return cookie ? decodeURIComponent(cookie.split("=")[1]) : "";
+    }
+
+    /* SAVE PROGRESS TO DJANGO */
+    const HEARTBEAT_MS = 4000;
+
+    function saveProgress(position, duration, isCompleted = false) {
+        if (!duration || duration <= 0) return;
+
+        fetch("{% url 'save_video_progress' course.slug video.slug %}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() },
+            credentials: "same-origin",
+            body: JSON.stringify({ position, duration_seconds: duration }),
+        })
+        .then(r => r.ok ? r.json() : Promise.reject(new Error("Progress request failed.")))
+        .then(function (data) {
+            if (!data) return;
+            watchedSeconds = Math.max(watchedSeconds, data.last_valid_position);
+            updateProgressUI(data.completed ? 100 : data.progress_percent);
+
+            const drift = position - data.last_valid_position;
+            if (html5Video && drift > 2) {
+                html5Video.currentTime = data.last_valid_position;
+                showSkipMessage();
+            }
+        })
+        .catch(err => console.error("Unable to save video progress:", err));
+    }
+
+    function showSkipMessage() {
+        const el = document.getElementById("progressStatus");
+        if (!el) return;
+        const original = el.textContent;
+        el.textContent = "Finish watching this section to continue.";
+        setTimeout(() => { el.textContent = original; }, 2500);
+    }
+
+    /* HTML5 VIDEO WIRING */
+    if (html5Video) {
+        html5Video.addEventListener("loadedmetadata", function () {
+            durationSeconds = html5Video.duration;
+            if (lastPosition > 5 && lastPosition < durationSeconds - 5) {
+                html5Video.currentTime = lastPosition;
+            }
+            if (watchedSeconds > 0 && durationSeconds > 0) {
+                updateProgressUI((watchedSeconds / durationSeconds) * 100);
+            }
+        });
+
+        html5Video.addEventListener("seeking", function () {
+            if (html5Video.currentTime - watchedSeconds > 2) {
+                html5Video.currentTime = watchedSeconds;
+                showSkipMessage();
+            }
+        });
+
+        setInterval(function () {
+            if (!html5Video.paused) {
+                saveProgress(html5Video.currentTime, html5Video.duration, false);
+            }
+        }, HEARTBEAT_MS);
+
+        html5Video.addEventListener("pause", function () {
+            saveProgress(html5Video.currentTime, html5Video.duration, false);
+        });
+
+        html5Video.addEventListener("ended", function () {
+            saveProgress(html5Video.duration, html5Video.duration, true);
+        });
+    }
+
+    /* YOUTUBE VIDEO — unchanged from before, just keep this whole block as-is */
+    /* =========================================
+   YOUTUBE VIDEO
+   ========================================= */
+
+{% if video.video_type == "youtube" and video.youtube_url %}
+
+function extractYouTubeVideoId(url) {
+    try {
+        const parsed = new URL(url);
+        const hostname = parsed.hostname.toLowerCase();
+
+        // youtube.com
+        if (
+            hostname === "youtube.com" ||
+            hostname === "www.youtube.com" ||
+            hostname === "m.youtube.com"
+        ) {
+            // /watch?v=VIDEO_ID
+            const watchId = parsed.searchParams.get("v");
+
+            if (watchId) {
+                return watchId;
+            }
+
+            // /embed/VIDEO_ID
+            // /shorts/VIDEO_ID
+            const parts = parsed.pathname
+                .split("/")
+                .filter(Boolean);
+
+            if (
+                parts.length >= 2 &&
+                (parts[0] === "embed" || parts[0] === "shorts")
+            ) {
+                return parts[1];
+            }
+        }
+
+        // youtu.be/VIDEO_ID
+        if (hostname === "youtu.be") {
+            const parts = parsed.pathname
+                .split("/")
+                .filter(Boolean);
+
+            if (parts.length > 0) {
+                return parts[0];
+            }
+        }
+
+    } catch (error) {
+        console.error("Invalid YouTube URL:", error);
+    }
+
+    return null;
+}
+
+
+const youtubeVideoId =
+    extractYouTubeVideoId(
+        "{{ video.youtube_url|escapejs }}"
+    );
+
+console.log("YouTube URL:",
+    "{{ video.youtube_url|escapejs }}"
+);
+
+console.log("YouTube Video ID:",
+    youtubeVideoId
+);
+
+
+function showYouTubeError(message) {
+
+    const errorBox =
+        document.getElementById("youtubeError");
+
+    if (errorBox) {
+        errorBox.textContent = message;
+        errorBox.style.display = "block";
+    }
+
+    console.error("YouTube:", message);
+}
+
+
+let youtubePlayer = null;
+
+
+/* =========================================
+   INITIALIZE YOUTUBE PLAYER
+   ========================================= */
+
+function initializeYouTubePlayer() {
+
+    console.log("Attempting to initialize YouTube player...");
+
+    if (!youtubeVideoId) {
+
+        showYouTubeError(
+            "Invalid YouTube URL. Please check the video link."
+        );
+
+        return;
+    }
+
+
+    if (
+        typeof YT === "undefined" ||
+        typeof YT.Player === "undefined"
+    ) {
+
+        console.log(
+            "YouTube API not ready yet. Waiting..."
+        );
+
+        return;
+    }
+
+
+    console.log(
+        "YouTube API ready. Creating player..."
+    );
+
+
+    youtubePlayer =
+        new YT.Player(
+            "youtubePlayer",
+            {
+
+                videoId: youtubeVideoId,
+
+                width: "100%",
+                height: "100%",
+
+                playerVars: {
+                    rel: 0,
+                    controls: 1,
+                    autoplay: 0,
+                    playsinline: 1
+                },
+
+                events: {
+
+                    /* -------------------------
+                       PLAYER READY
+                       ------------------------- */
+
+                    onReady: function(event) {
+
+                        console.log(
+                            "YouTube player ready."
+                        );
+
+
+                        durationSeconds =
+                            event.target.getDuration();
+
+
+                        /*
+                         * Resume previous position
+                         */
+
+                        if (
+                            lastPosition > 5 &&
+                            lastPosition <
+                                durationSeconds - 5
+                        ) {
+
+                            event.target.seekTo(
+                                lastPosition,
+                                true
+                            );
+                        }
+
+
+                        /*
+                         * Show saved progress
+                         */
+
+                        if (
+                            watchedSeconds > 0 &&
+                            durationSeconds > 0
+                        ) {
+
+                            updateProgressUI(
+                                (
+                                    watchedSeconds /
+                                    durationSeconds
+                                ) * 100
+                            );
+                        }
+
+
+                        /*
+                         * Save progress every 4 seconds
+                         */
+
+                        setInterval(function() {
+
+                            if (
+                                event.target.getPlayerState() ===
+                                YT.PlayerState.PLAYING
+                            ) {
+
+                                const currentTime =
+                                    event.target.getCurrentTime();
+
+                                const duration =
+                                    event.target.getDuration();
+
+                                saveProgress(
+                                    currentTime,
+                                    duration,
+                                    false
+                                );
+                            }
+
+                        }, HEARTBEAT_MS);
+                    },
+
+
+                    /* -------------------------
+                       STATE CHANGE
+                       ------------------------- */
+
+                    onStateChange: function(event) {
+
+                        console.log(
+                            "YouTube state:",
+                            event.data
+                        );
+
+
+                        /*
+                         * Video ended
+                         */
+
+                        if (
+                            event.data ===
+                            YT.PlayerState.ENDED
+                        ) {
+
+                            const duration =
+                                event.target.getDuration();
+
+                            saveProgress(
+                                duration,
+                                duration,
+                                true
+                            );
+                        }
+                    },
+
+
+                    /* -------------------------
+                       PLAYER ERROR
+                       ------------------------- */
+
+                    onError: function(event) {
+
+                        console.error(
+                            "YouTube player error code:",
+                            event.data
+                        );
+
+
+                        let message =
+                            "This YouTube video cannot be embedded or played.";
+
+
+                        /*
+                         * YouTube error codes
+                         */
+
+                        if (event.data === 2) {
+
+                            message =
+                                "Invalid YouTube video ID.";
+                        }
+
+                        else if (
+                            event.data === 5
+                        ) {
+
+                            message =
+                                "The YouTube video cannot be played in this browser.";
+                        }
+
+                        else if (
+                            event.data === 100
+                        ) {
+
+                            message =
+                                "This YouTube video does not exist or is private.";
+                        }
+
+                        else if (
+                            event.data === 101 ||
+                            event.data === 150
+                        ) {
+
+                            message =
+                                "This YouTube video does not allow embedding.";
+                        }
+
+
+                        showYouTubeError(message);
+                    }
+                }
+            }
+        );
+}
+
+
+/* =========================================
+   YOUTUBE API CALLBACK
+   ========================================= */
+
+/*
+ * IMPORTANT:
+ * This must be defined globally.
+ * Do NOT put it inside DOMContentLoaded.
+ */
+
+window.onYouTubeIframeAPIReady =
+    function() {
+
+        console.log(
+            "YouTube iframe API is ready."
+        );
+
+        initializeYouTubePlayer();
+    };
+
+
+/* =========================================
+   API ALREADY LOADED CHECK
+   ========================================= */
+
+/*
+ * Handles the situation where the API
+ * loaded before our callback was registered.
+ */
+
+if (
+    typeof YT !== "undefined" &&
+    typeof YT.Player !== "undefined"
+) {
+
+    console.log(
+        "YouTube API was already loaded."
+    );
+
+    initializeYouTubePlayer();
+}
+
+
+/* =========================================
+   API LOAD TIMEOUT
+   ========================================= */
+
+setTimeout(function() {
+
+    if (
+        typeof YT === "undefined" ||
+        typeof YT.Player === "undefined"
+    ) {
+
+        showYouTubeError(
+            "YouTube player could not load. Check your internet connection."
+        );
+    }
+
+}, 10000);
+
+
+{% endif %}  
+
+});  
+</script>
 
 {% endblock content %}

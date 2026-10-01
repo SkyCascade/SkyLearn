@@ -25,13 +25,17 @@
             <div class="card">
                 <p class="form-title">{% trans 'Personal Info' %}</p>
                 <div class="p-2">
-                    {{ form.first_name|as_crispy_field }}
-                    {{ form.last_name|as_crispy_field }}
-                    {{ form.email|as_crispy_field }}
-                    {{ form.address|as_crispy_field }}
-                    {{ form.phone|as_crispy_field }}
-                    {{ form.gender|as_crispy_field }}
-                </div>
+    {{ form.username|as_crispy_field }}
+    {{ form.password1|as_crispy_field }}
+    {{ form.password2|as_crispy_field }}
+
+    {{ form.first_name|as_crispy_field }}
+    {{ form.last_name|as_crispy_field }}
+    {{ form.email|as_crispy_field }}
+    {{ form.address|as_crispy_field }}
+    {{ form.phone|as_crispy_field }}
+    {{ form.gender|as_crispy_field }}
+</div>
             </div>
         </div>
     </div>

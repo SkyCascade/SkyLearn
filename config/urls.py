@@ -16,16 +16,15 @@ urlpatterns = [
 urlpatterns += i18n_patterns(
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
     path("", include("core.urls")),
-    path("jet/", include("jet.urls", "jet")),  # Django JET URLS
-    path(
-        "jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")
-    ),  # Django JET dashboard URLS
+    path("jet/", include("jet.urls", "jet")),
+    path("jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")),
     path("accounts/", include("accounts.urls")),
     path("programs/", include("course.urls")),
     path("result/", include("result.urls")),
     path("search/", include("search.urls")),
     path("quiz/", include("quiz.urls")),
     path("payments/", include("payments.urls")),
+    path("attendance/", include("attendance.urls")),   # <-- add this
 )
 
 

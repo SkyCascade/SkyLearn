@@ -38,10 +38,12 @@ GRADE_CHOICES = (
 
 PASS = "PASS"
 FAIL = "FAIL"
+IN_PROGRESS = "IN_PROGRESS"
 
 COMMENT_CHOICES = (
     (PASS, "PASS"),
     (FAIL, "FAIL"),
+    (IN_PROGRESS, "IN PROGRESS"),
 )
 
 GRADE_BOUNDARIES = [
@@ -74,10 +76,23 @@ GRADE_POINT_MAPPING = {
 }
 
 
+
 class TakenCourse(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     course = models.ForeignKey(
         Course, on_delete=models.CASCADE, related_name="taken_courses"
+    )
+    lecturer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        # SET_NULL (not CASCADE): removing a teacher's account, or reallocating
+        # a course away from them, should only clear who is teaching this
+        # student's course - it must never delete the student's enrollment,
+        # grades, assignment/exam/quiz/attendance scores along with it.
+        on_delete=models.SET_NULL,
+        related_name="student_courses",
+        limit_choices_to={"is_lecturer": True},
+        null=True,
+        blank=True,
     )
     assignment = models.DecimalField(
         max_digits=5, decimal_places=2, default=Decimal("0.00")
@@ -122,6 +137,24 @@ class TakenCourse(models.Model):
             ]
         )
 
+    def has_scores(self):
+        """
+        Returns True only if the lecturer has actually entered at least
+        one score component. A freshly-enrolled row where everything is
+        still at its default of 0.00 has NOT been graded yet, and must
+        not be treated the same as a student who scored zero.
+        """
+        return any(
+            Decimal(value) != Decimal("0.00")
+            for value in [
+                self.assignment,
+                self.mid_exam,
+                self.quiz,
+                self.attendance,
+                self.final_exam,
+            ]
+        )
+
     def get_grade(self):
         total = self.total
         for boundary, grade in GRADE_BOUNDARIES:
@@ -141,9 +174,20 @@ class TakenCourse(models.Model):
 
     def save(self, *args, **kwargs):
         self.total = self.get_total()
-        self.grade = self.get_grade()
-        self.point = self.get_point()
-        self.comment = self.get_comment()
+
+        if not self.has_scores():
+            # Nothing has been graded yet (still an ongoing/current
+            # semester with no marks entered) - do NOT compute a grade
+            # or mark the student as failed. Leave grade/point blank
+            # and flag the row as still in progress.
+            self.grade = ""
+            self.point = Decimal("0.00")
+            self.comment = IN_PROGRESS
+        else:
+            self.grade = self.get_grade()
+            self.point = self.get_point()
+            self.comment = self.get_comment()
+
         super().save(*args, **kwargs)
 
     def calculate_gpa(self):
@@ -155,7 +199,7 @@ class TakenCourse(models.Model):
             student=self.student,
             course__level=self.student.level,
             course__semester=current_semester.semester,
-        )
+        ).exclude(comment=IN_PROGRESS)
 
         total_points = sum(tc.point for tc in taken_courses)
         total_credits = sum(tc.course.credit for tc in taken_courses)
@@ -166,7 +210,9 @@ class TakenCourse(models.Model):
         return Decimal("0.00")
 
     def calculate_cgpa(self):
-        taken_courses = TakenCourse.objects.filter(student=self.student)
+        taken_courses = TakenCourse.objects.filter(student=self.student).exclude(
+            comment=IN_PROGRESS
+        )
 
         total_points = sum(tc.point for tc in taken_courses)
         total_credits = sum(tc.course.credit for tc in taken_courses)

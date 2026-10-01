@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'My Attendance' %} | SkyLearn{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'student_dashboard' %}">{% trans 'Dashboard' %}</a></li>
+        <li class="breadcrumb-item active">{% trans 'My Attendance' %}</li>
+    </ol>
+</nav>
+
+<h1 class="title-1 mb-4">{% trans 'My Attendance' %}</h1>
+
+<div class="row px-2">
+
+    {% for s in stats %}
+
+    <div class="col-md-6 p-2">
+
+        <div class="card p-4">
+
+            <div class="d-flex justify-content-between align-items-start">
+                <h5>{{ s.course.code }} &middot; {{ s.course.title }}</h5>
+                {% if s.is_defaulter %}
+                    <span class="badge bg-danger">{% trans 'Below 70%' %}</span>
+                {% else %}
+                    <span class="badge bg-success">{% trans 'On Track' %}</span>
+                {% endif %}
+            </div>
+
+            <h2 class="mt-2">{{ s.percent }}%</h2>
+
+            <div class="progress mb-3" style="height: 10px;">
+                <div class="progress-bar {% if s.is_defaulter %}bg-danger{% else %}bg-success{% endif %}"
+                     role="progressbar" style="width: {{ s.percent }}%;"></div>
+            </div>
+
+            <small class="text-muted">
+                {% trans 'Attended' %} {{ s.attended }} / {{ s.total_sessions }}
+                {% trans 'sessions' %} ({{ s.absent }} {% trans 'missed' %})
+            </small>
+
+            <hr>
+
+            {% if s.total_sessions == 0 %}
+                <small class="text-muted">
+                    {% trans 'No sessions recorded yet for this course.' %}
+                </small>
+            {% else %}
+                <small>
+                    {% if s.safe_to_skip_next %}
+                        {% trans "It's fine to skip the next lecture and stay at or above 70%." %}
+                    {% else %}
+                        {% trans "Skipping the next lecture would drop you below 70% — try to attend." %}
+                    {% endif %}
+                    <br>
+                    {% trans 'You can still miss up to' %}
+                    <strong>{{ s.max_more_skippable }}</strong>
+                    {% trans 'more lecture(s) and stay at or above 70%.' %}
+                </small>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    {% empty %}
+
+    <div class="col-12">
+        <div class="alert alert-info">{% trans "You're not enrolled in any courses yet." %}</div>
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock content %}
