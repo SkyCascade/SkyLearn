@@ -10,9 +10,11 @@ from accounts.decorators import (
 )
 from accounts.models import User, Student
 
-from course.models import Course, CourseAllocation, Upload, UploadVideo
+from course.models import Course, CourseAllocation, Upload, UploadVideo, VideoProgress
 from result.models import TakenCourse
-from quiz.models import Quiz
+from quiz.models import Quiz, Sitting
+from gamification.models import StudentXP, StudentBadge, LearningStreak, QuizXPRecord
+from gamification.services import get_level_info
 from .forms import SessionForm, SemesterForm, NewsAndEventsForm
 from .models import NewsAndEvents, ActivityLog, Session, Semester
 
@@ -119,6 +121,15 @@ def lecturer_dashboard_view(request):
     # Student progress
     # --------------------------------------------------
 
+    # Student profiles don't carry a confirmed field back to User in this
+    # codebase, but the reverse accessor "student" (used elsewhere as
+    # request.user.student) is confirmed, so go via User instead of
+    # guessing the forward field name on Student.
+    user_by_student_id = {
+        u.student.id: u
+        for u in User.objects.filter(student__in=students).select_related("student")
+    }
+
     student_progress = []
 
     for student in students:
@@ -128,9 +139,32 @@ def lecturer_dashboard_view(request):
             course__in=courses
         ).select_related("course")
 
+        student_user = user_by_student_id.get(student.id)
+
         progress_data = []
 
         for taken in taken_courses:
+            video_total = UploadVideo.objects.filter(course=taken.course).count()
+            video_completed = (
+                VideoProgress.objects.filter(
+                    student=student_user, video__course=taken.course, completed=True
+                ).count()
+                if student_user else 0
+            )
+            video_percent = round(
+                (video_completed / video_total) * 100, 1
+            ) if video_total else 0
+
+            course_quizzes = Quiz.objects.filter(course=taken.course)
+            quiz_scores = list(
+                QuizXPRecord.objects.filter(
+                    student=student_user, quiz__in=course_quizzes
+                ).values_list("best_percent", flat=True)
+            ) if student_user else []
+            quiz_average = round(
+                sum(quiz_scores) / len(quiz_scores), 1
+            ) if quiz_scores else None
+
             progress_data.append({
                 "course": taken.course,
                 "assignment": taken.assignment,
@@ -140,11 +174,23 @@ def lecturer_dashboard_view(request):
                 "final_exam": taken.final_exam,
                 "total": taken.total,
                 "grade": taken.grade,
+                "video_progress_percent": video_percent,
+                "quiz_average": quiz_average,
             })
+
+        total_xp = 0
+        badge_count = 0
+        if student_user:
+            xp_record = StudentXP.objects.filter(student=student_user).first()
+            total_xp = xp_record.total_xp if xp_record else 0
+            badge_count = StudentBadge.objects.filter(student=student_user).count()
 
         student_progress.append({
             "student": student,
+            "student_name": student_user.get_full_name if student_user else str(student),
             "courses": progress_data,
+            "total_xp": total_xp,
+            "badge_count": badge_count,
         })
 
     context = {
@@ -222,10 +268,69 @@ def student_dashboard_view(request):
             "score": float(taken_course.total),
         })
 
-    # Student's quizzes
-    quiz_count = Quiz.objects.filter(
-        course__in=taken_courses.values("course")
+    enrolled_course_ids = taken_courses.values_list("course_id", flat=True)
+
+    # --------------------------------------------------
+    # Gamification: XP / level / streak / badges
+    # --------------------------------------------------
+
+    xp_record = StudentXP.objects.filter(student=request.user).first()
+    total_xp = xp_record.total_xp if xp_record else 0
+    level_info = get_level_info(total_xp)
+
+    streak = LearningStreak.objects.filter(student=request.user).first()
+
+    earned_badges = StudentBadge.objects.filter(
+        student=request.user
+    ).select_related("badge").order_by("-earned_at")
+
+    # --------------------------------------------------
+    # Video learning progress (across enrolled courses)
+    # --------------------------------------------------
+
+    total_videos = UploadVideo.objects.filter(
+        course_id__in=enrolled_course_ids
     ).count()
+
+    completed_videos = VideoProgress.objects.filter(
+        student=request.user,
+        video__course_id__in=enrolled_course_ids,
+        completed=True,
+    ).count()
+
+    video_progress_percent = round(
+        (completed_videos / total_videos) * 100, 1
+    ) if total_videos else 0
+
+    # --------------------------------------------------
+    # Assigned quizzes (per-quiz status, not just a count)
+    # --------------------------------------------------
+
+    quizzes = Quiz.objects.filter(
+        course_id__in=enrolled_course_ids
+    ).select_related("course")
+
+    quiz_records = {
+        r.quiz_id: r
+        for r in QuizXPRecord.objects.filter(student=request.user, quiz__in=quizzes)
+    }
+    in_progress_quiz_ids = set(
+        Sitting.objects.filter(user=request.user, quiz__in=quizzes, complete=False)
+        .values_list("quiz_id", flat=True)
+    )
+
+    quiz_status = []
+    for quiz in quizzes:
+        record = quiz_records.get(quiz.id)
+        quiz_status.append({
+            "quiz": quiz,
+            "course": quiz.course,
+            "attempted": record is not None,
+            "best_percent": record.best_percent if record else None,
+            "in_progress": quiz.id in in_progress_quiz_ids,
+        })
+
+    quiz_count = quizzes.count()
 
     context = {
         "title": "Student Dashboard",
@@ -239,6 +344,19 @@ def student_dashboard_view(request):
         "cgpa": cgpa,
         "quiz_count": quiz_count,
         "course_performance": course_performance,
+
+        # Gamification
+        "level_info": level_info,
+        "streak": streak,
+        "earned_badges": earned_badges,
+
+        # Video progress
+        "total_videos": total_videos,
+        "completed_videos": completed_videos,
+        "video_progress_percent": video_progress_percent,
+
+        # Assigned quizzes
+        "quiz_status": quiz_status,
     }
 
     return render(

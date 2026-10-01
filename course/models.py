@@ -272,6 +272,21 @@ class VideoProgress(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
+    watched_segments = models.JSONField(
+        default=list,
+        blank=True,
+        help_text=(
+            "Audit record of validated watched range(s), e.g. [[0, 125.4]]. "
+            "Currently always a single interval from 0 to the furthest "
+            "validated position, since lessons are watched sequentially."
+        ),
+    )
+
+    COMPLETION_THRESHOLD_PERCENT = 95
+    FORWARD_PLAYBACK_TOLERANCE = 1.5
+    MIN_HEARTBEAT_WINDOW_SECONDS = 3
+    MAX_HEARTBEAT_GAP_SECONDS = 15
+
     class Meta:
         unique_together = ("student", "video")
 
@@ -281,6 +296,48 @@ class VideoProgress(models.Model):
             f"{self.video} - "
             f"{self.progress_percent:.1f}%"
         )
+
+    def apply_heartbeat(self, reported_position, duration_seconds, now):
+        """
+        Server-authoritative progress update. Backward or within-frontier
+        movement is always free; forward movement past the frontier is
+        rate-limited by real elapsed server time, not by anything the
+        client reports. Returns (accepted_position, became_completed_just_now).
+        """
+        reported_position = max(0.0, float(reported_position))
+        duration_seconds = max(0.0, float(duration_seconds))
+        frontier = self.watched_seconds
+
+        if reported_position <= frontier:
+            accepted_frontier = frontier
+            accepted_position = reported_position
+        else:
+            elapsed = (now - self.updated_at).total_seconds()
+            elapsed = max(elapsed, self.MIN_HEARTBEAT_WINDOW_SECONDS)
+            elapsed = min(elapsed, self.MAX_HEARTBEAT_GAP_SECONDS)
+            granted_advance = min(
+                reported_position - frontier,
+                elapsed * self.FORWARD_PLAYBACK_TOLERANCE,
+            )
+            accepted_frontier = frontier + granted_advance
+            accepted_position = accepted_frontier
+
+        was_completed = self.completed
+        self.watched_seconds = accepted_frontier
+        self.last_position = accepted_position
+        if duration_seconds > 0:
+            self.duration_seconds = duration_seconds
+            self.progress_percent = max(
+                0.0, min((accepted_frontier / duration_seconds) * 100, 100)
+            )
+        self.watched_segments = [[0, round(accepted_frontier, 2)]]
+
+        if not self.completed and self.progress_percent >= self.COMPLETION_THRESHOLD_PERCENT:
+            self.completed = True
+
+        self.save()
+        return accepted_position, (self.completed and not was_completed)
+
 @receiver(pre_save, sender=UploadVideo)
 def video_pre_save_receiver(sender, instance, **kwargs):
     if not instance.slug:
@@ -330,3 +387,4 @@ class SCORMPackage(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.course.title}"
+

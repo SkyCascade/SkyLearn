@@ -431,7 +431,7 @@ def student_add_view(request):
 
         if form.is_valid():
             user = form.save()
-            full_name = user.get_full_name()
+            full_name = user.get_full_name
 
             messages.success(
                 request,

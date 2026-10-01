@@ -150,11 +150,6 @@ class MCQuestionCreate(CreateView):
     form_class = MCQuestionForm
     template_name = "quiz/mcquestion_form.html"
 
-    # def get_form_kwargs(self):
-    #     kwargs = super().get_form_kwargs()
-    #     kwargs["quiz"] = get_object_or_404(Quiz, id=self.kwargs["quiz_id"])
-    #     return kwargs
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["course"] = get_object_or_404(Course, slug=self.kwargs["slug"])
@@ -364,6 +359,18 @@ class QuizTake(FormView):
         if self.quiz.answers_at_end:
             results["questions"] = self.sitting.get_questions(with_answers=True)
             results["incorrect_questions"] = self.sitting.get_incorrect_questions
+
+        # Gamification only cares about a genuine student attempt, not a
+        # lecturer/admin previewing their own quiz.
+        if self.request.user.is_student:
+            from gamification.services import record_quiz_result
+
+            results["newly_awarded_badges"] = record_quiz_result(
+                student=self.request.user,
+                quiz=self.quiz,
+                course=self.course,
+                percent=results["percent"],
+            )
 
         if (
             not self.quiz.exam_paper

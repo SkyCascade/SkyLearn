@@ -280,15 +280,14 @@ class StudentAddForm(UserCreationForm):
 
         for course in courses:
             allocation = CourseAllocation.objects.filter(
-            courses=course,
-            session__is_current_session=True,
-        ).select_related("lecturer").first()
-
-        TakenCourse.objects.create(
-            student=student,
-            course=course,
-            lecturer=allocation.lecturer if allocation else None,
-        )
+                courses=course,
+                session__is_current_session=True,
+            ).select_related("lecturer").first()
+            TakenCourse.objects.create(
+                student=student,
+                course=course,
+                lecturer=allocation.lecturer if allocation else None,
+            )
 
         return user
 
@@ -538,7 +537,6 @@ def save(self, commit=True):
                     courses=course,
                     session__is_current_session=True,
                 ).select_related("lecturer").first()
-
                 TakenCourse.objects.create(
                     student=student,
                     course=course,

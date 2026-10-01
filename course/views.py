@@ -6,10 +6,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
+import json
+from django.utils import timezone
 import os
 import xml.etree.ElementTree as ET
 import zipfile
+
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView
 from django_filters.views import FilterView
@@ -542,33 +546,19 @@ def handle_file_delete(request, slug, file_id):
 
 @login_required
 def handle_video_single(request, slug, video_slug):
-    course = get_object_or_404(
-        Course,
-        slug=slug,
-    )
-
-    video = get_object_or_404(
-        UploadVideo,
-        slug=video_slug,
-        course=course,
-    )
+    course = get_object_or_404(Course, slug=slug)
+    video = get_object_or_404(UploadVideo, slug=video_slug, course=course)
 
     progress = None
-
     if request.user.is_student:
         progress = VideoProgress.objects.filter(
-            student=request.user,
-            video=video,
+            student=request.user, video=video
         ).first()
 
     return render(
         request,
         "upload/video_single.html",
-        {
-            "video": video,
-            "course": course,
-            "progress": progress,
-        },
+        {"video": video, "course": course, "progress": progress},
     )
 
 @login_required
@@ -576,106 +566,73 @@ def handle_video_single(request, slug, video_slug):
 def save_video_progress(request, slug, video_slug):
     if request.method != "POST":
         return JsonResponse(
-            {
-                "success": False,
-                "error": "POST request required.",
-            },
-            status=405,
+            {"success": False, "error": "POST request required."}, status=405
         )
 
-    course = get_object_or_404(
-        Course,
-        slug=slug,
-    )
+    course = get_object_or_404(Course, slug=slug)
+    video = get_object_or_404(UploadVideo, slug=video_slug, course=course)
 
-    video = get_object_or_404(
-        UploadVideo,
-        slug=video_slug,
-        course=course,
-    )
+    # Ownership check: a student may only report progress on videos
+    # belonging to a course they are actually enrolled in.
+    if not request.user.is_superuser:
+        is_enrolled = TakenCourse.objects.filter(
+            student__student=request.user, course=course
+        ).exists()
+        if not is_enrolled:
+            return JsonResponse(
+                {"success": False, "error": "You are not enrolled in this course."},
+                status=403,
+            )
 
     try:
-        import json
-
         data = json.loads(request.body)
-
-        watched_seconds = float(
-            data.get("watched_seconds", 0)
-        )
-
-        duration_seconds = float(
-            data.get("duration_seconds", 0)
-        )
-
-        last_position = float(
-            data.get("last_position", 0)
-        )
-
-        completed = bool(
-            data.get("completed", False)
-        )
-
+        position = float(data.get("position", 0))
+        duration_seconds = float(data.get("duration_seconds", 0))
     except (ValueError, TypeError, json.JSONDecodeError):
         return JsonResponse(
-            {
-                "success": False,
-                "error": "Invalid progress data.",
-            },
-            status=400,
+            {"success": False, "error": "Invalid progress data."}, status=400
         )
 
-    if duration_seconds > 0:
-        progress_percent = (
-            watched_seconds / duration_seconds
-        ) * 100
-    else:
-        progress_percent = 0
-
-    progress_percent = max(
-        0,
-        min(progress_percent, 100),
+    progress, _created = VideoProgress.objects.get_or_create(
+        student=request.user, video=video
     )
 
-    if progress_percent >= 100:
-        progress_percent = 100
-        completed = True
-
-    progress, created = VideoProgress.objects.get_or_create(
-        student=request.user,
-        video=video,
+  
+    accepted_position, just_completed = progress.apply_heartbeat(
+        reported_position=position,
+        duration_seconds=duration_seconds,
+        now=timezone.now(),
     )
 
-    # Keep the highest actual watched coverage.
-    if watched_seconds >= progress.watched_seconds:
-        progress.watched_seconds = watched_seconds
-
-    if duration_seconds > 0:
-        progress.duration_seconds = duration_seconds
-
-    progress.last_position = max(
-        0,
-        last_position,
-    )
-
-    progress.progress_percent = progress_percent
-
-    if completed:
-        progress.completed = True
-
-    progress.save()
+    newly_awarded_badges = []
+    if just_completed:
+        # False→True transition only, guaranteed by apply_heartbeat — a
+        # reload or replay can never re-fire this.
+        from gamification.services import award_video_completion
+        newly_awarded_badges = award_video_completion(request.user, video)
 
     return JsonResponse(
         {
             "success": True,
-            "progress_percent": round(
-                progress.progress_percent,
-                2,
-            ),
+            "progress_percent": round(progress.progress_percent, 2),
             "completed": progress.completed,
-            "last_position": progress.last_position,
+            "last_valid_position": progress.last_position,
+            "video_completed_now": just_completed,
+            "newly_awarded_badges": [
+                {"name": b.name, "slug": b.slug, "icon_class": b.icon_class}
+                for b in newly_awarded_badges
+            ],
         }
     )
 
+    return JsonResponse(
+        {
+            "success": True,
+            "progress_percent": round(progress.progress_percent, 2),
+            "completed": progress.completed,
+            "last_valid_position": progress.last_position,
+        }
+    )
 
 # ########################################################
 # Video Upload Views
@@ -778,20 +735,16 @@ def save_video_progress(request, slug, video_slug):
 
         data = json.loads(request.body)
 
-        watched_seconds = float(
-            data.get("watched_seconds", 0)
+        # NOTE: the player (video_single.html) posts {"position", "duration_seconds"} —
+        # it does not send watched_seconds/last_position/completed. Those were being
+        # read under the wrong keys before, so they silently defaulted to 0/False on
+        # every heartbeat and progress never advanced.
+        reported_position = float(
+            data.get("position", 0)
         )
 
         duration_seconds = float(
             data.get("duration_seconds", 0)
-        )
-
-        last_position = float(
-            data.get("last_position", 0)
-        )
-
-        completed = bool(
-            data.get("completed", False)
         )
 
     except (ValueError, TypeError, json.JSONDecodeError):
@@ -803,44 +756,30 @@ def save_video_progress(request, slug, video_slug):
             status=400,
         )
 
-    if duration_seconds > 0:
-        progress_percent = (
-            watched_seconds / duration_seconds
-        ) * 100
-    else:
-        progress_percent = 0
-
-    progress_percent = max(
-        0,
-        min(progress_percent, 100),
-    )
-
-    if progress_percent >= 100:
-        progress_percent = 100
-        completed = True
+    from django.utils import timezone
 
     progress, created = VideoProgress.objects.get_or_create(
         student=request.user,
         video=video,
     )
 
-    if watched_seconds >= progress.watched_seconds:
-        progress.watched_seconds = watched_seconds
-
-    if duration_seconds > 0:
-        progress.duration_seconds = duration_seconds
-
-    progress.last_position = max(
-        0,
-        last_position,
+    # apply_heartbeat() is server-authoritative: forward movement past the
+    # validated frontier is capped by real elapsed server time, not by
+    # whatever position the client claims, so skipping ahead can't be used
+    # to fake completion. It also flips `completed` itself once the
+    # threshold is crossed, and returns whether that just happened.
+    accepted_position, became_completed_just_now = progress.apply_heartbeat(
+        reported_position,
+        duration_seconds,
+        timezone.now(),
     )
 
-    progress.progress_percent = progress_percent
+    newly_awarded_badges = []
 
-    if completed:
-        progress.completed = True
+    if became_completed_just_now:
+        from gamification.services import award_video_completion
 
-    progress.save()
+        newly_awarded_badges = award_video_completion(request.user, video)
 
     return JsonResponse(
         {
@@ -850,7 +789,11 @@ def save_video_progress(request, slug, video_slug):
                 2,
             ),
             "completed": progress.completed,
-            "last_position": progress.last_position,
+            "last_valid_position": accepted_position,
+            "newly_awarded_badges": [
+                {"name": b.name, "description": b.description, "icon_class": b.icon_class}
+                for b in newly_awarded_badges
+            ],
         }
     )
 

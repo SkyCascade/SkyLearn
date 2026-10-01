@@ -3,7 +3,8 @@
 
 <div id="side-nav">
 	<div class="main-menu">
-		<div class="top-side text-center py-4" style="background-image: url({% static 'img/dotted.jpg' %});">
+		{% static 'img/dotted.jpg' as dotted_bg %}
+		<div class="top-side text-center py-4" style="background-image: url('{{ dotted_bg }}');">
 			<div class="desktop-hide">
 				<div class="toggle-btn" onclick="toggleSidebar()">
 					<i class="fas fa-times"></i>
@@ -30,6 +31,8 @@
 		{% url 'course_registration' as cr %} {% url 'edit_profile' as ep %} {% url 'change_password' as cp %}
 		{% url 'quiz_progress' as qpr %} {% url 'quiz_marking' as qce %} {% url 'user_course_list' as ucl %}
 		{% url 'admin_panel' as admin_p %}
+		{% url 'attendance_lecturer_home' as att_home %}
+		{% url 'my_attendance' as my_att %}
 		
 
 
@@ -110,7 +113,13 @@
 			{% if request.user.is_lecturer %}
 			<li class="{% if request.path == ascore %}active{% endif %}">
 				<a href="{% url 'add_score' %}"><i class="fas fa-table"></i>{% trans 'Manage Score' %}</a>
+				
 			</li>
+			{% if request.user.is_lecturer %}
+			<li class="{% if request.path == att_home %}active{% endif %}">
+				<a href="{% url 'attendance_lecturer_home' %}"><i class="fas fa-clipboard-check"></i>{% trans 'Attendance' %}</a>
+			</li>
+{% endif %}
 			{% endif %}
 
 			{% if request.user.is_student %}
@@ -126,6 +135,9 @@
 			<li class="{% if request.path == cr %}active{% endif %}">
 				<a href="{% url 'course_registration' %}"><i class="fas fa-plus"></i>{% trans 'Add' %} &amp; {% trans 'Drop Course' %}</a>
 			</li>
+			{% if request.user.is_student %}
+			<li class="{% if request.path == my_att %}active{% endif %}">
+				<a href="{% url 'my_attendance' %}"><i class="fas fa-clipboard-check"></i>{% trans 'My Attendance' %}</a> </li> {% endif %}
 			{% endif %}
 			<br />
 			<p class="ms-3 text-secondary">&RightArrow; Others</p>

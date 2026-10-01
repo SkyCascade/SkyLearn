@@ -148,6 +148,93 @@
 </div>
 
 
+<!-- Level, Streak & Video Progress -->
+
+<div class="row px-2">
+
+    <div class="col-md-4 p-2">
+
+        <div class="card p-4 text-center">
+
+            <h5>
+                {% trans 'Level' %} {{ level_info.level }} &middot; {{ level_info.level_name }}
+            </h5>
+
+            <h2 class="mb-2">
+                {{ level_info.total_xp }} XP
+            </h2>
+
+            <div class="progress" style="height: 10px;">
+                <div class="progress-bar bg-info" role="progressbar"
+                     style="width: {{ level_info.progress_percent }}%;"
+                     aria-valuenow="{{ level_info.progress_percent }}"
+                     aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+
+            {% if level_info.next_level_xp %}
+            <small class="text-muted mt-2">
+                {{ level_info.next_level_xp }} XP {% trans 'for next level' %}
+            </small>
+            {% else %}
+            <small class="text-muted mt-2">
+                {% trans 'Max level reached' %}
+            </small>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4 p-2">
+
+        <div class="card p-4 text-center">
+
+            <h5>
+                <i class="fas fa-fire"></i> {% trans 'Learning Streak' %}
+            </h5>
+
+            <h2>
+                {{ streak.current_streak|default:0 }} {% trans 'days' %}
+            </h2>
+
+            <small class="text-muted">
+                {% trans 'Longest' %}: {{ streak.longest_streak|default:0 }} {% trans 'days' %}
+            </small>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4 p-2">
+
+        <div class="card p-4 text-center">
+
+            <h5>
+                {% trans 'Video Progress' %}
+            </h5>
+
+            <h2 class="mb-2">
+                {{ completed_videos }} / {{ total_videos }}
+            </h2>
+
+            <div class="progress" style="height: 10px;">
+                <div class="progress-bar bg-success" role="progressbar"
+                     style="width: {{ video_progress_percent }}%;"
+                     aria-valuenow="{{ video_progress_percent }}"
+                     aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+
+            <small class="text-muted mt-2">
+                {{ video_progress_percent }}% {% trans 'complete' %}
+            </small>
+
+        </div>
+
+    </div>
+
+</div>
+
+
 <!-- GPA -->
 
 <div class="row px-2">
@@ -306,6 +393,100 @@
 
                     </td>
 
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- My Badges -->
+
+<div class="card mt-3 p-3">
+
+    <h5 class="border-bottom pb-2">
+        {% trans 'My Badges' %}
+    </h5>
+
+    <div class="row px-2">
+
+        {% for sb in earned_badges %}
+
+        <div class="col-6 col-md-3 mb-3 px-2 text-center">
+            <i class="{{ sb.badge.icon_class }} fa-2x mb-2"></i>
+            <div><strong>{{ sb.badge.name }}</strong></div>
+            <small class="text-muted">{{ sb.badge.description }}</small>
+        </div>
+
+        {% empty %}
+
+        <div class="col-12 text-center text-muted py-3">
+            {% trans "No badges earned yet — keep watching videos and taking quizzes." %}
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+
+<!-- Assigned Quizzes -->
+
+<div class="card mt-3 p-3">
+
+    <h5 class="border-bottom pb-2">
+        {% trans 'Assigned Quizzes' %}
+    </h5>
+
+    <div class="table-responsive">
+
+        <table class="table table-hover">
+
+            <thead>
+                <tr>
+                    <th>{% trans 'Quiz' %}</th>
+                    <th>{% trans 'Course' %}</th>
+                    <th>{% trans 'Status' %}</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for item in quiz_status %}
+
+                <tr>
+                    <td>{{ item.quiz.title }}</td>
+                    <td>{{ item.course.code }}</td>
+                    <td>
+                        {% if item.attempted %}
+                            <span class="badge bg-success">
+                                {% trans 'Completed' %} &middot; {{ item.best_percent|floatformat:0 }}%
+                            </span>
+                        {% elif item.in_progress %}
+                            <span class="badge bg-warning text-dark">
+                                {% trans 'In Progress' %}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                {% trans 'Assigned' %}
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="3" class="text-center text-muted">
+                        {% trans 'No quizzes assigned yet.' %}
+                    </td>
                 </tr>
 
                 {% endfor %}

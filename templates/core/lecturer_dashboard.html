@@ -162,6 +162,64 @@
 
 </div>
 
+<!-- Student Progress -->
+<div class="card mt-3 p-3">
+
+    <h5 class="border-bottom pb-2">
+        {% trans 'Student Progress' %}
+    </h5>
+
+    <div class="table-responsive">
+
+        <table class="table table-hover">
+
+            <thead>
+                <tr>
+                    <th>{% trans 'Student' %}</th>
+                    <th>{% trans 'Course' %}</th>
+                    <th>{% trans 'Video Progress' %}</th>
+                    <th>{% trans 'Quiz Avg' %}</th>
+                    <th>{% trans 'Grade' %}</th>
+                    <th>{% trans 'XP' %}</th>
+                    <th>{% trans 'Badges' %}</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for entry in student_progress %}
+                    {% for c in entry.courses %}
+                    <tr>
+                        <td>{% if forloop.first %}{{ entry.student_name }}{% endif %}</td>
+                        <td>{{ c.course.code }}</td>
+                        <td>{{ c.video_progress_percent }}%</td>
+                        <td>{% if c.quiz_average != None %}{{ c.quiz_average }}%{% else %}—{% endif %}</td>
+                        <td>{{ c.grade|default:"—" }}</td>
+                        <td>{% if forloop.first %}{{ entry.total_xp }}{% endif %}</td>
+                        <td>{% if forloop.first %}{{ entry.badge_count }}{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td>{{ entry.student_name }}</td>
+                        <td colspan="6" class="text-muted">{% trans 'Not enrolled in any of your courses.' %}</td>
+                    </tr>
+                    {% endfor %}
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">
+                        {% trans 'No students found.' %}
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
 {% endblock content %}
 
 

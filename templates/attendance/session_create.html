@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'New Session' %} | {{ course.code }} | SkyLearn{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'lecturer_dashboard' %}">{% trans 'Dashboard' %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'attendance_session_list' course.slug %}">{% trans 'Attendance' %}</a></li>
+        <li class="breadcrumb-item active">{% trans 'New Session' %}</li>
+    </ol>
+</nav>
+
+<h1 class="title-1 mb-4">{% trans 'New Attendance Session' %} &middot; {{ course.title }}</h1>
+
+<div class="card p-4" style="max-width: 500px;">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">{% trans 'Date' %}</label>
+            <input type="date" name="date" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">{% trans 'Timetable Slot (optional)' %}</label>
+            <select name="lecture_slot" class="form-select">
+                <option value="">{% trans 'Ad-hoc / no fixed slot' %}</option>
+                {% for slot in slots %}
+                <option value="{{ slot.id }}">{{ slot }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">{% trans 'Topic (optional)' %}</label>
+            <input type="text" name="topic" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-primary">{% trans 'Create & Mark Attendance' %}</button>
+    </form>
+</div>
+
+{% endblock content %}
